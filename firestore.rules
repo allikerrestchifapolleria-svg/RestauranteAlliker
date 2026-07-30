@@ -1,0 +1,205 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ============================================================
+    // Funciones auxiliares
+    // ============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function userRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && userRole() == 'admin';
+    }
+
+    // Roles reales usados en la app (ver services/auth.ts -> UserRole):
+    // 'admin' | 'cook' | 'waiter' | 'user'  (user = cliente final, no es staff)
+    function isStaff() {
+      return isAuthenticated() && userRole() in ['admin', 'cook', 'waiter'];
+    }
+
+    function belongsToBranch(branchId) {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.branchId == branchId;
+    }
+
+    // El usuario autenticado es el dueño del pedido referenciado por orderId
+    function ownsOrder(orderId) {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/orders/$(orderId)).data.customerId == request.auth.uid;
+    }
+
+    // ============================================================
+    // Catálogo público
+    // ============================================================
+
+    match /restaurants/{restaurantId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /branches/{branchId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // OJO: el código usa la colección 'menu_categories', no 'categories'.
+    match /menu_categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /menu_items/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /promotions/{promoId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ============================================================
+    // Usuarios
+    // ============================================================
+
+    match /users/{userId} {
+      // El documento de usuario vive en users/{uid de Firebase Auth}. Nunca debe
+      // contener un campo 'password': las credenciales las maneja Firebase Auth,
+      // no Firestore (ver services/auth.ts y netlify/functions/admin-*-user.ts).
+      allow read: if isOwner(userId) || isAdmin();
+      // Un cliente final puede crear su propio perfil al registrarse (email/password
+      // o Google/Facebook), pero solo con role 'user' - nunca puede auto-asignarse
+      // admin/cook/waiter. El staff se crea desde el backend (Admin SDK), que no
+      // pasa por estas reglas, pero se deja tambien la puerta para un admin autenticado.
+      allow create: if !('password' in request.resource.data) &&
+        (isAdmin() || (isOwner(userId) && request.resource.data.role == 'user'));
+      // Un usuario solo puede editar sus propios datos de contacto, nunca su propio role.
+      // Antes esto se podia saltar porque existia un 'allow write' mas permisivo en paralelo;
+      // aqui NO hay ningun 'allow write' amplio, asi que esta es la unica puerta de update.
+      allow update: if !('password' in request.resource.data) &&
+        (isAdmin() ||
+         (isOwner(userId) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'firstName', 'lastName', 'email', 'phone'])));
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // Operacion: mesas, pedidos, reservas
+    // ============================================================
+
+    match /tables/{tableId} {
+      allow read: if isStaff() && belongsToBranch(resource.data.branchId);
+      allow create: if isStaff();
+      allow update: if isStaff() && belongsToBranch(resource.data.branchId);
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read: if isOwner(resource.data.customerId) || (isStaff() && belongsToBranch(resource.data.branchId));
+      allow create: if isAuthenticated();
+      // Staff de la sucursal puede actualizar el pedido completo (estado, cocina, pago, etc).
+      // El cliente dueno del pedido SOLO puede cancelarlo (status) y nunca tocar total/paymentStatus.
+      allow update: if (isStaff() && belongsToBranch(resource.data.branchId)) ||
+        (isOwner(resource.data.customerId) &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']));
+      allow delete: if isAdmin();
+    }
+
+    match /reservations/{reservationId} {
+      allow read: if isOwner(resource.data.customerId) || (isStaff() && belongsToBranch(resource.data.branchId));
+      allow create: if isAuthenticated();
+      allow update: if isOwner(resource.data.customerId) || (isStaff() && belongsToBranch(resource.data.branchId));
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // Dinero: ventas y pagos (antes SIN reglas -> denegado por defecto,
+    // por eso el proyecto dependia del modo prueba abierto)
+    // ============================================================
+
+    match /sales/{saleId} {
+      allow read: if isStaff() || ownsOrder(resource.data.orderId);
+      // El cliente solo puede crear la venta de SU PROPIO pedido (checkout publico).
+      allow create: if isStaff() || ownsOrder(request.resource.data.orderId);
+      allow update, delete: if isAdmin();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isStaff() || ownsOrder(resource.data.orderId);
+      allow create: if isStaff() || ownsOrder(request.resource.data.orderId);
+      allow update, delete: if isAdmin();
+    }
+
+    // NOTA IMPORTANTE: esta regla evita que un desconocido lea/escriba pagos ajenos,
+    // pero NO evita que un cliente reporte su propio pago como 'completed' sin haber
+    // pagado de verdad (el token de Culqi no se valida en servidor todavia). Eso
+    // requiere una funcion backend que confirme el cargo antes de que el pago se
+    // pueda marcar como pagado - ver conversacion sobre CulqiService.
+
+    // ============================================================
+    // Nota: 'inventory_items' y 'stock_movements' existen en Firestore pero
+    // el proyecto no maneja inventario (decision del usuario) - sin servicio
+    // ni UI que las use, no llevan regla propia (quedan denegadas por defecto
+    // una vez que se desactive el modo prueba).
+    // ============================================================
+
+    // kitchen_tickets y activity_logs existen en Firestore pero ningun servicio
+    // de este repo las escribe/lee todavia (puede ser una funcion Cloud Function
+    // externa, o una coleccion en desuso). Se dejan accesibles solo a staff/admin
+    // como precaucion; revisar si realmente se usan antes de depender de esta regla.
+    match /kitchen_tickets/{ticketId} {
+      allow read: if isStaff();
+      allow write: if isStaff();
+    }
+
+    match /activity_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isStaff();
+    }
+
+    // ============================================================
+    // Facturacion (SUNAT) y contadores correlativos
+    // ============================================================
+
+    match /invoices/{invoiceId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /counters/{counterId} {
+      allow read: if isStaff();
+      allow write: if isStaff();
+    }
+
+    match /config/{configId} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    // ============================================================
+    // Clientes, notificaciones, reportes
+    // ============================================================
+
+    match /customers/{customerId} {
+      allow read, write: if isStaff();
+    }
+
+    match /notifications/{notificationId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /reports/{reportId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

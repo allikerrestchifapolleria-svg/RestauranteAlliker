@@ -1,0 +1,74 @@
+<div class="kitchen-layout">
+  <header class="layout-header">
+    <div class="header-brand">
+      <i class="fas fa-fire-burner"></i>
+      <span class="brand-text">Cocina</span>
+      <span class="brand-dot">Alliker</span>
+    </div>
+    <nav class="header-nav">
+      <a routerLink="/kitchen/orders" routerLinkActive="active" class="nav-link">
+        <i class="fas fa-clipboard-list"></i>
+        <span>Pedidos</span>
+      </a>
+    </nav>
+    <div class="header-actions">
+      <div class="branch-badge" *ngIf="branchSelection.getSelectedBranchId()">
+        <i class="fas fa-store"></i>
+        <span>{{getBranchName()}}</span>
+      </div>
+
+      <div class="notification-wrapper">
+        <button class="btn-notification" (click)="toggleNotifications()" title="Notificaciones">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge" *ngIf="unreadNotifications > 0">{{ unreadNotifications }}</span>
+        </button>
+
+        <div class="notification-dropdown" *ngIf="showNotifications">
+          <div class="notif-header">
+            <span class="notif-title">Notificaciones</span>
+            <button class="notif-mark-all" (click)="markAllAsRead()" *ngIf="unreadNotifications > 0">Marcar todo leído</button>
+          </div>
+          <div class="notif-list">
+            <div class="notif-item" *ngFor="let n of notifications">
+              <div class="notif-icon" [class]="'notif-icon-' + n.type">
+                <i class="fas"
+                   [class.fa-info-circle]="n.type === 'info'"
+                   [class.fa-exclamation-triangle]="n.type === 'warning'"
+                   [class.fa-times-circle]="n.type === 'error'"
+                   [class.fa-check-circle]="n.type === 'success'"></i>
+              </div>
+              <div class="notif-content">
+                <div class="notif-item-title" *ngIf="n.title">{{ n.title }}</div>
+                <div class="notif-message">{{ n.message }}</div>
+                <div class="notif-time">{{ n.createdAt | date:'short' }}</div>
+              </div>
+              <button class="notif-dismiss" (click)="markAsRead(n); $event.stopPropagation()" title="Cerrar">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="notif-empty" *ngIf="notifications.length === 0">
+              <i class="fas fa-check-circle"></i> No hay notificaciones pendientes
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="user-info-mini" *ngIf="getCurrentUser()">
+        <i class="fas fa-user-circle"></i>
+        <span>{{ getCurrentUser()?.email }}</span>
+      </div>
+      <button class="btn-portal" (click)="goToPublicPortal()" title="Ver portal público">
+        <i class="fas fa-globe"></i>
+        <span>Portal</span>
+      </button>
+      <button class="btn-logout" (click)="logout()" title="Cerrar sesión">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Salir</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="layout-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

@@ -1,0 +1,398 @@
+<!-- Enhanced Cart Hero Section -->
+<section class="cart-hero bg-gradient-success position-relative overflow-hidden" *ngIf="cartItems.length > 0">
+  <div class="hero-bg-pattern"></div>
+  <div class="floating-cart-elements">
+    <div class="floating-plate animate-float" style="top: 20%; left: 10%; animation-delay: 0s;">
+      <i class="fas fa-utensils text-warning"></i>
+    </div>
+    <div class="floating-shopping animate-float" style="top: 30%; right: 15%; animation-delay: 1s;">
+      <i class="fas fa-shopping-cart text-primary"></i>
+    </div>
+    <div class="floating-heart animate-float" style="bottom: 25%; left: 20%; animation-delay: 2s;">
+      <i class="fas fa-heart text-danger"></i>
+    </div>
+    <div class="floating-star animate-float" style="top: 60%; right: 10%; animation-delay: 0.5s;">
+      <i class="fas fa-star text-warning"></i>
+    </div>
+  </div>
+
+  <div class="container position-relative">
+    <div class="row justify-content-center align-items-center min-vh-50 py-5">
+      <div class="col-lg-8 text-center">
+        <div class="hero-content">
+          <!-- Cart Badge -->
+          <div class="cart-badge mb-4">
+            <span class="badge bg-light text-success px-4 py-2 rounded-pill shadow-sm">
+              <i class="fas fa-shopping-cart me-2"></i> Carrito de Compras
+            </span>
+          </div>
+
+          <!-- Main Title -->
+          <h1 class="hero-title mb-4">
+            <span class="title-main">Tu Pedido</span>
+            <span class="title-accent">Está Listo</span>
+            <span class="title-highlight">para Confirmar</span>
+          </h1>
+
+          <!-- Subtitle -->
+          <p class="hero-subtitle mb-4">
+            Revisa tus deliciosos platillos y procede con tu orden.
+            ¡Estamos emocionados de servirte!
+          </p>
+
+          <!-- Quick Cart Stats -->
+          <div class="cart-quick-stats mb-4">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-utensils text-primary"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">{{ getItemCount() }}</div>
+                <div class="stat-label">Platillos</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-calculator text-success"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">S/ {{ getTotal() }}</div>
+                <div class="stat-label">Total</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-clock text-info"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">15-25 min</div>
+                <div class="stat-label">Preparación</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-light btn-lg rounded-pill px-4 shadow-lg animate__animated animate__pulse animate__infinite" (click)="scrollToCheckout()">
+            <i class="fas fa-credit-card me-2"></i>
+            Proceder al Pago
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Enhanced Empty Cart State -->
+<section class="empty-cart-section py-5" *ngIf="cartItems.length === 0">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-6">
+        <div class="empty-cart-card text-center shadow-lg rounded-4 p-5">
+          <div class="empty-cart-visual mb-4">
+            <div class="empty-cart-icon">
+              <i class="fas fa-shopping-cart fa-4x text-muted"></i>
+            </div>
+            <div class="floating-food">
+              <i class="fas fa-pizza-slice floating-item" style="animation-delay: 0s;"></i>
+              <i class="fas fa-hamburger floating-item" style="animation-delay: 1s;"></i>
+              <i class="fas fa-ice-cream floating-item" style="animation-delay: 2s;"></i>
+            </div>
+          </div>
+
+          <h2 class="empty-title mb-3">Tu carrito está vacío</h2>
+          <p class="empty-subtitle mb-4 text-muted">
+            Descubre nuestros deliciosos platillos y comienza a crear tu pedido perfecto
+          </p>
+
+          <div class="empty-actions">
+            <button class="btn btn-primary btn-lg rounded-pill px-4 me-3" routerLink="/menu">
+              <i class="fas fa-utensils me-2"></i>
+              Explorar Menú
+            </button>
+            <button class="btn btn-outline-primary btn-lg rounded-pill px-4" routerLink="/dishes">
+              <i class="fas fa-search me-2"></i>
+              Buscar Platillos
+            </button>
+          </div>
+
+          <!-- Popular Suggestions -->
+          <div class="popular-suggestions mt-5">
+            <h5 class="suggestions-title mb-3">
+              <i class="fas fa-star text-warning me-2"></i>
+              Platillos Populares
+            </h5>
+            <div class="suggestions-grid">
+              <div class="suggestion-item" routerLink="/dishes">
+                <i class="fas fa-fish text-primary"></i>
+                <span>Ceviche</span>
+              </div>
+              <div class="suggestion-item" routerLink="/dishes">
+                <i class="fas fa-drumstick-bite text-success"></i>
+                <span>Lomo Saltado</span>
+              </div>
+              <div class="suggestion-item" routerLink="/dishes">
+                <i class="fas fa-birthday-cake text-danger"></i>
+                <span>Suspiro Limeño</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Enhanced Cart Items Section -->
+<section class="cart-items-section py-5" *ngIf="cartItems.length > 0">
+  <div class="container">
+    <div class="row">
+      <!-- Cart Items -->
+      <div class="col-lg-8">
+        <div class="cart-items-container">
+          <div class="section-header mb-4">
+            <h3 class="section-title">
+              <i class="fas fa-shopping-basket text-primary me-2"></i>
+              Tus Platillos ({{ getItemCount() }})
+            </h3>
+            <button class="btn btn-outline-danger btn-sm" (click)="clearCart()" [disabled]="isClearing">
+              <i class="fas fa-trash me-1"></i>
+              <span *ngIf="!isClearing">Vaciar Carrito</span>
+              <span *ngIf="isClearing">Vaciando...</span>
+            </button>
+          </div>
+
+          <div class="cart-items-list">
+            <div class="cart-item-card shadow-sm rounded-3 p-3 mb-3 animate__animated animate__fadeInUp"
+                 *ngFor="let cartItem of cartItems; let i = index"
+                 [style.animation-delay.ms]="i * 100">
+
+              <div class="row align-items-center">
+                <!-- Item Image -->
+                <div class="col-auto">
+                  <div class="item-image-wrapper">
+                    <img [src]="cartItem.item.image" [alt]="cartItem.item.name"
+                         class="item-image rounded-3"
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjQwIiB5PSI0NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzZDNzU3ZCIgZm9udC1zaXplPSIxNiI+Q2V2aWNoZTwvdGV4dD4KPHN2Zz4='">
+                    <div class="item-image-overlay">
+                      <i class="fas fa-utensils text-white"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Item Details -->
+                <div class="col">
+                  <div class="item-details">
+                    <h5 class="item-name mb-1">{{ cartItem.item.name }}</h5>
+                    <div class="item-variant small text-muted" *ngIf="cartItem.selectedVariant">
+                      <i class="fas fa-tag me-1"></i>{{ cartItem.selectedVariant.name }}
+                    </div>
+                    <div class="item-modifiers small text-muted" *ngIf="cartItem.selectedModifiers && cartItem.selectedModifiers.length > 0">
+                      <i class="fas fa-plus-circle me-1"></i>
+                      <span *ngFor="let m of cartItem.selectedModifiers; let last = last">{{ m.name }}<span *ngIf="!last">, </span></span>
+                    </div>
+                    <p class="item-description text-muted small mb-2">{{ cartItem.item.description }}</p>
+
+                    <!-- Item Tags -->
+                    <div class="item-tags mb-2" *ngIf="cartItem.item.tags && cartItem.item.tags.length > 0">
+                      <span class="badge badge-sm me-1"
+                            [class]="getTagClass(tag)"
+                            *ngFor="let tag of cartItem.item.tags.slice(0, 2)">
+                        <i class="fas fa-tag me-1"></i>{{ tag }}
+                      </span>
+                    </div>
+
+                    <div class="item-price">
+                      <span class="current-price">S/ {{ getItemPrice(cartItem).toFixed(2) }}</span>
+                      <span class="unit-text text-muted">c/u</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Quantity Controls -->
+                <div class="col-auto">
+                  <div class="quantity-controls-modern">
+                    <button class="quantity-btn-modern"
+                            (click)="updateQuantity(i, cartItem.quantity - 1)"
+                            [disabled]="cartItem.quantity <= 1 || isUpdating">
+                      <i class="fas fa-minus"></i>
+                    </button>
+                    <div class="quantity-display">
+                      <span class="quantity-value">{{ cartItem.quantity }}</span>
+                    </div>
+                    <button class="quantity-btn-modern"
+                            (click)="updateQuantity(i, cartItem.quantity + 1)"
+                            [disabled]="isUpdating">
+                      <i class="fas fa-plus"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Subtotal & Actions -->
+                <div class="col-auto text-end">
+                  <div class="item-subtotal-section">
+                    <div class="item-subtotal">S/ {{ getItemSubtotal(cartItem).toFixed(2) }}</div>
+                    <button class="btn btn-sm btn-outline-danger remove-item-btn"
+                            (click)="removeItem(i)"
+                            [disabled]="isUpdating">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary Sidebar -->
+      <div class="col-lg-4">
+        <div class="order-summary-sticky">
+          <div class="order-summary-card shadow-lg rounded-4 p-4">
+            <div class="summary-header mb-4">
+              <h4 class="summary-title">
+                <i class="fas fa-receipt text-primary me-2"></i>
+                Resumen del Pedido
+              </h4>
+            </div>
+
+            <!-- Order Items Summary -->
+            <div class="order-items-summary mb-4">
+              <div class="summary-item d-flex justify-content-between py-2"
+                   *ngFor="let cartItem of cartItems">
+                <span class="item-name-summary">{{ cartItem.item.name }}</span>
+                <span class="item-quantity-price text-muted">
+                  {{ cartItem.quantity }} × S/ {{ getItemPrice(cartItem).toFixed(2) }}
+                </span>
+              </div>
+            </div>
+
+            <hr class="my-3">
+
+            <!-- Pricing Breakdown -->
+            <div class="pricing-breakdown">
+              <div class="pricing-row d-flex justify-content-between">
+                <span>Subtotal:</span>
+                <span>S/ {{ getSubtotal() }}</span>
+              </div>
+
+              <div class="pricing-row d-flex justify-content-between" *ngIf="getServiceFee() > 0">
+                <span>Servicio:</span>
+                <span>S/ {{ getServiceFee() }}</span>
+              </div>
+
+              <hr class="my-2">
+
+              <div class="pricing-row total-row d-flex justify-content-between fw-bold">
+                <span>Total:</span>
+                <span class="text-primary">S/ {{ getTotal() }}</span>
+              </div>
+            </div>
+
+            <!-- Branch Selector -->
+            <div class="branch-options mt-4">
+              <h6 class="options-title mb-3">
+                <i class="fas fa-store text-primary me-2"></i>
+                Sucursal para Recoger
+              </h6>
+
+              <div class="branch-selector">
+                <div class="branch-dropdown-trigger"
+                     [class.open]="branchDropdownOpen"
+                     (click)="toggleBranchDropdown()"
+                     tabindex="0"
+                     (blur)="onBranchBlur()">
+                  <div class="trigger-content">
+                    <i class="fas fa-map-marker-alt trigger-icon text-danger"></i>
+                    <span class="trigger-text" *ngIf="!selectedBranch">Seleccionar sucursal...</span>
+                    <span class="trigger-text selected" *ngIf="selectedBranch">
+                      {{ selectedBranch.name }}
+                      <small class="text-muted"> — {{ selectedBranch.address }}</small>
+                    </span>
+                  </div>
+                  <i class="fas fa-chevron-down trigger-chevron text-muted" [class.rotated]="branchDropdownOpen"></i>
+                </div>
+
+                <div class="branch-dropdown-panel" *ngIf="branchDropdownOpen" (click)="$event.stopPropagation()">
+                  <div class="branch-list">
+                    <div class="branch-card"
+                         *ngFor="let b of branches"
+                         [class.selected]="selectedBranchId === b.id"
+                         (click)="selectBranch(b.id)">
+                      <div class="branch-card-left">
+                        <i class="fas fa-store"></i>
+                      </div>
+                      <div class="branch-card-info">
+                        <div class="branch-card-name">{{ b.name }}</div>
+                        <div class="branch-card-address"><i class="fas fa-map-pin me-1"></i>{{ b.address }}</div>
+                        <div class="branch-card-phone" *ngIf="b.phone"><i class="fas fa-phone me-1"></i>{{ b.phone }}</div>
+                      </div>
+                      <div class="branch-card-check" *ngIf="selectedBranchId === b.id">
+                        <i class="fas fa-check-circle text-success"></i>
+                      </div>
+                    </div>
+                    <div class="branch-empty" *ngIf="branches.length === 0">
+                      <i class="fas fa-exclamation-circle"></i> No hay sucursales disponibles
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="selected-branch-info mt-3 p-3 rounded-3" *ngIf="selectedBranch" style="background: #f0fff4; border: 1px solid #b7f5c8;">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="fas fa-check-circle text-success"></i>
+                  <span class="fw-semibold text-success">Recogerás en:</span>
+                  <span><strong>{{ selectedBranch.name }}</strong></span>
+                </div>
+                <div class="small text-muted mt-1 ms-4">{{ selectedBranch.address }}</div>
+              </div>
+            </div>
+
+            <!-- Special Instructions -->
+            <div class="special-instructions mt-4">
+              <label for="orderNotes" class="form-label fw-semibold">
+                <i class="fas fa-sticky-note text-info me-1"></i>
+                Notas del Pedido
+              </label>
+              <textarea class="form-control"
+                        id="orderNotes"
+                        [(ngModel)]="orderNotes"
+                        rows="2"
+                        placeholder="Instrucciones especiales, alergias, etc."></textarea>
+            </div>
+
+            <!-- Checkout Actions -->
+            <div class="checkout-actions mt-4" id="checkoutSection">
+              <button class="btn btn-success btn-lg w-100 rounded-pill mb-2"
+                      (click)="proceedToCheckout()"
+                      [disabled]="isProcessing || !selectedBranchId">
+                <span *ngIf="!isProcessing">
+                  <i class="fas fa-credit-card me-2"></i>
+                  Proceder al Pago
+                </span>
+                <span *ngIf="isProcessing">
+                  <i class="fas fa-spinner fa-spin me-2"></i>
+                  Procesando...
+                </span>
+              </button>
+
+              <button class="btn btn-outline-primary btn-lg w-100 rounded-pill"
+                      routerLink="/menu">
+                <i class="fas fa-plus me-2"></i>
+                Agregar Más Platillos
+              </button>
+            </div>
+
+            <!-- Security Notice -->
+            <div class="security-notice mt-3 p-3 bg-light rounded-3">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-shield-alt text-success me-2"></i>
+                <small class="text-muted">
+                  Pago seguro con encriptación SSL
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

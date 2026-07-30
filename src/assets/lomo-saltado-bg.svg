@@ -1,0 +1,43 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="lomoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B4513;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#A0522D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#CD853F;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#lomoGradient)"/>
+
+  <!-- Plate -->
+  <ellipse cx="200" cy="220" rx="150" ry="40" fill="#F5F5DC" opacity="0.8"/>
+  <ellipse cx="200" cy="210" rx="140" ry="35" fill="#FFF8DC"/>
+
+  <!-- Lomo (steak) -->
+  <rect x="120" y="180" width="80" height="25" rx="5" fill="#8B4513"/>
+  <rect x="130" y="185" width="60" height="15" rx="3" fill="#A0522D"/>
+  <rect x="200" y="180" width="80" height="25" rx="5" fill="#8B4513"/>
+  <rect x="210" y="185" width="60" height="15" rx="3" fill="#A0522D"/>
+
+  <!-- Onions -->
+  <ellipse cx="160" cy="160" rx="15" ry="8" fill="#FFD700" opacity="0.8"/>
+  <ellipse cx="180" cy="155" rx="12" ry="6" fill="#FFA500" opacity="0.8"/>
+  <ellipse cx="220" cy="160" rx="15" ry="8" fill="#FFD700" opacity="0.8"/>
+  <ellipse cx="240" cy="155" rx="12" ry="6" fill="#FFA500" opacity="0.8"/>
+
+  <!-- French fries -->
+  <rect x="110" y="210" width="4" height="20" fill="#FFD700"/>
+  <rect x="118" y="208" width="4" height="22" fill="#FFD700"/>
+  <rect x="126" y="212" width="4" height="18" fill="#FFD700"/>
+  <rect x="134" y="206" width="4" height="24" fill="#FFD700"/>
+  <rect x="142" y="210" width="4" height="20" fill="#FFD700"/>
+  <rect x="270" y="210" width="4" height="20" fill="#FFD700"/>
+  <rect x="278" y="208" width="4" height="22" fill="#FFD700"/>
+  <rect x="286" y="212" width="4" height="18" fill="#FFD700"/>
+  <rect x="294" y="206" width="4" height="24" fill="#FFD700"/>
+  <rect x="302" y="210" width="4" height="20" fill="#FFD700"/>
+
+  <!-- Title -->
+  <text x="200" y="40" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="24" font-weight="bold">Lomo Saltado</text>
+  <text x="200" y="65" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="16" opacity="0.9">Clásico Peruano</text>
+</svg>

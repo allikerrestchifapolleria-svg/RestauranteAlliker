@@ -1,0 +1,328 @@
+<div class="payment-page">
+  <div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="payment-title">
+          <i class="fas fa-credit-card me-2 text-primary"></i> Pasarela de Pago
+        </h2>
+        <p class="payment-subtitle mb-0">Elige tu método de pago y confirma tu pedido</p>
+      </div>
+      <button class="btn btn-outline-secondary rounded-pill px-3" (click)="goBack()">
+        <i class="fas fa-arrow-left me-1"></i> Volver
+      </button>
+    </div>
+
+    <!-- Success State -->
+    <div *ngIf="paymentResult && paymentResult.success" class="row justify-content-center mb-4">
+      <div class="col-lg-6">
+        <div class="payment-success-card text-center p-5">
+          <div class="success-icon mb-3">
+            <i class="fas fa-check-circle fa-5x"></i>
+          </div>
+          <h3 class="text-success mb-2">¡Pago Exitoso!</h3>
+          <p class="text-muted mb-2">Tu pedido ha sido registrado. Prepárate para disfrutar.</p>
+          <div class="order-id-badge mb-3" *ngIf="createdOrderId">
+              <span class="badge bg-primary px-4 py-2 rounded-pill fs-6">
+                <i class="fas fa-receipt me-2"></i> Pedido #{{ createdOrderNumber || (createdOrderId ? createdOrderId.slice(-6) : '') }}
+              </span>
+          </div>
+          <div class="mb-3" *ngIf="branchName">
+            <span class="badge bg-success px-3 py-2 rounded-pill fs-6">
+              <i class="fas fa-store me-2"></i> Recoger en: {{ branchName }}
+            </span>
+          </div>
+          <p class="text-muted small mb-3" *ngIf="useFactura">
+            <i class="fas fa-file-invoice me-1"></i> Factura generada. Descarga el PDF para tu sustento tributario.
+          </p>
+          <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <button class="btn btn-outline-danger rounded-pill px-4" *ngIf="lastInvoiceData && useFactura" (click)="downloadPdf()">
+              <i class="fas fa-file-pdf me-2"></i> Descargar PDF (Factura)
+            </button>
+            <button class="btn btn-primary rounded-pill px-4" [routerLink]="'/order-tracking/' + createdOrderId">
+              <i class="fas fa-search me-2"></i> Ver seguimiento
+            </button>
+            <button class="btn btn-outline-primary rounded-pill px-4" routerLink="/menu">
+              <i class="fas fa-utensils me-2"></i> Seguir Ordenando
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4" *ngIf="!paymentResult?.success">
+      <!-- Order Summary -->
+      <div class="col-lg-4">
+        <div class="order-summary-card">
+          <div class="card-header-section">
+            <h5><i class="fas fa-receipt me-2"></i> Resumen del Pedido</h5>
+          </div>
+          <div class="card-body p-4">
+            <!-- Items -->
+            <div class="order-items mb-3" style="max-height: 200px; overflow-y: auto;">
+              <div *ngFor="let ci of cartItems" class="d-flex justify-content-between align-items-center mb-2 pb-2" style="border-bottom: 1px solid #efe8dc;">
+                <div class="flex-grow-1">
+                  <small class="fw-semibold text-dark">{{ ci.item.name }}</small>
+                  <div *ngIf="ci.selectedVariant" class="small text-muted">{{ ci.selectedVariant.name }}</div>
+                  <div *ngIf="ci.selectedModifiers && ci.selectedModifiers.length > 0" class="small text-muted">
+                    <span *ngFor="let m of ci.selectedModifiers">+{{ m.name }} </span>
+                  </div>
+                  <small class="text-muted">{{ ci.quantity }} x S/ {{ getItemPrice(ci).toFixed(2) }}</small>
+                </div>
+                <span class="fw-bold text-dark">S/ {{ getItemSubtotal(ci).toFixed(2) }}</span>
+              </div>
+            </div>
+
+            <!-- Branch Info -->
+            <div class="mb-3 p-3 rounded-3" style="background: #f0fff4; border: 1px solid #b7f5c8;">
+              <div class="d-flex align-items-center gap-2">
+                <i class="fas fa-store text-success"></i>
+                <small class="fw-semibold">Recoger en: <span class="text-success">{{ branchName }}</span></small>
+              </div>
+            </div>
+
+            <!-- Totals -->
+            <div class="border-top pt-3" style="border-color: #efe8dc !important;">
+              <div class="d-flex justify-content-between mb-1 text-secondary">
+                <span>Subtotal:</span>
+                <span>S/ {{ calculateSubtotal().toFixed(2) }}</span>
+              </div>
+              <div class="d-flex justify-content-between mb-1 text-secondary">
+                <span>IGV (18%):</span>
+                <span>S/ {{ calculateTax().toFixed(2) }}</span>
+              </div>
+              <div class="d-flex justify-content-between fw-bold fs-5 mt-2 pt-2" style="border-top: 2px solid var(--accent-gold);">
+                <span>Total:</span>
+                <span style="color: var(--primary-color);">S/ {{ calculateTotal().toFixed(2) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Form -->
+      <div class="col-lg-8">
+        <div class="payment-form-card">
+          <div class="card-header-section" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));">
+            <h5><i class="fas fa-money-bill-wave me-2"></i> Procesar Pago</h5>
+          </div>
+          <div class="card-body p-4">
+            <form #paymentForm="ngForm" novalidate>
+              <!-- Comprobante -->
+              <div class="mb-4 p-3 rounded-3" style="background: var(--bg-cream); border: 1px solid #efe8dc;">
+                <h6 class="fw-semibold text-dark mb-3">Comprobante de pago:</h6>
+                <div class="d-flex gap-2 mb-3">
+                  <button type="button" class="btn btn-sm" [class.btn-success]="!useFactura" [class.btn-outline-secondary]="useFactura"
+                          (click)="useFactura ? toggleDocType() : null">
+                    <i class="fas fa-receipt me-1"></i> Boleta
+                  </button>
+                  <button type="button" class="btn btn-sm" [class.btn-warning]="useFactura" [class.btn-outline-secondary]="!useFactura"
+                          (click)="!useFactura ? toggleDocType() : null">
+                    <i class="fas fa-file-invoice me-1"></i> Factura
+                  </button>
+                </div>
+
+                <div *ngIf="useFactura">
+                  <div class="row g-2">
+                    <div class="col-md-4">
+                      <label class="form-label small">RUC <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control"
+                             [(ngModel)]="clienteRuc"
+                             (input)="onRucInput()"
+                             name="clienteRuc"
+                             placeholder="10765432101"
+                             maxlength="11"
+                             inputmode="numeric"
+                             [class.is-invalid]="fieldErrors['clienteRuc']">
+                      <small class="field-error" *ngIf="fieldErrors['clienteRuc']">{{ fieldErrors['clienteRuc'] }}</small>
+                    </div>
+                    <div class="col-md-8">
+                      <label class="form-label small">Razón Social <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control"
+                             [(ngModel)]="clienteRazonSocial"
+                             name="clienteRazonSocial"
+                             placeholder="Razón Social del cliente"
+                             [class.is-invalid]="fieldErrors['clienteRazonSocial']">
+                      <small class="field-error" *ngIf="fieldErrors['clienteRazonSocial']">{{ fieldErrors['clienteRazonSocial'] }}</small>
+                    </div>
+                  </div>
+                  <div class="row g-2 mt-2">
+                    <div class="col-12">
+                      <label class="form-label small">Dirección <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control"
+                             [(ngModel)]="clienteDireccion"
+                             name="clienteDireccion"
+                             placeholder="Domicilio Fiscal (obligatorio para Factura)"
+                             [class.is-invalid]="fieldErrors['clienteDireccion']">
+                      <small class="field-error" *ngIf="fieldErrors['clienteDireccion']">{{ fieldErrors['clienteDireccion'] }}</small>
+                    </div>
+                  </div>
+                  <small class="text-muted mt-2 d-block">
+                    <i class="fas fa-info-circle me-1"></i> Podrás descargar el PDF de tu factura al finalizar el pago.
+                  </small>
+                </div>
+              </div>
+
+              <!-- Payment Methods -->
+              <div class="payment-methods mb-4">
+                <h6 class="fw-semibold text-dark mb-3">Seleccione metodo de pago:</h6>
+                <div class="row g-3">
+                  <div class="col-6 col-md-3" *ngFor="let method of paymentMethods">
+                    <div class="payment-method-card"
+                         [class.selected]="selectedMethod === method"
+                         (click)="selectPaymentMethod(method)">
+                      <div class="text-center">
+                        <i class="fas fa-2x mb-2" [class.fa-credit-card]="method === 'card'" [class.fa-mobile-alt]="method === 'yape'" [class.fa-money-bill-wave]="method === 'cash'"
+                           [style.color]="method === 'card' ? 'var(--primary-color)' : method === 'yape' ? '#22d3ee' : '#f59e0b'"></i>
+                        <h6 class="mb-0">{{ methodLabels[method] }}</h6>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Payment Details -->
+              <div *ngIf="selectedMethod" class="payment-details-section">
+                <!-- Yape -->
+                <div *ngIf="selectedMethod === 'yape'">
+                  <h6 class="fw-semibold mb-3"><i class="fas fa-mobile-alt me-2" style="color: #22d3ee;"></i> Pago con Yape</h6>
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <label for="yapeCode" class="form-label">Código de confirmación Yape</label>
+                      <input type="text"
+                             class="form-control form-control-lg"
+                             id="yapeCode"
+                             [(ngModel)]="yapeCode"
+                             name="yapeCode"
+                             #yapeCodeModel="ngModel"
+                             placeholder="Ingresa el código de tu operación Yape"
+                             minlength="3"
+                             required>
+                      <div *ngIf="yapeCodeModel.invalid && (yapeCodeModel.dirty || yapeCodeModel.touched)" class="text-danger small mt-1">
+                        <div *ngIf="yapeCodeModel.errors?.['required']">El código de confirmación es obligatorio.</div>
+                        <div *ngIf="yapeCodeModel.errors?.['minlength']">Debe tener al menos 3 caracteres.</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-3 p-4 rounded-3 qr-section">
+                    <h6 class="mb-2 text-center">Código QR</h6>
+                    <div class="text-center">
+                      <img src="/assets/images/yape.png" alt="Yape QR" class="img-fluid" style="max-height: 250px;">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Card (Culqi) -->
+                <div *ngIf="selectedMethod === 'card' && !cardPaymentProcessed">
+                  <h6 class="fw-semibold mb-3"><i class="fas fa-credit-card me-2" style="color: var(--primary-color);"></i> Pago con Tarjeta (Culqi)</h6>
+                  <div class="culqi-section p-4 rounded-3 text-center">
+                    <img src="https://culqi.com/assets/images/logos/culqi-logo.svg" alt="Culqi" style="height: 40px;" class="mb-3">
+                    <p class="text-secondary mb-3">Paga de forma segura con la pasarela de pago Culqi. Aceptamos todas las tarjetas.</p>
+                    <div class="card-brands mb-3">
+                      <i class="fab fa-cc-visa fa-2x mx-1" style="color: #1a1f71;"></i>
+                      <i class="fab fa-cc-mastercard fa-2x mx-1" style="color: #eb001b;"></i>
+                      <i class="fab fa-cc-amex fa-2x mx-1" style="color: #2e77bb;"></i>
+                      <i class="fab fa-cc-diners-club fa-2x mx-1" style="color: #0079be;"></i>
+                    </div>
+                    <p class="small text-muted mb-0">Al hacer clic seras redirigido a la pasarela de pago seguro de Culqi</p>
+                  </div>
+                </div>
+
+                <!-- Card Payment Result -->
+                <div *ngIf="selectedMethod === 'card' && cardPaymentProcessed">
+                  <h6 class="fw-semibold mb-3"><i class="fas fa-credit-card me-2" style="color: var(--primary-color);"></i> Pago con Tarjeta (Culqi)</h6>
+                  <div class="culqi-section p-4 rounded-3 text-center" style="background: #f0fff4; border-color: #9ae6b4;">
+                    <i class="fas fa-check-circle fa-3x mb-2" style="color: #10b981;"></i>
+                    <p class="text-success fw-semibold mb-0">Pago con Culqi procesado correctamente</p>
+                  </div>
+                </div>
+
+                <!-- Cash -->
+                <div *ngIf="selectedMethod === 'cash'">
+                  <h6 class="fw-semibold mb-3"><i class="fas fa-money-bill-wave me-2" style="color: #f59e0b;"></i> Pago en Efectivo</h6>
+                  <div class="cash-notice p-4 rounded-3 mb-3">
+                    <div class="d-flex align-items-center mb-3">
+                      <i class="fas fa-info-circle fa-2x me-3" style="color: #f59e0b;"></i>
+                      <div>
+                        <h6 class="mb-1">Pagarás en el local</h6>
+                        <p class="mb-0" style="color: #64748b;">Selecciona esta opción si pagarás con efectivo cuando recibas tu pedido.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label for="cashReceived" class="form-label">Monto con el que pagas</label>
+                      <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-light">S/</span>
+                        <input type="number"
+                               class="form-control form-control-lg"
+                               id="cashReceived"
+                               [(ngModel)]="cashReceived"
+                               name="cashReceived"
+                               #cashReceivedModel="ngModel"
+                               placeholder="0.00"
+                               min="0"
+                               step="0.01"
+                               required
+                               (input)="onCashReceivedInput()">
+                      </div>
+                      <div *ngIf="cashReceivedModel.invalid && (cashReceivedModel.dirty || cashReceivedModel.touched)" class="text-danger small mt-1">
+                        <div *ngIf="cashReceivedModel.errors?.['required']">Ingresa el monto.</div>
+                      </div>
+                    </div>
+                    <div class="col-md-6" *ngIf="cashReceived && cashReceived >= calculateTotal()">
+                      <label class="form-label">Vuelto</label>
+                      <div class="change-display p-3 rounded-3">
+                        <span class="change-amount">S/ {{ cashChange.toFixed(2) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div *ngIf="cashReceived !== null && cashReceived < calculateTotal()" class="alert alert-warning mt-2 mb-0 py-2">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    El monto debe ser mayor o igual al total (S/ {{ calculateTotal().toFixed(2) }})
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            <!-- Processing -->
+            <div *ngIf="isProcessing" class="processing-section text-center py-4">
+              <div class="spinner-border mb-3" role="status" style="width: 3rem; height: 3rem; color: var(--primary-color);">
+                <span class="visually-hidden">Procesando...</span>
+              </div>
+              <h5 class="text-dark">Procesando pago...</h5>
+              <p class="text-muted">Por favor espere, no cierre esta ventana.</p>
+            </div>
+
+            <!-- Error -->
+            <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show mb-3">
+              <i class="fas fa-exclamation-triangle me-2"></i>
+              {{ errorMessage }}
+              <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="card-footer border-0 p-4 pt-0" *ngIf="!isProcessing && !paymentResult">
+            <div class="d-flex gap-2 justify-content-end flex-wrap">
+              <button class="btn btn-outline-secondary rounded-pill px-4" (click)="goBack()">
+                <i class="fas fa-times me-1"></i> Cancelar
+              </button>
+              <button class="btn btn-success btn-lg rounded-pill px-4"
+                      (click)="processPayment()"
+                      [disabled]="!canProcessPayment()">
+                <i class="fas fa-credit-card me-2"></i>
+                Pagar S/ {{ calculateTotal().toFixed(2) }}
+              </button>
+            </div>
+            <div class="mt-2 text-end" *ngIf="useFactura && !isCustomerDataValid()">
+              <small class="text-warning">
+                <i class="fas fa-info-circle me-1"></i> Complete RUC (11 díg.), Razón Social y Dirección para emitir Factura.
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

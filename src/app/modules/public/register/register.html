@@ -1,0 +1,292 @@
+<!-- Enhanced Register Hero Section -->
+<section class="register-hero bg-gradient-primary position-relative overflow-hidden">
+  <div class="hero-bg-pattern"></div>
+  <div class="floating-elements">
+    <div class="floating-user animate-float" style="top: 20%; left: 10%; animation-delay: 0s;">
+      <i class="fas fa-user-plus text-warning"></i>
+    </div>
+    <div class="floating-shield animate-float" style="top: 30%; right: 15%; animation-delay: 1s;">
+      <i class="fas fa-shield-alt text-info"></i>
+    </div>
+    <div class="floating-utensils animate-float" style="bottom: 25%; left: 20%; animation-delay: 2s;">
+      <i class="fas fa-utensils text-success"></i>
+    </div>
+    <div class="floating-heart animate-float" style="top: 60%; right: 10%; animation-delay: 0.5s;">
+      <i class="fas fa-heart text-danger"></i>
+    </div>
+  </div>
+
+  <div class="container position-relative">
+    <div class="row justify-content-center align-items-center min-vh-100 py-5">
+      <div class="col-lg-10">
+        <div class="row align-items-center">
+          <!-- Welcome Content -->
+          <div class="col-lg-6 text-center text-lg-start mb-5 mb-lg-0">
+            <div class="welcome-content">
+              <div class="welcome-badge mb-4">
+                <span class="badge bg-light text-primary px-4 py-2 rounded-pill shadow-sm">
+                  <i class="fas fa-utensils me-2"></i> Alliker - Pollería
+                </span>
+              </div>
+
+              <h1 class="welcome-title mb-4">
+                <span class="title-main">Únete a</span>
+                <span class="title-accent">Nuestra</span>
+                <span class="title-highlight">Comunidad</span>
+              </h1>
+
+              <p class="welcome-subtitle mb-4">
+                Crea tu cuenta y disfruta de una experiencia gastronómica excepcional.
+                Reserva mesas, realiza pedidos y accede a ofertas exclusivas.
+              </p>
+
+              <div class="welcome-features">
+                <div class="feature-item">
+                  <i class="fas fa-check-circle text-success me-2"></i>
+                  <span>Reservas instantáneas</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check-circle text-success me-2"></i>
+                  <span>Pedidos en línea</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check-circle text-success me-2"></i>
+                  <span>Ofertas exclusivas</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check-circle text-success me-2"></i>
+                  <span>Programa de fidelidad</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Register Form -->
+          <div class="col-lg-6">
+            <div class="register-card-modern shadow-lg rounded-4 p-4 p-md-5">
+              <div class="register-header text-center mb-4">
+                <div class="register-icon mb-3">
+                  <i class="fas fa-user-plus fa-3x text-primary"></i>
+                </div>
+                <h2 class="register-title mb-2">Crear Cuenta</h2>
+                <p class="register-subtitle text-muted">Únete a nuestra comunidad culinaria</p>
+              </div>
+
+              <!-- Social Register Options -->
+              <div class="social-register mb-4">
+                <button class="btn btn-google btn-lg w-100 mb-2 rounded-pill" type="button">
+                  <i class="fab fa-google me-2"></i>
+                  Registrarse con Google
+                </button>
+                <!-- Registro con Facebook deshabilitado por ahora, queda pendiente para una versión futura.
+                <button class="btn btn-facebook btn-lg w-100 rounded-pill" type="button">
+                  <i class="fab fa-facebook-f me-2"></i>
+                  Registrarse con Facebook
+                </button>
+                -->
+              </div>
+
+              <div class="divider mb-4">
+                <span class="divider-text">o</span>
+              </div>
+
+              <!-- Register Form -->
+              <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <div class="mb-3">
+                  <label for="nombre" class="form-label fw-semibold">
+                    <i class="fas fa-user me-1 text-muted"></i>
+                    Nombres
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <i class="fas fa-signature"></i>
+                    </span>
+                    <input type="text"
+                           class="form-control form-control-lg"
+                           id="nombre"
+                           formControlName="nombre"
+                           placeholder="Tu nombre"
+                           autocomplete="given-name"
+                           (input)="form.get('nombre')?.setValue($any($event.target).value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, ''))">
+                  </div>
+                  <div *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched" class="text-danger small mt-1">
+                    <div *ngIf="form.get('nombre')?.errors?.['required']">Nombre es requerido</div>
+                    <div *ngIf="form.get('nombre')?.errors?.['pattern']">Solo se permiten letras y espacios</div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="apellidos" class="form-label fw-semibold">
+                    <i class="fas fa-user me-1 text-muted"></i>
+                    Apellidos
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <i class="fas fa-address-card"></i>
+                    </span>
+                    <input type="text"
+                           class="form-control form-control-lg"
+                           id="apellidos"
+                           formControlName="apellidos"
+                           placeholder="Tus apellidos"
+                           autocomplete="family-name"
+                           (input)="form.get('apellidos')?.setValue($any($event.target).value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, ''))">
+                  </div>
+                  <div *ngIf="form.get('apellidos')?.invalid && form.get('apellidos')?.touched" class="text-danger small mt-1">
+                    <div *ngIf="form.get('apellidos')?.errors?.['required']">Apellidos son requeridos</div>
+                    <div *ngIf="form.get('apellidos')?.errors?.['pattern']">Solo se permiten letras y espacios</div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="email" class="form-label fw-semibold">
+                    <i class="fas fa-envelope me-1 text-muted"></i>
+                    Correo electrónico
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <i class="fas fa-at"></i>
+                    </span>
+                    <input type="email"
+                           class="form-control form-control-lg"
+                           id="email"
+                           formControlName="email"
+                           placeholder="tu@email.com"
+                           autocomplete="email">
+                  </div>
+                  <div *ngIf="form.get('email')?.invalid && form.get('email')?.touched" class="text-danger small mt-1">
+                    <div *ngIf="form.get('email')?.errors?.['required']">Email es requerido</div>
+                    <div *ngIf="form.get('email')?.errors?.['email']">Email inválido</div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="password" class="form-label fw-semibold">
+                    <i class="fas fa-lock me-1 text-muted"></i>
+                    Contraseña
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <i class="fas fa-key"></i>
+                    </span>
+                    <input type="password"
+                           class="form-control form-control-lg"
+                           id="password"
+                           formControlName="password"
+                           placeholder="Tu contraseña"
+                           autocomplete="new-password">
+                    <button class="btn btn-outline-secondary"
+                            type="button"
+                            (click)="togglePasswordVisibility('password')"
+                            title="Mostrar/ocultar contraseña">
+                      <i class="fas" [class]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
+                  </div>
+                  <div class="progress mt-2" *ngIf="form.get('password')?.value">
+                    <div class="progress-bar" [class]="getProgressClass()" [style.width.%]="(getPasswordStrength() / 5) * 100"></div>
+                  </div>
+                  <div *ngIf="form.get('password')?.invalid && form.get('password')?.touched" class="text-danger small mt-1">
+                    <div *ngIf="form.get('password')?.errors?.['required']">Contraseña es requerida</div>
+                    <div *ngIf="form.get('password')?.errors?.['minlength']">Mínimo 6 caracteres</div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="confirmPassword" class="form-label fw-semibold">
+                    <i class="fas fa-lock me-1 text-muted"></i>
+                    Confirmar contraseña
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <i class="fas fa-key"></i>
+                    </span>
+                    <input type="password"
+                           class="form-control form-control-lg"
+                           id="confirmPassword"
+                           formControlName="confirmPassword"
+                           placeholder="Confirma tu contraseña"
+                           autocomplete="new-password">
+                    <button class="btn btn-outline-secondary"
+                            type="button"
+                            (click)="togglePasswordVisibility('confirmPassword')"
+                            title="Mostrar/ocultar contraseña">
+                      <i class="fas" [class]="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
+                  </div>
+                  <div *ngIf="form.get('confirmPassword')?.invalid && form.get('confirmPassword')?.touched" class="text-danger small mt-1">
+                    <div *ngIf="form.get('confirmPassword')?.errors?.['required']">Confirmación es requerida</div>
+                    <div *ngIf="form.get('confirmPassword')?.errors?.['mismatch']">Las contraseñas no coinciden</div>
+                  </div>
+                </div>
+
+                <!-- Terms and Conditions -->
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="acceptTerms"
+                           formControlName="acceptTerms">
+                    <label class="form-check-label small" for="acceptTerms">
+                      Acepto los <a href="#" class="text-primary text-decoration-none">términos y condiciones</a> y la <a href="#" class="text-primary text-decoration-none">política de privacidad</a>
+                    </label>
+                  </div>
+                  <div *ngIf="form.get('acceptTerms')?.invalid && form.get('acceptTerms')?.touched" class="text-danger small mt-1">
+                    Debe aceptar los términos y condiciones
+                  </div>
+                </div>
+
+                <!-- Error Message -->
+                <div *ngIf="errorMessage"
+                     class="alert alert-danger alert-dismissible fade show mb-3"
+                     role="alert">
+                  <i class="fas fa-exclamation-triangle me-2"></i>
+                  {{ errorMessage }}
+                  <button type="button"
+                          class="btn-close"
+                          (click)="errorMessage = ''"
+                          aria-label="Close"></button>
+                </div>
+
+                <!-- Success Message -->
+                <div *ngIf="successMessage"
+                     class="alert alert-success alert-dismissible fade show mb-3"
+                     role="alert">
+                  <i class="fas fa-check-circle me-2"></i>
+                  {{ successMessage }}
+                  <button type="button"
+                          class="btn-close"
+                          (click)="successMessage = ''"
+                          aria-label="Close"></button>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit"
+                        class="btn btn-primary btn-lg w-100 rounded-pill mb-3"
+                        [disabled]="isLoading || form.invalid">
+                  <span *ngIf="!isLoading">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Crear Cuenta
+                  </span>
+                  <span *ngIf="isLoading">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Creando cuenta...
+                  </span>
+                </button>
+              </form>
+
+              <!-- Login Link -->
+              <div class="text-center">
+                <p class="mb-2 text-muted">¿Ya tienes cuenta?</p>
+                <button class="btn btn-outline-primary rounded-pill px-4" (click)="goToLogin()">
+                  <i class="fas fa-sign-in-alt me-2"></i>
+                  Iniciar Sesión
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

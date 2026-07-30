@@ -1,0 +1,167 @@
+<div class="public-layout">
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-xl custom-navbar" [class.scrolled]="isScrolled">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand d-flex align-items-center" routerLink="/">
+        <i class="fas fa-fire brand-icon"></i>
+        <span class="brand-text">{{ companyData.commercialName || 'Alliker' }}</span>
+        <span class="brand-sep">&bull;</span>
+        <span class="brand-sub">Pollería</span>
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto mb-2 mb-xl-0 ms-xl-4">
+          <li class="nav-item" (click)="closeNavbar()">
+            <a class="nav-link" routerLink="/" routerLinkActive="active"
+               [routerLinkActiveOptions]="{ exact: true }">Inicio</a>
+          </li>
+          <li class="nav-item" (click)="closeNavbar()">
+            <a class="nav-link" routerLink="/menu" routerLinkActive="active">Menú</a>
+          </li>
+          <li class="nav-item" (click)="closeNavbar()">
+            <a class="nav-link" routerLink="/dishes" routerLinkActive="active">Platos</a>
+          </li>
+          <li class="nav-item" *ngIf="!isCook && !isWaiter && !isAdmin" (click)="closeNavbar()">
+            <a class="nav-link" routerLink="/reservations" routerLinkActive="active">Reservaciones</a>
+          </li>
+        </ul>
+        <ul class="navbar-nav align-items-center">
+          <li class="nav-item" *ngIf="isAdmin" (click)="closeNavbar()">
+            <button class="btn btn-admin btn-staff-return" (click)="goToAdmin()" title="Volver al panel de administración">
+              <span class="staff-return-pulse"></span>
+              <i class="fas fa-cog me-1"></i>
+              <span class="staff-return-text"><small>Volver al</small>Panel Admin</span>
+            </button>
+          </li>
+          <li class="nav-item" *ngIf="isCook" (click)="closeNavbar()">
+            <button class="btn btn-kitchen btn-staff-return" (click)="goToKitchen()" title="Volver a la cocina">
+              <span class="staff-return-pulse"></span>
+              <i class="fas fa-utensils me-1"></i>
+              <span class="staff-return-text"><small>Volver a</small>Cocina</span>
+            </button>
+          </li>
+          <li class="nav-item" *ngIf="isWaiter" (click)="closeNavbar()">
+            <button class="btn btn-waiter btn-staff-return" (click)="goToWaiter()" title="Volver al módulo de mesas">
+              <span class="staff-return-pulse"></span>
+              <i class="fas fa-concierge-bell me-1"></i>
+              <span class="staff-return-text"><small>Volver a</small>Mesas</span>
+            </button>
+          </li>
+          <li class="nav-item nav-item-inline" *ngIf="!isCook && !isWaiter && !isAdmin">
+            <a class="nav-link cart-link" (click)="openCartSidebar()" role="button" style="cursor: pointer;">
+              <i class="fas fa-shopping-cart"></i>
+              <span class="cart-badge" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
+            </a>
+          </li>
+          <li class="nav-item nav-item-inline notification-wrapper" *ngIf="isCustomer">
+            <button class="nav-link btn-notification-public" (click)="toggleNotifications()" title="Notificaciones" type="button">
+              <i class="fas fa-bell"></i>
+              <span class="notification-badge" *ngIf="unreadNotifications > 0">{{ unreadNotifications }}</span>
+            </button>
+
+            <div class="notification-dropdown" *ngIf="showNotifications" (click)="$event.stopPropagation()">
+              <div class="notif-header">
+                <span class="notif-title">Notificaciones</span>
+                <button class="notif-mark-all" (click)="markAllNotificationsAsRead()" *ngIf="unreadNotifications > 0">Marcar todo leído</button>
+              </div>
+              <div class="notif-list">
+                <div class="notif-item" *ngFor="let n of notifications">
+                  <div class="notif-icon" [class]="'notif-icon-' + n.type">
+                    <i class="fas"
+                       [class.fa-info-circle]="n.type === 'info'"
+                       [class.fa-exclamation-triangle]="n.type === 'warning'"
+                       [class.fa-times-circle]="n.type === 'error'"
+                       [class.fa-check-circle]="n.type === 'success'"></i>
+                  </div>
+                  <div class="notif-content">
+                    <div class="notif-item-title" *ngIf="n.title">{{ n.title }}</div>
+                    <div class="notif-message">{{ n.message }}</div>
+                    <div class="notif-time">{{ n.createdAt | date:'short' }}</div>
+                  </div>
+                  <button class="notif-dismiss" (click)="markNotificationAsRead(n); $event.stopPropagation()" title="Cerrar">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <div class="notif-empty" *ngIf="notifications.length === 0">
+                  <i class="fas fa-check-circle"></i> No hay notificaciones pendientes
+                </div>
+              </div>
+            </div>
+          </li>
+          <ng-container *ngIf="!isLoggedIn">
+            <li class="nav-item nav-item-inline ms-xl-2" (click)="closeNavbar()">
+              <a class="nav-link" routerLink="/login" routerLinkActive="active">Iniciar Sesión</a>
+            </li>
+            <li class="nav-item nav-item-inline ms-xl-2" (click)="closeNavbar()">
+              <a class="btn btn-register" routerLink="/register" routerLinkActive="active">Registrarse</a>
+            </li>
+          </ng-container>
+          <li class="nav-item ms-xl-2" *ngIf="isLoggedIn">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="user-badge-nav">
+                <i class="fas fa-user-circle"></i>
+                <span class="user-email-nav">{{ userEmail }}</span>
+                <span class="user-role-badge" *ngIf="isAdmin || isCook || isWaiter">{{ roleLabel }}</span>
+              </span>
+              <button class="btn btn-outline-gold btn-sm" (click)="logout()" title="Cerrar sesión">
+                <i class="fas fa-sign-out-alt"></i>
+              </button>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="layout-content flex-grow-1">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- Cart Sidebar -->
+  <app-cart-sidebar></app-cart-sidebar>
+
+  <!-- Footer -->
+  <footer class="layout-footer">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="footer-brand">
+            <i class="fas fa-fire"></i>
+            <span>{{ companyData.commercialName || 'Alliker' }}</span>
+          </div>
+          <p class="footer-desc">{{ companyData.businessName || 'Disfruta del mejor pollo a la brasa con los sabores tradicionales preparados con ingredientes frescos y técnicas ancestrales.' }}</p>
+          <div class="social-links">
+            <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <h6 class="footer-title">Enlaces Rápidos</h6>
+          <ul class="footer-links">
+            <li><a href="#">Sobre Nosotros</a></li>
+            <li><a href="#">Nuestro Menú</a></li>
+            <li><a href="#">Reservaciones</a></li>
+            <li><a href="#">Contacto</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-4">
+          <h6 class="footer-title">Información de Contacto</h6>
+          <ul class="footer-contact">
+            <li><i class="fas fa-map-marker-alt"></i><span>{{ getAddress() }}</span></li>
+            <li><i class="fas fa-phone"></i><span>{{ companyData.phone || '+51 123 456 789' }}</span></li>
+            <li><i class="fas fa-envelope"></i><span>{{ companyData.email || 'info@alliker.com' }}</span></li>
+            <li><i class="fas fa-clock"></i><span>Lun-Dom: 12:00 - 23:00</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; {{ currentYear }} {{ companyData.commercialName || 'Alliker' }}. Todos los derechos reservados.</p>
+        <p class="footer-credit">Desarrollado con <i class="fas fa-heart"></i> para amantes de la buena comida</p>
+      </div>
+    </div>
+  </footer>
+</div>

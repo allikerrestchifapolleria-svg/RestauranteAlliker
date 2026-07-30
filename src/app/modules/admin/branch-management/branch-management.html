@@ -1,0 +1,101 @@
+<div class="branch-management">
+  <div class="header">
+    <h2>Gestión de Sucursales</h2>
+    <button class="btn-primary" (click)="addNewBranch()">Agregar Sucursal</button>
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <input type="text" placeholder="Buscar sucursales..." [(ngModel)]="searchTerm" (input)="onSearch()">
+    </div>
+  </div>
+
+  <div class="branch-grid">
+    <div *ngFor="let branch of filteredBranches$ | async" class="branch-card">
+      <div class="branch-header">
+        <h3>{{branch.name}}</h3>
+        <div class="branch-actions">
+          <button class="btn-edit" (click)="editBranch(branch)">Editar</button>
+          <button class="btn-delete" (click)="deleteBranch(branch)">Eliminar</button>
+        </div>
+      </div>
+
+      <div class="branch-details">
+        <!-- <p class="branch-id">ID: {{branch.branchId}}</p> -->
+        <p class="restaurant-id">Alliker - Pollería</p>
+        <p class="address">{{branch.address}}</p>
+        <p class="phone">{{branch.phone}}</p>
+        <p class="status" [class.active]="branch.status === 'open'" [class.inactive]="branch.status === 'closed'">
+          {{branch.status === 'open' ? 'Abierta' : 'Cerrada'}}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Form Modal -->
+  <div *ngIf="showAddForm" class="modal-overlay" (click)="cancelEdit()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{editingBranch ? 'Editar Sucursal' : 'Agregar Nueva Sucursal'}}</h3>
+        <button class="close-btn" (click)="cancelEdit()">&times;</button>
+      </div>
+
+      <form (ngSubmit)="saveBranch()" class="branch-form">
+        <div class="form-row">
+          <!-- <div class="form-group">
+            <label for="branchId">ID de Sucursal *</label>
+            <input type="text" id="branchId" [(ngModel)]="newBranch.branchId" name="branchId" placeholder="SUCC001" readonly required>
+          </div> -->
+
+          <div class="form-group">
+            <label for="name">Nombre *</label>
+            <input type="text" id="name" [(ngModel)]="newBranch.name" name="name" required
+              pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$" (input)="onNameInput($event)">
+            <div *ngIf="nameError" class="text-danger small mt-1">{{ nameError }}</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="address">Dirección *</label>
+          <input type="text" id="address" [(ngModel)]="newBranch.address" name="address" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">Teléfono</label>
+            <input type="tel" id="phone" [(ngModel)]="newBranch.phone" name="phone"
+              pattern="^[0-9]{1,9}$" maxlength="9" (input)="onPhoneInput($event)">
+            <div *ngIf="phoneError" class="text-danger small mt-1">{{ phoneError }}</div>
+          </div>
+
+          <div class="form-group">
+            <label for="status">Estado</label>
+            <select id="status" [(ngModel)]="newBranch.status" name="status">
+              <option value="open">Abierta</option>
+              <option value="closed">Cerrada</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="opening-hours-section">
+          <h4>Horarios de Apertura</h4>
+          <div class="opening-hours-grid">
+            <div class="day-hours" *ngFor="let day of ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']">
+              <label>{{day | titlecase}}</label>
+              <div class="time-inputs">
+                <input type="time" [value]="getOpeningHour(day, 'open')" (input)="updateOpeningHour(day, 'open', $event.target.value)" placeholder="Apertura">
+                <span>-</span>
+                <input type="time" [value]="getOpeningHour(day, 'close')" (input)="updateOpeningHour(day, 'close', $event.target.value)" placeholder="Cierre">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="cancelEdit()">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

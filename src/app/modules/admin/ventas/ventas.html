@@ -1,0 +1,159 @@
+<div class="v-wrapper">
+  <div class="v-header">
+    <div class="v-header-left">
+      <h1>Ventas</h1>
+      <p>Historial de ventas del período seleccionado</p>
+    </div>
+    <div class="v-header-right">
+      <div class="v-date-range">
+        <input type="date" [ngModel]="dateStart" #startInput (input)="onDateInput('start', startInput.value)" class="v-date-picker">
+        <span class="v-date-separator">→</span>
+        <input type="date" [ngModel]="dateEnd" #endInput (input)="onDateInput('end', endInput.value)" class="v-date-picker">
+      </div>
+      <div class="v-search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar pedido, mesero...">
+      </div>
+      <button class="v-refresh-btn" (click)="loadData()">
+        <i class="fas fa-sync-alt"></i> Actualizar
+      </button>
+    </div>
+  </div>
+
+  <div class="v-stats-grid" *ngIf="!loading && rows.length > 0">
+    <div class="v-stat-card stat-total">
+      <div class="v-stat-row">
+        <div class="v-stat-icon icon-total"><i class="fas fa-dollar-sign"></i></div>
+        <div class="v-stat-info">
+          <div class="v-stat-label">Total Ventas</div>
+          <div class="v-stat-value mono">S/ {{ totalVentas | number:'1.2-2' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="v-stat-card stat-count">
+      <div class="v-stat-row">
+        <div class="v-stat-icon icon-count"><i class="fas fa-receipt"></i></div>
+        <div class="v-stat-info">
+          <div class="v-stat-label">Transacciones</div>
+          <div class="v-stat-value">{{ totalTransactions }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="v-stat-card stat-avg">
+      <div class="v-stat-row">
+        <div class="v-stat-icon icon-avg"><i class="fas fa-chart-bar"></i></div>
+        <div class="v-stat-info">
+          <div class="v-stat-label">Ticket Promedio</div>
+          <div class="v-stat-value mono">S/ {{ averageTicket | number:'1.2-2' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="v-stat-card stat-methods">
+      <div class="v-stat-row">
+        <div class="v-stat-icon icon-methods"><i class="fas fa-credit-card"></i></div>
+        <div class="v-stat-info">
+          <div class="v-stat-label">Métodos de Pago</div>
+          <div class="v-stat-value">{{ paymentMethodsCount }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="loading-spinner"></div>
+    <p>Cargando ventas...</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && errorMessage && rows.length === 0">
+    <i class="fas fa-exclamation-triangle"></i>
+    <h5>Error al cargar datos</h5>
+    <p>{{ errorMessage }}</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && !errorMessage && rows.length === 0">
+    <i class="fas fa-receipt"></i>
+    <h5>No hay ventas registradas</h5>
+    <p>No se encontraron ventas para el período y sucursal seleccionados.</p>
+  </div>
+
+  <div class="v-card" *ngIf="!loading && rows.length > 0">
+    <div class="v-card-header">
+      <h3><i class="fas fa-receipt"></i> Ventas del período</h3>
+      <span class="v-badge">{{ filteredRows.length }} ventas</span>
+    </div>
+    <div class="v-card-body">
+      <table class="v-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Fecha</th>
+            <th>Pedido</th>
+            <th>Mesero</th>
+            <th>Sucursal</th>
+            <th>Métodos de Pago</th>
+            <th class="text-end">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of filteredRows; trackBy: trackBySaleId">
+            <td style="font-size:0.78rem;color:var(--text-primary)">{{ row.index }}</td>
+            <td>{{ row.date | date:'dd/MM/yy HH:mm' }}</td>
+            <td><span class="order-id">#{{ row.orderNumber || row.orderId.slice(-6).toUpperCase() }}</span></td>
+            <td><span class="waiter-name"><i class="fas fa-user"></i> {{ row.waiterName }}</span></td>
+            <td><span style="color:var(--text-secondary);font-size:0.82rem">{{ row.branchName }}</span></td>
+            <td>
+              <span class="payment-badge payment-badge-sm"
+                    *ngFor="let m of row.methods"
+                    [ngClass]="getMethodClass(m.method)">
+                {{ getMethodLabel(m.method) }} S/ {{ m.amount | number:'1.2-2' }}
+              </span>
+              <span *ngIf="row.methods.length === 0" class="payment-badge pm-desconocido">Sin método</span>
+            </td>
+            <td class="text-end fw-bold" style="color:var(--text-primary)">S/ {{ row.total | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="grand-total">
+            <td colspan="6" class="text-end">TOTAL</td>
+            <td class="text-end total-amount">S/ {{ totalVentas | number:'1.2-2' }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="v-card" *ngIf="!loading && paymentSummary.length > 0">
+    <div class="v-card-header">
+      <h3><i class="fas fa-credit-card"></i> Resumen por método de pago</h3>
+    </div>
+    <div class="v-card-body">
+      <table class="v-table">
+        <thead>
+          <tr>
+            <th>Método</th>
+            <th class="text-end">Transacciones</th>
+            <th class="text-end">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let pm of paymentSummary">
+            <td>
+              <span class="payment-badge" [ngClass]="getMethodClass(pm.method)">
+                {{ pm.label }}
+              </span>
+            </td>
+            <td class="text-end">{{ pm.count }}</td>
+            <td class="text-end fw-bold" style="color:var(--text-primary)">S/ {{ pm.total | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="grand-total">
+            <td>TOTAL</td>
+            <td class="text-end">{{ paymentSummary.reduce((a, p) => a + p.count, 0) }}</td>
+            <td class="text-end total-amount">S/ {{ paymentGrandTotal | number:'1.2-2' }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>

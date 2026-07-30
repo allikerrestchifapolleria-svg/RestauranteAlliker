@@ -1,0 +1,9 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="400" height="300" fill="#F3F4F6"/>
+<circle cx="200" cy="120" r="60" fill="#F39C12" opacity="0.15"/>
+<circle cx="160" cy="100" r="12" fill="#E74C3C" opacity="0.3"/>
+<circle cx="220" cy="90" r="10" fill="#3498DB" opacity="0.3"/>
+<circle cx="200" cy="150" r="15" fill="#8B4513" opacity="0.15"/>
+<circle cx="240" cy="140" r="8" fill="#E74C3C" opacity="0.3"/>
+<text x="200" y="240" text-anchor="middle" fill="#6C757D" font-size="16" font-family="Arial">Ceviche</text>
+</svg>

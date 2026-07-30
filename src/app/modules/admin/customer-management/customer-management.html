@@ -1,0 +1,89 @@
+<div class="customer-management">
+  <div class="header">
+    <h2>Gestión de Clientes</h2>
+    <button class="btn-primary" (click)="addNewCustomer()">Agregar Cliente</button>
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <input type="text" placeholder="Buscar clientes..." [(ngModel)]="searchTerm" (input)="onSearch()">
+    </div>
+  </div>
+
+  <div class="customer-grid">
+    <div *ngFor="let customer of filteredCustomers$ | async" class="customer-card">
+      <div class="customer-header">
+        <h3>{{customer.name}}</h3>
+        <div class="customer-actions">
+          <button class="btn-edit" (click)="editCustomer(customer)">Editar</button>
+          <button class="btn-delete" (click)="deleteCustomer(customer)">Eliminar</button>
+        </div>
+      </div>
+
+      <div class="customer-details">
+        <p class="email">{{customer.email}}</p>
+        <p class="phone">{{customer.phone}}</p>
+        <p class="orders">Total de pedidos: {{customer.totalOrders}}</p>
+        <p class="last-order" *ngIf="customer.lastOrderAt">Último pedido: {{customer.lastOrderAt | date:'short'}}</p>
+        <div class="favorites" *ngIf="customer.favoriteItems && customer.favoriteItems.length > 0">
+          <span class="favorites-label">Favoritos:</span>
+          <span class="favorites-list">{{customer.favoriteItems.join(', ')}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Form Modal -->
+  <div *ngIf="showAddForm" class="modal-overlay" (click)="cancelEdit()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{editingCustomer ? 'Editar Cliente' : 'Agregar Nuevo Cliente'}}</h3>
+        <button class="close-btn" (click)="cancelEdit()">&times;</button>
+      </div>
+
+      <form (ngSubmit)="saveCustomer()" class="customer-form">
+        <div class="form-group">
+          <label for="name">Nombre *</label>
+          <input type="text" id="name" [(ngModel)]="newCustomer.name" name="name" required
+            pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$" (input)="onNameInput($event)">
+          <div *ngIf="nameError" class="text-danger small mt-1">{{ nameError }}</div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input type="email" id="email" [(ngModel)]="newCustomer.email" name="email" required>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Teléfono</label>
+          <input type="tel" id="phone" [(ngModel)]="newCustomer.phone" name="phone"
+            pattern="^[0-9]{1,9}$" maxlength="9" (input)="onPhoneInput($event)">
+          <div *ngIf="phoneError" class="text-danger small mt-1">{{ phoneError }}</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="totalOrders">Total de Pedidos</label>
+            <div class="number-stepper">
+              <input type="number" id="totalOrders" [(ngModel)]="newCustomer.totalOrders" name="totalOrders" min="0">
+              <div class="stepper-controls">
+                <button type="button" class="stepper-btn stepper-up" (click)="adjustNumericField(newCustomer, 'totalOrders', 1)" aria-label="Aumentar total de pedidos"><i class="fas fa-chevron-up"></i></button>
+                <button type="button" class="stepper-btn stepper-down" (click)="adjustNumericField(newCustomer, 'totalOrders', -1)" aria-label="Disminuir total de pedidos"><i class="fas fa-chevron-down"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="favoriteItems">Items Favoritos (IDs separados por comas)</label>
+            <input type="text" id="favoriteItems" [(ngModel)]="favoriteItemsString" name="favoriteItems" placeholder="item1, item2, item3">
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="cancelEdit()">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

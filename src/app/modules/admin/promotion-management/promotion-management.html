@@ -1,0 +1,128 @@
+<div class="promotion-management">
+  <div class="header">
+    <h2>Gestión de Promociones</h2>
+    <button class="btn-primary" (click)="addNewPromotion()">Agregar Promoción</button>
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <input type="text" placeholder="Buscar promociones..." [(ngModel)]="searchTerm" (input)="onSearch()">
+    </div>
+  </div>
+
+  <div class="promotion-grid">
+    <div *ngFor="let promotion of filteredPromotions$ | async" class="promotion-card">
+      <div class="promotion-header">
+        <div class="promotion-info">
+          <img *ngIf="promotion.image" [src]="promotion.image" [alt]="promotion.title" class="promotion-image">
+          <h3>{{promotion.title}}</h3>
+        </div>
+        <div class="promotion-actions">
+          <button class="btn-edit" (click)="editPromotion(promotion)">Editar</button>
+          <button class="btn-delete" (click)="deletePromotion(promotion)">Eliminar</button>
+          <button class="btn-toggle" (click)="togglePromotionStatus(promotion)">
+            {{promotion.active ? 'Desactivar' : 'Activar'}}
+          </button>
+        </div>
+      </div>
+
+      <div class="promotion-details">
+        <p class="description">{{promotion.description}}</p>
+        <p class="discount">Descuento: {{promotion.discountPercentage}}%</p>
+        <p class="type">Tipo: {{promotion.type}}</p>
+        <div class="valid-days" *ngIf="promotion.validDays && promotion.validDays.length > 0">
+          <span class="valid-days-label">Días válidos:</span>
+          <span class="valid-days-list">{{promotion.validDays.join(', ')}}</span>
+        </div>
+        <div class="valid-hours" *ngIf="promotion.validHours">
+          <span class="valid-hours-label">Horario válido:</span>
+          <span class="valid-hours-value">{{promotion.validHours.start}} - {{promotion.validHours.end}}</span>
+        </div>
+        <p class="status" [class.active]="promotion.active" [class.inactive]="!promotion.active">
+          {{promotion.active ? 'Activa' : 'Inactiva'}}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Form Modal -->
+  <div *ngIf="showAddForm" class="modal-overlay" (click)="cancelEdit()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{editingPromotion ? 'Editar Promoción' : 'Agregar Nueva Promoción'}}</h3>
+        <button class="close-btn" (click)="cancelEdit()">&times;</button>
+      </div>
+
+      <form (ngSubmit)="savePromotion()" class="promotion-form">
+        <div class="form-group">
+          <label for="title">Título *</label>
+          <input type="text" id="title" [(ngModel)]="newPromotion.title" name="title" required [class.invalid]="formErrors['title']">
+          <small class="field-error" *ngIf="formErrors['title']">{{ formErrors['title'] }}</small>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Descripción *</label>
+          <textarea id="description" [(ngModel)]="newPromotion.description" name="description" rows="3" required [class.invalid]="formErrors['description']"></textarea>
+          <small class="field-error" *ngIf="formErrors['description']">{{ formErrors['description'] }}</small>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="discountPercentage">Porcentaje de descuento *</label>
+            <div class="number-stepper" [class.invalid]="formErrors['discountPercentage']">
+              <input type="number" id="discountPercentage" [(ngModel)]="newPromotion.discountPercentage" name="discountPercentage" min="0" max="100" required>
+              <div class="stepper-controls">
+                <button type="button" class="stepper-btn stepper-up" (click)="adjustNumericField(newPromotion, 'discountPercentage', 1, 0, 100)" aria-label="Aumentar porcentaje"><i class="fas fa-chevron-up"></i></button>
+                <button type="button" class="stepper-btn stepper-down" (click)="adjustNumericField(newPromotion, 'discountPercentage', -1, 0, 100)" aria-label="Disminuir porcentaje"><i class="fas fa-chevron-down"></i></button>
+              </div>
+            </div>
+            <small class="field-error" *ngIf="formErrors['discountPercentage']">{{ formErrors['discountPercentage'] }}</small>
+          </div>
+
+          <div class="form-group">
+            <label for="type">Tipo</label>
+            <select id="type" [(ngModel)]="newPromotion.type" name="type">
+              <option value="porcentaje">Porcentaje</option>
+              <option value="fijo">Fijo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="image">Imagen de la promoción</label>
+          <input type="file" id="image" accept="image/*" (change)="onImageSelected($event)" name="imageFile">
+          <img *ngIf="imagePreviewUrl || newPromotion.image" [src]="imagePreviewUrl || newPromotion.image" alt="Vista previa" class="image-preview-thumb">
+        </div>
+
+        <div class="form-group">
+          <label for="validDays">Días válidos (separados por comas)</label>
+          <input type="text" id="validDays" [(ngModel)]="validDaysString" name="validDays" placeholder="lunes, miércoles, viernes">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="validHoursStart">Hora de inicio</label>
+            <input type="time" id="validHoursStart" [(ngModel)]="validHoursStart" name="validHoursStart">
+          </div>
+
+          <div class="form-group">
+            <label for="validHoursEnd">Hora de fin</label>
+            <input type="time" id="validHoursEnd" [(ngModel)]="validHoursEnd" name="validHoursEnd">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" [(ngModel)]="newPromotion.active" name="active">
+            Activa
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="cancelEdit()">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

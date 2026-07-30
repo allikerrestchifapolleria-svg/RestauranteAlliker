@@ -1,0 +1,60 @@
+REPORTE DE INTEGRACION DE PAGOS - CULQI CHECKOUT V4
+====================================================
+
+Fecha: 06/06/2026
+Proyecto: Alliker - Sistema de Restaurante
+
+1. CONFIGURACION DE API CULQI
+-------------------------------
+Archivo: src/environments/environment.ts
+Clave publica (sandbox): pk_test_xxxxxxxxxxxx
+
+Para obtener credenciales reales:
+  1. Registrarse en https://culqi.com
+  2. Ir al Dashboard > Integracion > API Keys
+  3. Copiar "Public Key" y reemplazar en environment.ts
+  4. La clave secreta (sk_test_...) solo se usa en backend
+
+2. ARCHIVOS MODIFICADOS
+------------------------
+  - src/index.html                     -> Script Culqi Checkout v4
+  - src/environments/environment.ts    -> Config culqi.publicKey
+  - src/app/services/culqi.ts          -> [NUEVO] Servicio wrapper Culqi
+  - src/app/services/payment.ts        -> Refactor: card|yape|plin|cash + Firestore
+  - src/app/services/orders.ts         -> Nuevo metodo updateOrderPaymentStatus()
+  - src/app/modules/waiter/payment/    -> Integrado Culqi + 4 metodos de pago
+  - src/app/modules/public/payment/    -> Compatibilizado con nueva API
+
+3. METODOS DE PAGO IMPLEMENTADOS
+----------------------------------
+  - Tarjeta (Culqi): Modal seguro PCI-compliant
+  - Yape: Confirmacion manual con numero de telefono
+  - Plin: Confirmacion manual con numero de telefono
+  - Efectivo: Monto recibido + calculo automatico de cambio
+
+4. FLUJO DE PAGO
+------------------
+  1. Mozo/Cliente selecciona metodo de pago
+  2. Si es tarjeta: se abre modal de Culqi Checkout
+  3. Culqi procesa y retorna cargo (token)
+  4. Se guarda pago en Firestore (coleccion 'payments')
+  5. Se actualiza orden en Firestore (paymentMethod + paymentStatus)
+  6. Se crea registro de venta (coleccion 'sales')
+
+5. COLECCIONES EN FIRESTORE
+-----------------------------
+  - payments/{id}: Registro de cada transaccion
+  - orders/{id}: Actualizado con paymentMethod y paymentStatus='paid'
+  - sales/{id}: Registro de venta completada
+
+6. CREDENCIALES PARA PRODUCCION
+----------------------------------
+  Culqi Public Key  (frontend): environment.ts -> culqi.publicKey
+  Culqi Secret Key  (backend):  Se recomienda usar Firebase Functions
+                                para crear cargos con la clave secreta
+
+7. PENDIENTE
+-------------
+  - Reemplazar pk_test_xxxxxxxxxxxx por clave publica real de Culqi
+  - Para entorno productivo, usar Culqi API desde Firebase Functions (backend)
+    para crear cargos de forma segura con la clave secreta

@@ -1,0 +1,161 @@
+<div class="user-management-container">
+  <div class="header">
+    <h1>Gestión de Usuarios</h1>
+    <button class="btn-create" (click)="showCreateForm = !showCreateForm">
+      {{ showCreateForm ? 'Cancelar' : 'Crear Usuario' }}
+    </button>
+  </div>
+
+  
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Create User Form -->
+   <div *ngIf="successMessage" class="alert-success">
+  {{ successMessage }}
+  <div *ngIf="generatedPassword" class="generated-password">
+    <strong>Contraseña generada:</strong> {{ generatedPassword }}
+  </div>
+</div>
+
+  <div *ngIf="showCreateForm" class="create-form">
+    <h3>Crear Nuevo Usuario</h3>
+    <form (ngSubmit)="createUser()" autocomplete="off">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre:</label>
+          <input type="text" [(ngModel)]="nombre" name="nombre"
+            pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$" (input)="onNombreInput($event)">
+        </div>
+        <div class="form-group">
+          <label>Apellidos:</label>
+          <input type="text" [(ngModel)]="apellidos" name="apellidos"
+            pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$" (input)="onApellidosInput($event)">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email:</label>
+          <input type="email" [(ngModel)]="newUser.email" name="email" placeholder="example@gmail.com" autocomplete="new-email">
+        </div>
+        <div class="form-group">
+          <label>Contraseña:</label>
+          <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="newUser.password" name="password" placeholder="contraseña123456" autocomplete="new-password">
+          <button type="button" (click)="generateAndShowPassword()" class="btn-generate">Generar</button>
+        </div>
+        <div class="form-group">
+          <label for="showPassword" class="checkbox-label">Ver contraseña</label>
+          <input type="checkbox" id="showPassword" [(ngModel)]="showPassword" name="showPassword" class="checkbox-input">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Rol:</label>
+          <select [(ngModel)]="newUser.role" name="role">
+            <option value="admin">Admin</option>
+            <option value="cook">Cocinero</option>
+            <option value="waiter">Mozo</option>
+            <option value="user">Cliente</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Sucursal:</label>
+          <select [(ngModel)]="newUser.branchId" name="branchId">
+            <option value="">Seleccionar Sucursal</option>
+            <option *ngFor="let branch of branches" [value]="branch.id">{{branch.name}}</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn-submit">Crear Usuario</button>
+    </form>
+  </div>
+
+  <!-- Users List -->
+  <div class="users-list">
+    <table *ngIf="!isLoading">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Apellidos</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Sucursal</th>
+          <th>Fecha Creación</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of usersWithBranch$ | async">
+          <td *ngIf="editingUser?.id !== user.id">{{ user.firstName }}</td>
+          <td *ngIf="editingUser?.id !== user.id">{{ user.lastName }}</td>
+          <td *ngIf="editingUser?.id !== user.id">{{ user.email }}</td>
+          <td *ngIf="editingUser?.id !== user.id">{{ getRoleLabel(user.role) }}</td>
+          <td *ngIf="editingUser?.id !== user.id">{{ user.branchLabel }}</td>
+          <td>{{ user.createdAt | date:'short' }}</td>
+          <td>
+            <button *ngIf="user.role !== 'user'" (click)="editUser(user)" class="btn-edit">Editar</button>
+            <button (click)="deleteUser(user)" class="btn-delete">Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="isLoading" class="loading">Cargando usuarios...</div>
+  </div>
+
+  <!-- Modal Editar Usuario -->
+  <div class="modal-overlay" *ngIf="showEditModal" (click)="cancelEdit()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Editar Usuario</h3>
+        <button class="modal-close" (click)="cancelEdit()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre:</label>
+            <input type="text" [(ngModel)]="editingNombre" placeholder="Nombre"
+              pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$" (input)="onEditingNombreInput($event)">
+          </div>
+          <div class="form-group">
+            <label>Apellidos:</label>
+            <input type="text" [(ngModel)]="editingApellidos" placeholder="Apellidos"
+              pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$" (input)="onEditingApellidosInput($event)">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email:</label>
+            <input type="email" [(ngModel)]="editingUser!.email" placeholder="example@gmail.com" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Nueva contraseña (opcional):</label>
+            <input type="text" [(ngModel)]="editingUser!.password" placeholder="Dejar en blanco para no cambiarla">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Rol:</label>
+            <select [(ngModel)]="editingUser!.role">
+              <option value="admin">Admin</option>
+              <option value="cook">Cocinero</option>
+              <option value="waiter">Mozo</option>
+              <option value="user">Cliente</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Sucursal:</label>
+            <select [(ngModel)]="editingUser!.branchId">
+              <option value="">Seleccionar Sucursal</option>
+              <option *ngFor="let branch of branches" [value]="branch.id">{{branch.name}}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cancelEdit()">Cancelar</button>
+        <button class="btn-save" (click)="updateUser()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
