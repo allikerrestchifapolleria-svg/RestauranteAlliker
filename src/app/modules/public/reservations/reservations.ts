@@ -22,6 +22,7 @@ import {
 } from '../../../services/voice-confirmation';
 import { VoiceCallLogger } from '../../../services/voice-call-logger';
 import { AppUpdateService } from '../../../services/app-update';
+import { Auth } from '../../../services/auth';
 
 import { Branch } from '../../../models/branch';
 import { Table } from '../../../models/table';
@@ -31,6 +32,7 @@ const CUSTOMER_NAME_PATTERN = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
 // Sin el prefijo no se puede marcar desde una llamada telefonica de Retell.
 const CUSTOMER_PHONE_PATTERN = /^\+?[0-9]{9,15}$/;
 const MIN_PEOPLE_COUNT = 1;
+const MAX_PEOPLE_COUNT = 20;
 const FAMILY_TABLE_ID_PREFIX = 'fam_';
 const DEFAULT_TABLE_CAPACITY = 4;
 const UNKNOWN_LABEL = 'Desconocida';
@@ -105,6 +107,11 @@ export class Reservations implements OnInit {
   successMessage = '';
   errorMessage = '';
 
+  readonly peopleCountOptions = Array.from(
+    { length: MAX_PEOPLE_COUNT - MIN_PEOPLE_COUNT + 1 },
+    (_, index) => MIN_PEOPLE_COUNT + index
+  );
+
   branches: Branch[] = [];
   allTables: Table[] = [];
   availableTables: Table[] = [];
@@ -121,10 +128,13 @@ export class Reservations implements OnInit {
     private tableService: TableService,
     private voiceConfirmationService: VoiceConfirmationService,
     private logger: VoiceCallLogger,
-    private appUpdateService: AppUpdateService
+    private appUpdateService: AppUpdateService,
+    private auth: Auth
   ) { }
 
   ngOnInit() {
+
+    this.lockEmailToAccount();
 
     this.branchService.getBranches().subscribe(branches => {
       this.branches = branches;
@@ -147,6 +157,27 @@ export class Reservations implements OnInit {
   /** Bloquea ambos botones mientras hay una operacion en curso. */
   get isBusy(): boolean {
     return this.isLoading || this.isAICalling || this.callActive;
+  }
+
+  /**
+   * La reserva queda atada al correo de la cuenta: el campo se rellena solo y
+   * se muestra de solo lectura. La ruta exige sesion iniciada (authGuard), asi
+   * que llegar aqui sin usuario no deberia ocurrir.
+   */
+  private lockEmailToAccount(): void {
+    const accountEmail = this.auth.getCurrentUser()?.email;
+    if (accountEmail) {
+      this.reservationForm.get('email')?.setValue(accountEmail);
+    }
+  }
+
+  get accountEmail(): string {
+    return this.auth.getCurrentUser()?.email ?? '';
+  }
+
+  /** Minimo del selector de fecha: impide elegir dias pasados desde el propio widget. */
+  get today(): string {
+    return new Date().toISOString().split('T')[0];
   }
 
   get isReservationInThePast(): boolean {
@@ -259,6 +290,7 @@ export class Reservations implements OnInit {
 
   resetForm() {
     this.reservationForm.reset({ peopleCount: MIN_PEOPLE_COUNT, acceptTerms: false });
+    this.lockEmailToAccount();
   }
 
   onDateChange() {

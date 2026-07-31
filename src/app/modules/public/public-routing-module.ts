@@ -41,7 +41,9 @@ export const routes: Routes = [
       {
         path: 'reservations',
         component: Reservations,
-        canActivate: [customerGuard]
+        // authGuard primero: reservar exige cuenta registrada, y redirige a
+        // /login?returnUrl=/reservations para volver aqui tras registrarse.
+        canActivate: [authGuard, customerGuard]
       },
       {
         path: 'cart',

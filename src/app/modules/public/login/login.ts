@@ -180,6 +180,10 @@ export class Login implements OnInit {
   }
 
   goToRegister() {
-    this.router.navigate(['/register']);
+    // Arrastra el returnUrl: quien llego aqui desde /reservations debe volver
+    // alli tras registrarse, no a la portada.
+    this.router.navigate(['/register'], {
+      queryParams: this.returnUrl ? { returnUrl: this.returnUrl } : {}
+    });
   }
 }

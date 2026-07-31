@@ -112,59 +112,69 @@
 
                 <div class="row g-3">
                   <div class="col-md-6">
-                    <label for="name" class="form-label fw-semibold">
-                      <i class="fas fa-signature me-1 text-muted"></i>
-                      Nombre completo *
-                    </label>
-                    <input type="text" class="form-control form-control-lg" id="name" formControlName="name"
-                      placeholder="Ingrese su nombre completo" maxlength="100"
-                      (input)="reservationForm.get('name')?.setValue($any($event.target).value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, ''))">
-                  </div>
-                  <div *ngIf="reservationForm.get('name')?.invalid && reservationForm.get('name')?.touched"
-                    class="text-danger small mt-1">
-                    <div *ngIf="reservationForm.get('name')?.errors?.['required']">Nombre es requerido</div>
-                    <div *ngIf="reservationForm.get('name')?.errors?.['pattern']">Solo se permiten letras y espacios</div>
-                  </div>
-
-                  <div class="col-md-6">
-                    <label for="email" class="form-label fw-semibold">
-                      <i class="fas fa-envelope me-1 text-muted"></i>
-                      Correo electrónico *
-                    </label>
-                    <input type="email" class="form-control form-control-lg" id="email" formControlName="email"
-                      placeholder="ejemplo@email.com" maxlength="100">
-                  </div>
-                  <div *ngIf="reservationForm.get('email')?.invalid && reservationForm.get('email')?.touched"
-                    class="text-danger small mt-1">
-                    <div *ngIf="reservationForm.get('email')?.errors?.['required']">Email es requerido</div>
-                    <div *ngIf="reservationForm.get('email')?.errors?.['email']">Email inválido</div>
+                    <div class="field">
+                      <label for="name" class="form-label fw-semibold">
+                        <i class="fas fa-signature me-1 text-muted"></i>
+                        Nombre completo *
+                      </label>
+                      <input type="text" class="form-control form-control-lg" id="name" formControlName="name"
+                        placeholder="Ingrese su nombre completo" maxlength="100" autocomplete="name"
+                        (input)="reservationForm.get('name')?.setValue($any($event.target).value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, ''))">
+                      <div class="field-feedback">
+                        <ng-container *ngIf="reservationForm.get('name')?.invalid && reservationForm.get('name')?.touched">
+                          <span *ngIf="reservationForm.get('name')?.errors?.['required']">Nombre es requerido</span>
+                          <span *ngIf="reservationForm.get('name')?.errors?.['pattern']">Solo se permiten letras y espacios</span>
+                        </ng-container>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="col-md-6">
-                    <label for="phone" class="form-label fw-semibold">
-                      <i class="fas fa-phone me-1 text-muted"></i>
-                      Teléfono *
-                    </label>
-                    <input type="tel" class="form-control form-control-lg" id="phone" formControlName="phone"
-                      placeholder="999999999" maxlength="9"
-                      (input)="reservationForm.get('phone')?.setValue($any($event.target).value.replace(/\D/g, '').slice(0, 9))">
-                  </div>
-                  <div *ngIf="reservationForm.get('phone')?.invalid && reservationForm.get('phone')?.touched"
-                    class="text-danger small mt-1">
-                    <div *ngIf="reservationForm.get('phone')?.errors?.['required']">Teléfono es requerido</div>
-                    <div *ngIf="reservationForm.get('phone')?.errors?.['pattern']">Solo se permiten números (máximo 9 dígitos)</div>
+                    <div class="field">
+                      <label for="email" class="form-label fw-semibold">
+                        <i class="fas fa-envelope me-1 text-muted"></i>
+                        Correo electrónico *
+                      </label>
+                      <input type="email" class="form-control form-control-lg is-locked" id="email"
+                        formControlName="email" readonly autocomplete="email">
+                      <div class="field-feedback field-feedback--hint">
+                        <i class="fas fa-lock me-1"></i>
+                        Es el correo de tu cuenta, la reserva queda asociada a él
+                      </div>
+                    </div>
                   </div>
 
                   <div class="col-md-6">
-                    <label for="peopleCount" class="form-label fw-semibold">
-                      <i class="fas fa-users me-1 text-muted"></i>
-                      Número de personas
-                    </label>
-                    <select class="form-select form-select-lg" id="peopleCount" formControlName="peopleCount">
-                      <option *ngFor="let num of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]" [value]="num">
-                        {{num}} {{num === 1 ? 'persona' : 'personas'}}
-                      </option>
-                    </select>
+                    <div class="field">
+                      <label for="phone" class="form-label fw-semibold">
+                        <i class="fas fa-phone me-1 text-muted"></i>
+                        Teléfono *
+                      </label>
+                      <input type="tel" class="form-control form-control-lg" id="phone" formControlName="phone"
+                        placeholder="+51 999 999 999" maxlength="16" inputmode="tel" autocomplete="tel"
+                        (input)="reservationForm.get('phone')?.setValue($any($event.target).value.replace(/[^0-9+]/g, '').slice(0, 16))">
+                      <div class="field-feedback">
+                        <ng-container *ngIf="reservationForm.get('phone')?.invalid && reservationForm.get('phone')?.touched">
+                          <span *ngIf="reservationForm.get('phone')?.errors?.['required']">Teléfono es requerido</span>
+                          <span *ngIf="reservationForm.get('phone')?.errors?.['pattern']">Entre 9 y 15 dígitos. Puedes incluir el prefijo, ej. +51987654321</span>
+                        </ng-container>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="field">
+                      <label for="peopleCount" class="form-label fw-semibold">
+                        <i class="fas fa-users me-1 text-muted"></i>
+                        Número de personas *
+                      </label>
+                      <select class="form-select form-select-lg" id="peopleCount" formControlName="peopleCount">
+                        <option *ngFor="let num of peopleCountOptions" [value]="num">
+                          {{num}} {{num === 1 ? 'persona' : 'personas'}}
+                        </option>
+                      </select>
+                      <div class="field-feedback"></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -178,69 +188,90 @@
 
                 <div class="row g-3">
                   <div class="col-md-6">
-                    <label for="branch" class="form-label fw-semibold">
-                      <i class="fas fa-building me-1 text-muted"></i>
-                      Sucursal *
-                    </label>
-                    <select class="form-select form-select-lg" id="branch" formControlName="branchId">
-                      <option value="" disabled>Seleccione una sucursal</option>
-                      <option *ngFor="let branch of branches" [value]="branch.branchId">
-                        {{branch.name}}
-                      </option>
-                    </select>
-                    <div *ngIf="reservationForm.get('branchId')?.invalid && reservationForm.get('branchId')?.touched"
-                      class="text-danger small mt-1">
-                      <div *ngIf="reservationForm.get('branchId')?.errors?.['required']">Sucursal es requerida</div>
+                    <div class="field">
+                      <label for="branch" class="form-label fw-semibold">
+                        <i class="fas fa-building me-1 text-muted"></i>
+                        Sucursal *
+                      </label>
+                      <select class="form-select form-select-lg" id="branch" formControlName="branchId">
+                        <option value="" disabled>Seleccione una sucursal</option>
+                        <option *ngFor="let branch of branches" [value]="branch.branchId">
+                          {{branch.name}}
+                        </option>
+                      </select>
+                      <div class="field-feedback">
+                        <span *ngIf="reservationForm.get('branchId')?.invalid && reservationForm.get('branchId')?.touched">
+                          Sucursal es requerida
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   <div class="col-md-6">
-                    <label for="tableId" class="form-label fw-semibold">
-                      <i class="fas fa-chair me-1 text-muted"></i>
-                      Mesa Disponible *
-                    </label>
-                    <select class="form-select form-select-lg" id="tableId" formControlName="tableId">
-                      <option value="" disabled>Seleccione una mesa libre</option>
-                      <optgroup label="Mesas individuales" *ngIf="availableTables.length">
-                        <option *ngFor="let table of availableTables" [value]="table.id">
-                          {{table.name}} - Capacidad: {{table.capacity}}
+                    <div class="field">
+                      <label for="tableId" class="form-label fw-semibold">
+                        <i class="fas fa-chair me-1 text-muted"></i>
+                        Mesa disponible *
+                      </label>
+                      <select class="form-select form-select-lg" id="tableId" formControlName="tableId">
+                        <option value="" disabled>
+                          {{ reservationForm.get('branchId')?.value ? 'Seleccione una mesa libre' : 'Elija primero una sucursal' }}
                         </option>
-                      </optgroup>
-                      <optgroup label="Mesas familiares" *ngIf="availableFamilyTables.length">
-                        <option *ngFor="let table of availableFamilyTables" [value]="table.id">
-                          {{table._displayName}} - Capacidad: {{table.capacity}}
-                        </option>
-                      </optgroup>
-                    </select>
-                    <div *ngIf="reservationForm.get('tableId')?.invalid && reservationForm.get('tableId')?.touched"
-                      class="text-danger small mt-1">
-                      <div *ngIf="reservationForm.get('tableId')?.errors?.['required']">Mesa es requerida</div>
+                        <optgroup label="Mesas individuales" *ngIf="availableTables.length">
+                          <option *ngFor="let table of availableTables" [value]="table.id">
+                            {{table.name}} · hasta {{table.capacity}} personas
+                          </option>
+                        </optgroup>
+                        <optgroup label="Mesas familiares" *ngIf="availableFamilyTables.length">
+                          <option *ngFor="let table of availableFamilyTables" [value]="table.id">
+                            {{table._displayName}} · hasta {{table.capacity}} personas
+                          </option>
+                        </optgroup>
+                      </select>
+                      <div class="field-feedback">
+                        <span *ngIf="reservationForm.get('tableId')?.invalid && reservationForm.get('tableId')?.touched">
+                          Mesa es requerida
+                        </span>
+                        <span class="field-feedback--hint"
+                          *ngIf="reservationForm.get('branchId')?.value && !availableTables.length && !availableFamilyTables.length">
+                          No hay mesas libres en esta sucursal ahora mismo
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   <div class="col-md-6">
-                    <label for="date" class="form-label fw-semibold">
-                      <i class="fas fa-calendar me-1 text-muted"></i>
-                      Fecha *
-                    </label>
-                    <input type="date" class="form-control form-control-lg" id="date" formControlName="date"
-                      (change)="onDateChange()">
-                  </div>
-                  <div *ngIf="reservationForm.get('date')?.invalid && reservationForm.get('date')?.touched"
-                    class="text-danger small mt-1">
-                    <div *ngIf="reservationForm.get('date')?.errors?.['required']">Fecha es requerida</div>
+                    <div class="field">
+                      <label for="date" class="form-label fw-semibold">
+                        <i class="fas fa-calendar me-1 text-muted"></i>
+                        Fecha *
+                      </label>
+                      <input type="date" class="form-control form-control-lg" id="date" formControlName="date"
+                        [min]="today" (change)="onDateChange()">
+                      <div class="field-feedback">
+                        <span *ngIf="reservationForm.get('date')?.invalid && reservationForm.get('date')?.touched">
+                          Fecha es requerida
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="col-md-6">
-                    <label for="time" class="form-label fw-semibold">
-                      <i class="fas fa-clock me-1 text-muted"></i>
-                      Hora *
-                    </label>
-                    <input type="time" class="form-control form-control-lg" id="time" formControlName="time">
-                  </div>
-                  <div *ngIf="reservationForm.get('time')?.invalid && reservationForm.get('time')?.touched"
-                    class="text-danger small mt-1">
-                    <div *ngIf="reservationForm.get('time')?.errors?.['required']">Hora es requerida</div>
+                    <div class="field">
+                      <label for="time" class="form-label fw-semibold">
+                        <i class="fas fa-clock me-1 text-muted"></i>
+                        Hora *
+                      </label>
+                      <input type="time" class="form-control form-control-lg" id="time" formControlName="time">
+                      <div class="field-feedback">
+                        <span *ngIf="reservationForm.get('time')?.invalid && reservationForm.get('time')?.touched">
+                          Hora es requerida
+                        </span>
+                        <span *ngIf="isReservationInThePast && reservationForm.get('time')?.touched">
+                          La fecha y hora deben ser futuras
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -294,10 +325,6 @@
 
               <!-- Submit Button -->
               <div class="text-center">
-                <div *ngIf="isReservationInThePast && reservationForm.get('time')?.touched"
-                  class="text-danger small mb-3">
-                  La fecha y hora de la reserva deben ser futuras
-                </div>
                 <button type="submit" [disabled]="isBusy"
                   class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-lg">
                   <span *ngIf="!isLoading">

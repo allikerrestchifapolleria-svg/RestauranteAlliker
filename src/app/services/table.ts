@@ -208,6 +208,15 @@ export class TableService {
       return null;
     }
 
+    // El selector de reservas guarda el id del documento de Firestore, mientras
+    // que los pedidos guardan el numero de mesa. Se prueba primero por id, que
+    // es el identificador real: Number('MPF7wPI60M9ZAgY6kxrz') es NaN y antes
+    // caia directo al `return null` del final.
+    const tableById = this.tablesSubject.value.find(t => t.id === tableId);
+    if (tableById) {
+      return tableById.name;
+    }
+
     // Regular table: match by number
     const num = Number(tableId);
     if (!isNaN(num)) {

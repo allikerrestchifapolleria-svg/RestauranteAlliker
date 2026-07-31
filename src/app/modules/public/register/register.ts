@@ -117,6 +117,10 @@ export class Register implements OnInit {
   }
 
   goToLogin() {
-    this.router.navigate(['/login']);
+    // Arrastra el returnUrl para no perder el destino al alternar entre
+    // registro e inicio de sesion.
+    this.router.navigate(['/login'], {
+      queryParams: this.returnUrl ? { returnUrl: this.returnUrl } : {}
+    });
   }
 }

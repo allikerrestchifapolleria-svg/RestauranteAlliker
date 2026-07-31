@@ -158,6 +158,60 @@ p, span, label, input, button, select { font-family: var(--font-body); }
   color: var(--text-dark, #1e272e);
 }
 
+.form-control:hover:not(:focus):not([readonly]),
+.form-select:hover:not(:focus) {
+  border-color: #d8cbb4;
+}
+
+/*
+  Cada campo reserva el alto de su mensaje de validacion. Sin esto, el mensaje
+  aparece y desaparece empujando el resto del formulario: es lo que hacia que
+  los campos "se movieran" al escribir.
+*/
+.field { display: flex; flex-direction: column; height: 100%; }
+.field .form-control, .field .form-select { margin-top: 0.4rem; }
+
+.field-feedback {
+  min-height: 1.4rem;
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #dc3545;
+}
+.field-feedback--hint { color: var(--text-muted, #7a7a7a); }
+.field-feedback .field-feedback--hint { display: block; }
+
+/* Dropdowns: chevron propio en vez del nativo, que cambia segun el navegador */
+.form-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23b08d3f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 16px 16px;
+  padding-right: 3rem;
+  cursor: pointer;
+}
+.form-select:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23d4af37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+}
+.form-select optgroup {
+  font-family: var(--font-body);
+  font-weight: 700;
+  color: var(--text-dark);
+  background: #fdfaf3;
+}
+.form-select option { padding: 10px 12px; color: var(--text-dark); }
+
+/* Correo tomado de la cuenta: se ve claramente que no es editable */
+.form-control.is-locked {
+  background-color: #f7f3ea;
+  border-style: dashed;
+  color: var(--text-muted, #6c757d);
+  cursor: not-allowed;
+}
+.form-control.is-locked:focus { box-shadow: none; border-color: #e8e0d4; }
+
 /* Time Slots */
 .time-info {
   background: #fef9f0 !important; border: 1px dashed var(--accent-gold);
