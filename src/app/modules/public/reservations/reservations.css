@@ -242,6 +242,10 @@ p, span, label, input, button, select { font-family: var(--font-body); }
 .btn-primary:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
 
 /* Alerts */
+.alert-info {
+  background-color: #eaf4fc; border: 1px solid #3a9bd5; color: #2c7bb6; border-radius: 12px;
+}
+.alert-info i { color: #2c7bb6 !important; }
 .alert-success {
   background-color: #e8f8f0; border: 1px solid #2ecc71; color: #27ae60; border-radius: 12px;
 }

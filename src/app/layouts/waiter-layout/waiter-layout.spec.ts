@@ -3,6 +3,7 @@ import { WaiterLayoutComponent } from './waiter-layout';
 import { Auth } from '../../services/auth';
 import { BranchService } from '../../services/branch';
 import { BranchSelectionService } from '../../services/branch-selection';
+import { NotificationService } from '../../services/notification';
 import { Router } from '@angular/router';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -16,13 +17,14 @@ describe('WaiterLayoutComponent', () => {
   let router: Router;
 
   beforeEach(async () => {
-    authSpy = jasmine.createSpyObj('Auth', ['getUserBranchId', 'getCurrentUser', 'logout']);
+    authSpy = jasmine.createSpyObj('Auth', ['getUserBranchId', 'getCurrentUser', 'logout', 'getUserRole']);
     branchServiceSpy = jasmine.createSpyObj('BranchService', ['getBranches']);
     branchSelectionSpy = jasmine.createSpyObj('BranchSelectionService', ['setBranches', 'initializeFromUserBranch', 'getSelectedBranchId', 'getSelectedBranchName']);
 
     branchServiceSpy.getBranches.and.returnValue(of([]));
     branchSelectionSpy.getSelectedBranchId.and.returnValue('b1');
     branchSelectionSpy.getSelectedBranchName.and.returnValue('Sucursal Centro');
+    authSpy.getUserRole.and.returnValue('waiter');
 
     await TestBed.configureTestingModule({
       imports: [WaiterLayoutComponent],
@@ -30,6 +32,7 @@ describe('WaiterLayoutComponent', () => {
         { provide: Auth, useValue: authSpy },
         { provide: BranchService, useValue: branchServiceSpy },
         { provide: BranchSelectionService, useValue: branchSelectionSpy },
+        { provide: NotificationService, useValue: { getNotifications: () => of([]) } },
         provideRouter([]),
       ]
     }).compileComponents();
@@ -51,12 +54,12 @@ describe('WaiterLayoutComponent', () => {
   });
 
   it('should navigate to no-branch when no branch selected', () => {
+    fixture.destroy();
     branchSelectionSpy.getSelectedBranchId.and.returnValue('');
     const navigateSpy = spyOn(router, 'navigate');
-    fixture.detectChanges(); // re-trigger ngOnInit via re-create
     const newFixture = TestBed.createComponent(WaiterLayoutComponent);
     newFixture.detectChanges();
-    // after ngOnInit runs with empty branchId
+    expect(navigateSpy).toHaveBeenCalledWith(['/no-branch']);
   });
 
   it('should return current user', () => {

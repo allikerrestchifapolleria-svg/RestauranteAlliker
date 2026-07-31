@@ -1,10 +1,11 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Dashboard } from './dashboard';
 import { SalesService } from '../../../services/sales';
 import { OrdersService } from '../../../services/orders';
 import { TableService } from '../../../services/table';
 import { ReservationsService } from '../../../services/reservations';
 import { BranchSelectionService } from '../../../services/branch-selection';
+import { PaymentService } from '../../../services/payment';
 import { of } from 'rxjs';
 import { Sale } from '../../../models/sale';
 import { Order } from '../../../models/order';
@@ -19,6 +20,7 @@ describe('Dashboard', () => {
   let tableServiceSpy: jasmine.SpyObj<TableService>;
   let reservationsServiceSpy: jasmine.SpyObj<ReservationsService>;
   let branchSelectionSpy: jasmine.SpyObj<BranchSelectionService>;
+  let paymentServiceSpy: jasmine.SpyObj<PaymentService>;
 
   const now = new Date();
   const mockOrders: Order[] = [
@@ -38,21 +40,24 @@ describe('Dashboard', () => {
     { saleId: 's2', orderId: 'o2', tableId: null, customerId: null, branchId: 'b2', items: [], subtotal: 30, tax: 5.4, total: 35.4, paymentMethod: 'card', paymentStatus: 'completed', saleDate: now, createdAt: now },
   ];
 
-  beforeEach(async () => {
-    salesServiceSpy = jasmine.createSpyObj('SalesService', ['getSalesByDateRange']);
+  beforeEach(fakeAsync(() => {
+    salesServiceSpy = jasmine.createSpyObj('SalesService', ['getSales']);
     ordersServiceSpy = jasmine.createSpyObj('OrdersService', ['getOrders']);
-    tableServiceSpy = jasmine.createSpyObj('TableService', ['getTables']);
+    tableServiceSpy = jasmine.createSpyObj('TableService', ['getTables', 'getTableDisplayName']);
     reservationsServiceSpy = jasmine.createSpyObj('ReservationsService', ['getReservations']);
     branchSelectionSpy = jasmine.createSpyObj('BranchSelectionService', ['selectedBranchId$', 'getSelectedBranchId']);
+    paymentServiceSpy = jasmine.createSpyObj('PaymentService', ['getPayments']);
 
-    salesServiceSpy.getSalesByDateRange.and.returnValue(of(mockSales));
+    salesServiceSpy.getSales.and.returnValue(of(mockSales));
     ordersServiceSpy.getOrders.and.returnValue(of(mockOrders));
     tableServiceSpy.getTables.and.returnValue(of(mockTables));
+    tableServiceSpy.getTableDisplayName.and.returnValue('Mesa 1');
     reservationsServiceSpy.getReservations.and.returnValue(of(mockReservations));
+    paymentServiceSpy.getPayments.and.returnValue(of([]));
     branchSelectionSpy.selectedBranchId$ = of('b1');
     branchSelectionSpy.getSelectedBranchId.and.returnValue('b1');
 
-    await TestBed.configureTestingModule({
+    TestBed.configureTestingModule({
       imports: [Dashboard],
       providers: [
         { provide: SalesService, useValue: salesServiceSpy },
@@ -60,13 +65,15 @@ describe('Dashboard', () => {
         { provide: TableService, useValue: tableServiceSpy },
         { provide: ReservationsService, useValue: reservationsServiceSpy },
         { provide: BranchSelectionService, useValue: branchSelectionSpy },
+        { provide: PaymentService, useValue: paymentServiceSpy },
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Dashboard);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+    tick(301);
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -76,7 +83,7 @@ describe('Dashboard', () => {
     expect(ordersServiceSpy.getOrders).toHaveBeenCalled();
     expect(tableServiceSpy.getTables).toHaveBeenCalled();
     expect(reservationsServiceSpy.getReservations).toHaveBeenCalled();
-    expect(salesServiceSpy.getSalesByDateRange).toHaveBeenCalled();
+    expect(salesServiceSpy.getSales).toHaveBeenCalled();
   });
 
   it('should compute todaySales', () => {
@@ -98,7 +105,7 @@ describe('Dashboard', () => {
   });
 
   it('should set dateRange and reload', () => {
-    const loadSpy = spyOn(component, 'loadData');
+    const loadSpy = spyOn(component as any, 'processData');
     component.setDateRange('week');
     expect(component.dateRange).toBe('week');
     expect(loadSpy).toHaveBeenCalled();

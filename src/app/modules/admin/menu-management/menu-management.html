@@ -86,6 +86,12 @@
           <div class="tags" *ngIf="item.tags.length > 0">
             <span *ngFor="let tag of item.tags" class="tag">{{tag}}</span>
           </div>
+
+          <div class="tags" *ngIf="item.servicePeriodIds && item.servicePeriodIds.length > 0">
+            <span *ngFor="let periodId of item.servicePeriodIds" class="tag tag-period">
+              <i class="fas fa-clock"></i> {{ getPeriodName(periodId) }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -206,6 +212,30 @@
             </tbody>
           </table>
           <button type="button" class="btn btn-sm btn-outline-primary" (click)="addModifier()"><i class="fas fa-plus me-1"></i>Agregar modificador</button>
+        </div>
+
+        <div class="form-section">
+          <h4 class="section-title">Franjas horarias</h4>
+          <p class="periods-hint">Deja vacío para heredar las franjas de la categoría, o para que se venda todo el día si la categoría tampoco tiene.</p>
+          <div class="periods-selector" *ngIf="servicePeriods.length > 0">
+            <label
+              *ngFor="let period of servicePeriods"
+              class="period-option"
+              [class.selected]="isServicePeriodSelected(period.id)">
+              <input type="checkbox"
+                     [checked]="isServicePeriodSelected(period.id)"
+                     (change)="toggleServicePeriod(period.id)"
+                     [name]="'period_' + period.id">
+              <i [class]="period.icon || 'fas fa-clock'"></i>
+              <span class="period-option-text">
+                <strong>{{ period.name }}</strong>
+                <small>{{ period.startTime }} - {{ period.endTime }}</small>
+              </span>
+            </label>
+          </div>
+          <p class="periods-hint" *ngIf="servicePeriods.length === 0">
+            No hay franjas configuradas. Crea una desde <a routerLink="/admin/schedule-management">Horarios</a>.
+          </p>
         </div>
 
         <div class="form-group">

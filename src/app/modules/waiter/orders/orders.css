@@ -1126,6 +1126,27 @@
   color: #64748b;
   font-size: 0.75rem;
 }
+.menu-dropdown li.dropdown-item-disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.menu-dropdown li.dropdown-item-disabled:hover {
+  background: transparent;
+}
+.dropdown-item-period {
+  display: block;
+  color: #22d3ee;
+  font-size: 0.72rem;
+  font-weight: 500;
+  margin-top: 2px;
+}
+.dropdown-item-unavailable {
+  display: block;
+  color: #f87171;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
 
 /* Category Filter Bar */
 .category-filter-bar {

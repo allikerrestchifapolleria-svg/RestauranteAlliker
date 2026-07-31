@@ -135,6 +135,7 @@ describe('Waiter Payment', () => {
     };
     component.allocs.cash.amount = 118;
     component.allocs.cash.received = 118;
+    component.isConfirmDisabled = false;
     expect(component.canProcessPayment()).toBeTrue();
   });
 
@@ -167,7 +168,7 @@ describe('Waiter Payment', () => {
     component.allocs.cash.amount = 50;
     component.newPayment();
     expect(component.paymentResult).toBeNull();
-    expect(component.allocs.cash.amount).toBe(0);
+    expect(component.allocs.cash.amount).toBeNull();
   });
 
   it('should go back to tables', () => {
@@ -200,6 +201,7 @@ describe('Waiter Payment', () => {
     component.allocs.cash.amount = 50;
     component.allocs.cash.received = 50;
     component.allocs.yape.amount = 68;
+    component.isConfirmDisabled = false;
     expect(component.canProcessPayment()).toBeTrue();
     expect(component.getTotalAllocated()).toBe(118);
   });

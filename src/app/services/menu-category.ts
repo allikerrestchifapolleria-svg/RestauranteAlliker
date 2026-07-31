@@ -27,6 +27,7 @@ export class MenuCategoryService {
           id: doc.id,
           name: data['name'] || '',
           active: data['active'] ?? true,
+          defaultServicePeriodIds: Array.isArray(data['defaultServicePeriodIds']) ? data['defaultServicePeriodIds'] : [],
           createdAt: new Date(), // Default since not stored
           updatedAt: new Date()  // Default since not stored
         } as MenuCategory);
@@ -48,7 +49,8 @@ export class MenuCategoryService {
       const categoriesCollection = collection(db, 'menu_categories');
       const dataToSave = {
         active: category.active,
-        name: category.name
+        name: category.name,
+        defaultServicePeriodIds: category.defaultServicePeriodIds || []
       };
       console.log('Data to save to Firestore:', dataToSave);
       console.log('Attempting to save to collection: menu_categories');
@@ -75,10 +77,13 @@ export class MenuCategoryService {
   async updateCategory(id: string, updates: Partial<MenuCategory>): Promise<void> {
     try {
       const categoryDoc = doc(db, 'menu_categories', id);
-      const updateData = {
+      const updateData: Record<string, unknown> = {
         active: updates.active,
         name: updates.name
       };
+      if (updates.defaultServicePeriodIds !== undefined) {
+        updateData['defaultServicePeriodIds'] = updates.defaultServicePeriodIds;
+      }
       await updateDoc(categoryDoc, updateData);
       // Update local state
       const currentCategories = this.categoriesSubject.value;

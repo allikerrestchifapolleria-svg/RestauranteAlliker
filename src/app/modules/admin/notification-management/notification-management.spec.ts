@@ -109,6 +109,7 @@ describe('NotificationManagement', () => {
 
   it('should create new notification', async () => {
     notificationServiceSpy.createNotification.and.returnValue(Promise.resolve());
+    component.newNotification.type = 'info';
     component.newNotification.title = 'Test';
     component.newNotification.message = 'Message';
     await component.saveNotification();

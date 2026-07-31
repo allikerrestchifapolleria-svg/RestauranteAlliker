@@ -5,6 +5,7 @@ import { TableService } from '../../../services/table';
 import { BranchSelectionService } from '../../../services/branch-selection';
 import { Auth } from '../../../services/auth';
 import { MenuService } from '../../../services/menu';
+import { MenuAvailabilityService } from '../../../services/menu-availability';
 import { UserService } from '../../../services/user';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -29,6 +30,7 @@ describe('Waiter Orders', () => {
   let branchSelectionSpy: jasmine.SpyObj<BranchSelectionService>;
   let authSpy: jasmine.SpyObj<Auth>;
   let menuServiceSpy: jasmine.SpyObj<MenuService>;
+  let availabilityServiceSpy: jasmine.SpyObj<MenuAvailabilityService>;
 
   beforeEach(async () => {
     ordersServiceSpy = jasmine.createSpyObj('OrdersService', ['getOrders', 'updateOrderStatus', 'createOrder', 'loadOrdersFromFirestore']);
@@ -36,6 +38,7 @@ describe('Waiter Orders', () => {
     branchSelectionSpy = jasmine.createSpyObj('BranchSelectionService', ['selectedBranchId$']);
     authSpy = jasmine.createSpyObj('Auth', ['getUserRole', 'isLoggedIn', 'getCurrentUser']);
     menuServiceSpy = jasmine.createSpyObj('MenuService', ['getMenuItems', 'getMenuCategories']);
+    availabilityServiceSpy = jasmine.createSpyObj('MenuAvailabilityService', ['startClock', 'getPeriods', 'getSchedule', 'isItemAvailable', 'getItemPeriodLabel']);
     const userServiceSpy = jasmine.createSpyObj('UserService', ['getUsers']);
 
     ordersServiceSpy.getOrders.and.returnValue(of(mockOrders));
@@ -47,6 +50,11 @@ describe('Waiter Orders', () => {
     menuServiceSpy.getMenuItems.and.returnValue(of([]));
     menuServiceSpy.getMenuCategories.and.returnValue(of([]));
     userServiceSpy.getUsers.and.returnValue(of([]));
+    availabilityServiceSpy.getPeriods.and.returnValue(of([]));
+    availabilityServiceSpy.getSchedule.and.returnValue(of({ closedDays: [], closedDates: [], closedMessage: '' }));
+    availabilityServiceSpy.now$ = of(new Date()) as any;
+    availabilityServiceSpy.isItemAvailable.and.returnValue(true);
+    availabilityServiceSpy.getItemPeriodLabel.and.returnValue('');
 
     mockOrders[0].status = 'pending';
 
@@ -58,6 +66,7 @@ describe('Waiter Orders', () => {
         { provide: BranchSelectionService, useValue: branchSelectionSpy },
         { provide: Auth, useValue: authSpy },
         { provide: MenuService, useValue: menuServiceSpy },
+        { provide: MenuAvailabilityService, useValue: availabilityServiceSpy },
         { provide: UserService, useValue: userServiceSpy },
         provideRouter([]),
       ]
@@ -173,5 +182,32 @@ describe('Waiter Orders', () => {
   it('should check getPaymentStatusLabel', () => {
     expect(component.getPaymentStatusLabel('pending')).toBe('Pendiente');
     expect(component.getPaymentStatusLabel('paid')).toBe('Pagado');
+  });
+
+  it('should evaluate current availability of an item', () => {
+    const item = { id: 'm1', categoryId: 'cat1', isAvailable: true } as any;
+    component.menuCategories = [{ id: 'cat1', name: 'Cat1', active: true } as any];
+    availabilityServiceSpy.isItemAvailable.and.returnValue(false);
+    expect(component.isItemCurrentlyAvailable(item)).toBeFalse();
+    availabilityServiceSpy.isItemAvailable.and.returnValue(true);
+    expect(component.isItemCurrentlyAvailable(item)).toBeTrue();
+  });
+
+  it('should return the sale period label of an item', () => {
+    const item = { id: 'm1', categoryId: 'cat1' } as any;
+    component.menuCategories = [{ id: 'cat1', name: 'Cat1', active: true } as any];
+    availabilityServiceSpy.getItemPeriodLabel.and.returnValue('Noche 17:00-01:00');
+    expect(component.getItemPeriodLabel(item)).toBe('Noche 17:00-01:00');
+  });
+
+  it('should not select an item outside its sale window', () => {
+    const item = { id: 'm1', categoryId: 'cat1', name: 'Lomo', price: 10 } as any;
+    component.addItem();
+    availabilityServiceSpy.isItemAvailable.and.returnValue(false);
+    component.selectItem(0, item);
+    expect(component.orderItems[0].name).not.toBe('Lomo');
+    availabilityServiceSpy.isItemAvailable.and.returnValue(true);
+    component.selectItem(0, item);
+    expect(component.orderItems[0].name).toBe('Lomo');
   });
 });

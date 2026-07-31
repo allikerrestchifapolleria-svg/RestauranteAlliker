@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MenuService } from '../../../services/menu';
+import { MenuAvailabilityService } from '../../../services/menu-availability';
 import { CartService } from '../../../services/cart';
 import { MenuItem, MenuVariant, MenuModifier } from '../../../models/menu-item';
 import { Router } from '@angular/router';
@@ -37,6 +38,7 @@ export class Dishes implements OnInit {
 
   constructor(
     private menuService: MenuService,
+    private availabilityService: MenuAvailabilityService,
     private cartService: CartService,
     private router: Router,
     private cartSidebarService: CartSidebarService,
@@ -54,6 +56,15 @@ export class Dishes implements OnInit {
       const vegCat = categories.find(c => c.name === 'Vegetarianos');
       this.vegetarianCategoryId = vegCat ? vegCat.id : '';
     });
+    this.availabilityService.getPeriods().subscribe(() => this.applyFilters());
+    this.availabilityService.getSchedule().subscribe(() => this.applyFilters());
+    this.availabilityService.now$.subscribe(() => this.applyFilters());
+    this.availabilityService.startClock();
+  }
+
+  isItemCurrentlyAvailable(item: MenuItem): boolean {
+    const category = this.categories.find(c => c.id === item.categoryId);
+    return this.availabilityService.isItemAvailable(item, category);
   }
 
   onSearch(event: any) {
@@ -73,12 +84,17 @@ export class Dishes implements OnInit {
       const searchMatch = !this.searchTerm ||
         item.name.toLowerCase().includes(term) ||
         item.description.toLowerCase().includes(term);
-      const availableMatch = !this.showAvailableOnly || item.isAvailable;
+      const availableMatch = !this.showAvailableOnly || this.isItemCurrentlyAvailable(item);
       const vegetarianMatch = !this.showVegetarianOnly ||
         (this.vegetarianCategoryId && item.categoryId === this.vegetarianCategoryId);
 
       return categoryMatch && searchMatch && availableMatch && vegetarianMatch;
     });
+  }
+
+  getItemPeriodLabel(item: MenuItem): string {
+    const category = this.categories.find(c => c.id === item.categoryId);
+    return this.availabilityService.getItemPeriodLabel(item, category);
   }
 
   getTotalItems(): number {
@@ -187,6 +203,6 @@ export class Dishes implements OnInit {
   }
 
   callNow() {
-    window.location.href = 'tel:+51123456789';
+    window.open('tel:+51123456789');
   }
 }

@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Cart } from './cart';
-import { CartService, CartItem } from '../../../services/cart';
+import { CartService } from '../../../services/cart';
+import { BranchService } from '../../../services/branch';
 import { Router } from '@angular/router';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { MenuItem } from '../../../models/menu-item';
 
 const mockItem: MenuItem = {
@@ -19,10 +21,6 @@ const mockItem2: MenuItem = {
   createdAt: new Date(), updatedAt: new Date(),
 };
 
-function createCartItem(item: MenuItem, quantity: number): CartItem {
-  return { item, quantity };
-}
-
 describe('Cart Component', () => {
   let component: Cart;
   let fixture: ComponentFixture<Cart>;
@@ -30,10 +28,14 @@ describe('Cart Component', () => {
   let router: Router;
 
   beforeEach(async () => {
+    const branchServiceSpy = jasmine.createSpyObj('BranchService', ['getBranches']);
+    branchServiceSpy.getBranches.and.returnValue(of([]));
+
     await TestBed.configureTestingModule({
       imports: [Cart],
       providers: [
         CartService,
+        { provide: BranchService, useValue: branchServiceSpy },
         provideRouter([]),
       ]
     }).compileComponents();
@@ -69,7 +71,7 @@ describe('Cart Component', () => {
     cartService.addToCart(mockItem);
     component.ngOnInit();
 
-    component.updateQuantity('1', 5);
+    component.updateQuantity(0, 5);
     expect(component.cartItems[0].quantity).toBe(5);
     expect(component.getItemCount()).toBe(5);
   });
@@ -79,7 +81,7 @@ describe('Cart Component', () => {
     cartService.addToCart(mockItem2);
     component.ngOnInit();
 
-    component.updateQuantity('1', 0);
+    component.updateQuantity(0, 0);
     expect(component.cartItems.length).toBe(1);
     expect(component.cartItems[0].item.id).toBe('2');
   });
@@ -89,7 +91,7 @@ describe('Cart Component', () => {
     cartService.addToCart(mockItem2);
     component.ngOnInit();
 
-    component.removeItem('1');
+    component.removeItem(0);
     expect(component.cartItems.length).toBe(1);
   });
 
@@ -111,16 +113,6 @@ describe('Cart Component', () => {
     const expected = 32 * 2 + 28 * 3;
     expect(component.getTotal()).toBe(expected);
     expect(component.getSubtotal()).toBe(expected);
-  });
-
-  it('should calculate delivery fee (free for pickup)', () => {
-    component.deliveryType = 'pickup';
-    expect(component.getDeliveryFee()).toBe(0);
-  });
-
-  it('should calculate delivery fee (5 for delivery)', () => {
-    component.deliveryType = 'delivery';
-    expect(component.getDeliveryFee()).toBe(5.00);
   });
 
   it('should have fixed service fee of 2.00', () => {
@@ -153,12 +145,8 @@ describe('Cart Component', () => {
     cartService.addToCart(mockItem);
     component.ngOnInit();
 
-    component.updateQuantity('1', 5);
-    component.updateQuantity('1', 3);
+    component.updateQuantity(0, 5);
+    component.updateQuantity(0, 3);
     expect(component.cartItems[0].quantity).toBe(5);
-  });
-
-  it('should prepopulate deliveryType as pickup', () => {
-    expect(component.deliveryType).toBe('pickup');
   });
 });

@@ -116,6 +116,23 @@
   </div>
 </section>
 
+<!-- Closed Banner -->
+<div class="container-fluid py-4" *ngIf="isClosed">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="closed-banner d-flex align-items-center gap-3 p-4 rounded-4">
+        <div class="closed-banner-icon">
+          <i class="fas fa-store-slash fa-2x"></i>
+        </div>
+        <div class="flex-grow-1">
+          <h3 class="mb-1 fw-bold">Hoy estamos cerrados</h3>
+          <p class="mb-0">{{ closedMessage }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Enhanced Search and Filter Section -->
 <div class="container-fluid py-4">
   <div class="row justify-content-center mb-5">
@@ -304,13 +321,13 @@
             <img [src]="item.image"
                  [alt]="item.name"
                  class="card-img-top menu-image"
-                 [class.opacity-50]="!item.isAvailable"
+                 [class.opacity-50]="!isItemCurrentlyAvailable(item)"
                  loading="lazy"
                  onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22%3E%3Crect fill=%22%23F3F4F6%22 width=%2280%22 height=%2280%22/%3E%3Ctext x=%2240%22 y=%2245%22 text-anchor=%22middle%22 fill=%22%239CA3AF%22 font-size=%2214%22%3EPlato%3C/text%3E%3C/svg%3E'">
-            <div class="image-overlay" *ngIf="!item.isAvailable">
+            <div class="image-overlay" *ngIf="!isItemCurrentlyAvailable(item)">
               <div class="overlay-content">
-                <i class="fas fa-eye-slash fa-2x text-white"></i>
-                <span class="overlay-text">No disponible</span>
+                <i class="fas fa-clock fa-2x text-white"></i>
+                <span class="overlay-text">{{ item.isAvailable ? 'Fuera de horario' : 'No disponible' }}</span>
               </div>
             </div>
           </div>
@@ -341,15 +358,22 @@
             </span>
           </div>
 
+          <!-- Sale period label -->
+          <div class="mb-3" *ngIf="getItemPeriodLabel(item)">
+            <span class="badge bg-info text-dark me-1 mb-1" [class.bg-secondary]="!isItemCurrentlyAvailable(item)">
+              <i class="fas fa-clock me-1"></i>{{ getItemPeriodLabel(item) }}
+            </span>
+          </div>
+
           <div class="d-flex justify-content-between align-items-center mt-auto">
             <span class="h5 mb-0 text-primary fw-bold">S/ {{ item.price.toFixed(2) }}</span>
             <button class="btn btn-primary btn-sm rounded-pill px-3"
                     (click)="addToCart(item)"
-                    [disabled]="!item.isAvailable"
-                    [ngClass]="{'btn-secondary': !item.isAvailable}">
+                    [disabled]="!isItemCurrentlyAvailable(item)"
+                    [ngClass]="{'btn-secondary': !isItemCurrentlyAvailable(item)}">
               <i class="fas fa-cart-plus me-1"></i>
-              <span class="d-none d-sm-inline">{{ item.isAvailable ? 'Agregar' : 'No disponible' }}</span>
-              <span class="d-sm-none">{{ item.isAvailable ? '+' : '✗' }}</span>
+              <span class="d-none d-sm-inline">{{ isItemCurrentlyAvailable(item) ? 'Agregar' : (item.isAvailable ? 'Fuera de horario' : 'No disponible') }}</span>
+              <span class="d-sm-none">{{ isItemCurrentlyAvailable(item) ? '+' : '✗' }}</span>
             </button>
           </div>
         </div>

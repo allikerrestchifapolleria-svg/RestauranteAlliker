@@ -1,8 +1,10 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Dishes } from './dishes';
 import { CartService } from '../../../services/cart';
 import { MenuService } from '../../../services/menu';
 import { MenuCategoryService } from '../../../services/menu-category';
+import { MenuAvailabilityService } from '../../../services/menu-availability';
+import { CartSidebarService } from '../../../shared/components/cart-sidebar/cart-sidebar.service';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
 import { MenuItem } from '../../../models/menu-item';
@@ -43,17 +45,28 @@ describe('Dishes Component', () => {
   let cartServiceSpy: jasmine.SpyObj<CartService>;
   let menuServiceSpy: jasmine.SpyObj<MenuService>;
   let categoryServiceSpy: jasmine.SpyObj<MenuCategoryService>;
+  let availabilityServiceSpy: jasmine.SpyObj<MenuAvailabilityService>;
+  let cartSidebarServiceSpy: jasmine.SpyObj<CartSidebarService>;
   let router: Router;
 
   beforeEach(async () => {
     cartServiceSpy = jasmine.createSpyObj('CartService', ['addToCart', 'getCartItemCount', 'getCartTotal']);
     menuServiceSpy = jasmine.createSpyObj('MenuService', ['getMenuItems']);
     categoryServiceSpy = jasmine.createSpyObj('MenuCategoryService', ['getCategories']);
+    availabilityServiceSpy = jasmine.createSpyObj('MenuAvailabilityService', [
+      'getPeriods', 'getSchedule', 'now$', 'startClock', 'isItemAvailable', 'getItemPeriodLabel'
+    ]);
+    cartSidebarServiceSpy = jasmine.createSpyObj('CartSidebarService', ['open']);
 
     menuServiceSpy.getMenuItems.and.returnValue(of(mockItems));
     categoryServiceSpy.getCategories.and.returnValue(of(mockCategories));
     cartServiceSpy.getCartItemCount.and.returnValue(0);
     cartServiceSpy.getCartTotal.and.returnValue(0);
+    availabilityServiceSpy.getPeriods.and.returnValue(of([]));
+    availabilityServiceSpy.getSchedule.and.returnValue(of({ closedDays: [], closedDates: [], closedMessage: '' }));
+    availabilityServiceSpy.now$ = of(new Date()) as any;
+    availabilityServiceSpy.isItemAvailable.and.callFake((item: MenuItem) => item.isAvailable);
+    availabilityServiceSpy.getItemPeriodLabel.and.returnValue('');
 
     await TestBed.configureTestingModule({
       imports: [Dishes],
@@ -61,6 +74,8 @@ describe('Dishes Component', () => {
         { provide: CartService, useValue: cartServiceSpy },
         { provide: MenuService, useValue: menuServiceSpy },
         { provide: MenuCategoryService, useValue: categoryServiceSpy },
+        { provide: MenuAvailabilityService, useValue: availabilityServiceSpy },
+        { provide: CartSidebarService, useValue: cartSidebarServiceSpy },
         provideRouter([]),
       ]
     }).compileComponents();
@@ -124,6 +139,28 @@ describe('Dishes Component', () => {
     expect(component.filteredItems.find(i => i.name === 'Suspiro Limeño')).toBeUndefined();
   });
 
+  it('should show items outside their sale window but mark them unavailable', () => {
+    availabilityServiceSpy.isItemAvailable.and.callFake((item: MenuItem) => item.id !== '2');
+    component.showAvailableOnly = false;
+    component.applyFilters();
+    expect(component.filteredItems.length).toBe(3);
+    expect(component.isItemCurrentlyAvailable(mockItems[1])).toBeFalse();
+    expect(component.isItemCurrentlyAvailable(mockItems[0])).toBeTrue();
+  });
+
+  it('should hide out-of-sale-window items when "Solo disponibles" is active', () => {
+    availabilityServiceSpy.isItemAvailable.and.callFake((item: MenuItem) => item.id !== '2');
+    component.showAvailableOnly = true;
+    component.applyFilters();
+    expect(component.filteredItems.length).toBe(2);
+    expect(component.filteredItems.find(i => i.id === '2')).toBeUndefined();
+  });
+
+  it('should return the sale period label of an item', () => {
+    availabilityServiceSpy.getItemPeriodLabel.and.returnValue('Noche 17:00-01:00');
+    expect(component.getItemPeriodLabel(mockItems[0])).toBe('Noche 17:00-01:00');
+  });
+
   it('should filter by vegetarian', () => {
     component.showVegetarianOnly = true;
     component.applyFilters();
@@ -183,10 +220,9 @@ describe('Dishes Component', () => {
     expect(cartServiceSpy.addToCart).toHaveBeenCalledWith(item);
   });
 
-  it('should navigate to cart when goToCart is called', () => {
-    const navigateSpy = spyOn(router, 'navigate');
-    component.goToCart();
-    expect(navigateSpy).toHaveBeenCalledWith(['/cart']);
+  it('should open cart sidebar', () => {
+    component.openCartSidebar();
+    expect(cartSidebarServiceSpy.open).toHaveBeenCalled();
   });
 
   it('should navigate to reservations when goToReservations is called', () => {

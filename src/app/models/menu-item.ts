@@ -9,6 +9,8 @@ export interface MenuItem {
   variants: MenuVariant[];
   modifiers: MenuModifier[];
   isAvailable: boolean;
+  /** Franjas horarias en las que se vende. Vacío = hereda las de su categoría. */
+  servicePeriodIds?: string[];
   createdAt: Date;
   updatedAt: Date;
 }

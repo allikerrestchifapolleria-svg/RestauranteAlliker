@@ -23,7 +23,7 @@ export class Tables implements OnInit {
   private _tables = signal<Table[]>([]);
   private _orders = signal<OrderModel[]>([]);
 
-  searchTerm = '';
+  searchTerm = signal('');
   selectedStatus = signal<string>('all');
   draggedTable: Table | null = null;
   selectedTable = signal<Table | null>(null);
@@ -88,7 +88,7 @@ export class Tables implements OnInit {
 
   // Combined display: regular + family composites
   filteredTables = computed(() => {
-    const search = this.searchTerm.toLowerCase();
+    const search = this.searchTerm().toLowerCase();
     const status = this.selectedStatus();
     const regular = this.regularTables();
     const families = this.familyComposites();

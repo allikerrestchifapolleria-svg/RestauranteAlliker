@@ -73,7 +73,7 @@ describe('Waiter Tables', () => {
   });
 
   it('should filter by search term', () => {
-    component.searchTerm = 'Mesa 1';
+    component.searchTerm.set('Mesa 1');
     fixture.detectChanges();
     expect(component.filteredTables().length).toBe(1);
     expect(component.filteredTables()[0].name).toContain('Mesa 1');
@@ -88,7 +88,7 @@ describe('Waiter Tables', () => {
   it('should compute stats', () => {
     const stats = component.stats();
     expect(stats.length).toBe(4);
-    expect(stats[0].label).toBe('Total Mesas');
+    expect(stats[0].label).toBe('Total');
   });
 
   it('should return status icon', () => {
@@ -194,10 +194,9 @@ describe('Waiter Tables', () => {
     expect(navigateSpy).toHaveBeenCalledWith('/waiter/orders?create=true');
   });
 
-  it('should navigate to order detail', () => {
-    const navigateSpy = spyOn(router, 'navigateByUrl');
+  it('should open order detail modal', () => {
     component.viewOrder(mockOrders[0]);
-    expect(navigateSpy).toHaveBeenCalledWith('/waiter/orders?orderId=o1');
+    expect(component.selectedOrder()?.id).toBe('o1');
   });
 
   it('should complete order and redirect to payment', () => {

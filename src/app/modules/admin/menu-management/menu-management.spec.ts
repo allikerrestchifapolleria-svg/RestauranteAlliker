@@ -84,7 +84,9 @@ describe('MenuManagement', () => {
 
   it('should not save without required fields', () => {
     component.saveItem();
-    expect(component.errorMessage).toBe('Por favor complete todos los campos requeridos');
+    expect(component.formErrors['name']).toBeTruthy();
+    expect(component.formErrors['price']).toBeTruthy();
+    expect(component.formErrors['categoryId']).toBeTruthy();
   });
 
   it('should update existing item', (done) => {

@@ -380,6 +380,120 @@
   transform: translateY(-1px);
 }
 
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+.tag {
+  background: rgba(167, 139, 250, 0.1);
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  color: #a78bfa;
+  border: 1px solid rgba(167, 139, 250, 0.2);
+}
+
+.tag-period {
+  background: rgba(34, 211, 238, 0.1);
+  color: #22d3ee;
+  border: 1px solid rgba(34, 211, 238, 0.25);
+}
+
+.form-section {
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: #0f172a;
+  border-radius: 8px;
+  border: 1px solid #334155;
+}
+
+.section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #334155;
+}
+
+.periods-hint {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.periods-hint a {
+  color: #22d3ee;
+  text-decoration: none;
+}
+
+.periods-hint a:hover {
+  text-decoration: underline;
+}
+
+.periods-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.period-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #1e293b;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.period-option:hover {
+  border-color: #22d3ee;
+}
+
+.period-option.selected {
+  border-color: rgba(34, 211, 238, 0.5);
+  background: rgba(34, 211, 238, 0.08);
+  color: #22d3ee;
+}
+
+.period-option input {
+  width: auto;
+  accent-color: #22d3ee;
+}
+
+.period-option > i {
+  font-size: 0.95rem;
+}
+
+.period-option-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.period-option-text strong {
+  font-size: 0.85rem;
+  color: inherit;
+}
+
+.period-option-text small {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+@media (max-width: 768px) {
+  .periods-selector {
+    grid-template-columns: 1fr;
+  }
+}
+
 .empty-state {
   text-align: center;
   padding: 3rem 2rem;

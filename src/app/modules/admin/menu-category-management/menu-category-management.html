@@ -24,6 +24,11 @@
         <p class="status" [class.active]="category.active" [class.inactive]="!category.active">
           {{category.active ? 'Activa' : 'Inactiva'}}
         </p>
+        <div class="tags" *ngIf="category.defaultServicePeriodIds && category.defaultServicePeriodIds.length > 0">
+          <span *ngFor="let periodId of category.defaultServicePeriodIds" class="tag tag-period">
+            <i class="fas fa-clock"></i> {{ getPeriodName(periodId) }}
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -48,6 +53,30 @@
             <input type="checkbox" id="active" [checked]="newCategory.active" (change)="newCategory.active = $event.target.checked" name="active" class="checkbox-input">
             <span class="checkbox-text">Activa</span>
           </label>
+        </div>
+
+        <div class="form-section">
+          <h4 class="section-title">Franjas horarias por defecto</h4>
+          <p class="periods-hint">Los platos de esta categoría sin franjas propias heredan estas franjas. Vacío = todo el día.</p>
+          <div class="periods-selector" *ngIf="servicePeriods.length > 0">
+            <label
+              *ngFor="let period of servicePeriods"
+              class="period-option"
+              [class.selected]="isServicePeriodSelected(period.id)">
+              <input type="checkbox"
+                     [checked]="isServicePeriodSelected(period.id)"
+                     (change)="toggleServicePeriod(period.id)"
+                     [name]="'period_' + period.id">
+              <i [class]="period.icon || 'fas fa-clock'"></i>
+              <span class="period-option-text">
+                <strong>{{ period.name }}</strong>
+                <small>{{ period.startTime }} - {{ period.endTime }}</small>
+              </span>
+            </label>
+          </div>
+          <p class="periods-hint" *ngIf="servicePeriods.length === 0">
+            No hay franjas configuradas. Crea una desde <a routerLink="/admin/schedule-management">Horarios</a>.
+          </p>
         </div>
 
         <div class="form-actions">

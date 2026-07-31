@@ -92,19 +92,19 @@ describe('CartService', () => {
 
   it('should update quantity', () => {
     service.addToCart(mockItem);
-    service.updateQuantity('1', 5);
+    service.updateQuantity(0, 5);
     expect(service.getCartItemCount()).toBe(5);
   });
 
   it('should remove item when quantity set to 0', () => {
     service.addToCart(mockItem);
-    service.updateQuantity('1', 0);
+    service.updateQuantity(0, 0);
     expect(service.getCartItems().length).toBe(0);
   });
 
   it('should remove item when quantity set to negative', () => {
     service.addToCart(mockItem);
-    service.updateQuantity('1', -3);
+    service.updateQuantity(0, -3);
     expect(service.getCartItems().length).toBe(0);
   });
 
@@ -125,7 +125,7 @@ describe('CartService', () => {
   });
 
   it('should handle updating non-existent item gracefully', () => {
-    service.updateQuantity('non-existent', 5);
+    service.updateQuantity(0, 5);
     expect(service.getCartItems().length).toBe(0);
   });
 });

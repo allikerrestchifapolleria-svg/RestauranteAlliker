@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { Observable, combineLatest } from 'rxjs';
 import { startWith, map } from 'rxjs/operators';
 import { MenuService } from '../../../services/menu';
+import { MenuAvailabilityService } from '../../../services/menu-availability';
 import { CartService } from '../../../services/cart';
 import { MenuCategoryService } from '../../../services/menu-category';
 import { MenuItem, MenuVariant, MenuModifier } from '../../../models/menu-item';
@@ -35,8 +36,12 @@ export class Menu implements OnInit {
   selectedModifiers: MenuModifier[] = [];
   configQuantity = 1;
 
+  isClosed = false;
+  closedMessage = '';
+
   constructor(
     private menuService: MenuService,
+    private availabilityService: MenuAvailabilityService,
     private cartService: CartService,
     private categoryService: MenuCategoryService,
     private router: Router,
@@ -47,6 +52,7 @@ export class Menu implements OnInit {
   ngOnInit() {
     this.menuItems$ = this.menuService.getMenuItems().pipe(startWith([]));
     this.categories$ = this.categoryService.getCategories().pipe(startWith([]));
+    this.availabilityService.startClock();
 
     combineLatest([this.menuItems$, this.categories$]).subscribe(([items, categories]) => {
       this.allItems = items;
@@ -56,6 +62,29 @@ export class Menu implements OnInit {
       this.applyFilters();
       this.cdr.detectChanges();
     });
+
+    this.availabilityService.getPeriods().subscribe(() => {
+      this.applyFilters();
+      this.cdr.detectChanges();
+    });
+
+    this.availabilityService.getSchedule().subscribe(schedule => {
+      this.closedMessage = schedule.closedMessage || '';
+      this.isClosed = !this.availabilityService.isRestaurantOpen();
+      this.applyFilters();
+      this.cdr.detectChanges();
+    });
+
+    this.availabilityService.now$.subscribe(() => {
+      this.isClosed = !this.availabilityService.isRestaurantOpen();
+      this.applyFilters();
+      this.cdr.detectChanges();
+    });
+  }
+
+  isItemCurrentlyAvailable(item: MenuItem): boolean {
+    const category = this.allCategories.find(c => c.id === item.categoryId);
+    return this.availabilityService.isItemAvailable(item, category);
   }
 
   filterByCategory(categoryId: string) {
@@ -77,13 +106,18 @@ export class Menu implements OnInit {
         item.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         item.description.toLowerCase().includes(this.searchTerm.toLowerCase());
 
-      const availableMatch = !this.showAvailableOnly || item.isAvailable;
+      const availableMatch = !this.showAvailableOnly || this.isItemCurrentlyAvailable(item);
 
       const vegetarianMatch = !this.showVegetarianOnly ||
         (this.vegetarianCategoryId && item.categoryId === this.vegetarianCategoryId);
 
       return categoryMatch && searchMatch && availableMatch && vegetarianMatch;
     });
+  }
+
+  getItemPeriodLabel(item: MenuItem): string {
+    const category = this.allCategories.find(c => c.id === item.categoryId);
+    return this.availabilityService.getItemPeriodLabel(item, category);
   }
 
   getTotalItems(): number {
@@ -196,6 +230,6 @@ export class Menu implements OnInit {
   }
 
   callNow() {
-    window.location.href = 'tel:+51123456789';
+    window.open('tel:+51123456789');
   }
 }

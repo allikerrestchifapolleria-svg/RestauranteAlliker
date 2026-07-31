@@ -334,8 +334,19 @@
                                  [name]="'itemName' + i" placeholder="Buscar plato... Ej: Lomo Saltado"
                                  required minlength="2" maxlength="100" autocomplete="off">
                           <ul class="menu-dropdown" *ngIf="showDropdown[i] && filteredItemLists[i]?.length">
-                            <li *ngFor="let mi of filteredItemLists[i]" (mousedown)="selectItem(i, mi)">
-                              <div class="dropdown-item-name">{{ mi.name }}</div>
+                            <li *ngFor="let mi of filteredItemLists[i]"
+                                (mousedown)="selectItem(i, mi)"
+                                [class.dropdown-item-disabled]="!isItemCurrentlyAvailable(mi)"
+                                [class.disabled]="!isItemCurrentlyAvailable(mi)">
+                              <div class="dropdown-item-name">
+                                {{ mi.name }}
+                                <span class="dropdown-item-period" *ngIf="getItemPeriodLabel(mi)">
+                                  <i class="fas fa-clock me-1"></i>{{ getItemPeriodLabel(mi) }}
+                                </span>
+                                <span class="dropdown-item-unavailable" *ngIf="!isItemCurrentlyAvailable(mi)">
+                                  <i class="fas fa-ban me-1"></i>Fuera de horario
+                                </span>
+                              </div>
                               <div class="dropdown-item-meta">
                                 <span class="dropdown-item-price">S/ {{ mi.price }}</span>
                                 <span class="dropdown-item-cat">{{ getCategoryName(mi.categoryId) }}</span>

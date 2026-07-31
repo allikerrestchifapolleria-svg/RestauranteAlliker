@@ -61,6 +61,32 @@ export class ReservationsService {
     });
   }
 
+  /**
+   * Observa el estado de una reserva concreta en Firestore. Es el unico canal
+   * por el que el cliente conoce el resultado de la llamada de confirmacion:
+   * el Workflow 3 de n8n lo escribe aqui (via confirm-reservation) unos
+   * segundos despues del `call_analyzed` de Retell.
+   */
+  watchReservationStatus(reservationId: string): Observable<string> {
+    return new Observable(observer => {
+      const reservationDoc = doc(db, 'reservations', reservationId);
+      const unsubscribe = onSnapshot(
+        reservationDoc,
+        snapshot => {
+          this.ngZone.run(() => {
+            const status = snapshot.exists() ? snapshot.data()['status'] || 'pending' : 'pending';
+            observer.next(status);
+          });
+        },
+        error => {
+          console.error('[RESERVATIONS] Error observando la reserva:', error);
+          observer.error(error);
+        }
+      );
+      return () => unsubscribe();
+    });
+  }
+
   async createReservation(reservation: Omit<Reservation, 'id' | 'createdAt'>): Promise<string> {
     try {
       console.log('ReservationsService.createReservation called with:', reservation);

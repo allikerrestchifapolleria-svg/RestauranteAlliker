@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { Auth } from '../../services/auth';
 import { BranchService } from '../../services/branch';
 import { BranchSelectionService } from '../../services/branch-selection';
@@ -21,8 +22,9 @@ const SIDEBAR_COLLAPSED_KEY = 'admin-sidebar-collapsed';
   styleUrls: ['./admin-layout.css'],
   imports: [RouterModule, CommonModule, FormsModule]
 })
-export class AdminLayoutComponent implements OnInit {
+export class AdminLayoutComponent implements OnInit, OnDestroy {
   branches: Branch[] = [];
+  private readonly subscriptions = new Subscription();
   selectedBranchId: string = '';
   sidebarCollapsed: boolean = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
   mobileMoreOpen: boolean = false;
@@ -32,6 +34,7 @@ export class AdminLayoutComponent implements OnInit {
     { icon: 'fas fa-cash-register', label: 'Caja', path: '/admin/cash-register' },
     { icon: 'fas fa-utensils', label: 'Gestión del Menú', path: '/admin/menu-management' },
     { icon: 'fas fa-tags', label: 'Categorías', path: '/admin/menu-category-management' },
+    { icon: 'fas fa-clock', label: 'Horarios', path: '/admin/schedule-management' },
     { icon: 'fas fa-user-friends', label: 'Clientes', path: '/admin/customer-management' },
     { icon: 'fas fa-building', label: 'Sucursales', path: '/admin/branch-management' },
     { icon: 'fas fa-percent', label: 'Promociones', path: '/admin/promotion-management' },
@@ -77,7 +80,8 @@ export class AdminLayoutComponent implements OnInit {
     private auth: Auth,
     private router: Router,
     private branchService: BranchService,
-    private branchSelection: BranchSelectionService
+    private branchSelection: BranchSelectionService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -86,12 +90,19 @@ export class AdminLayoutComponent implements OnInit {
       return;
     }
     this.selectedBranchId = this.branchSelection.getSelectedBranchId();
-    this.branchService.getBranches().subscribe(branches => {
-      this.branches = branches;
-      this.branchSelection.setBranches(branches);
-      this.branchSelection.initializeFromUserBranch(this.auth.getUserBranchId());
-      this.selectedBranchId = this.branchSelection.getSelectedBranchId();
-    });
+    this.subscriptions.add(
+      this.branchService.getBranches().subscribe(branches => {
+        this.branches = branches;
+        this.branchSelection.setBranches(branches);
+        this.branchSelection.initializeFromUserBranch(this.auth.getUserBranchId());
+        this.selectedBranchId = this.branchSelection.getSelectedBranchId();
+        this.cdr.detectChanges();
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
   onBranchChange() {

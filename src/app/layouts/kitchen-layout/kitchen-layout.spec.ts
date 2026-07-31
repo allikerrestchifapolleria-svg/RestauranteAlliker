@@ -16,13 +16,14 @@ describe('KitchenLayoutComponent', () => {
   let router: Router;
 
   beforeEach(async () => {
-    authSpy = jasmine.createSpyObj('Auth', ['getUserBranchId', 'getCurrentUser', 'logout']);
+    authSpy = jasmine.createSpyObj('Auth', ['getUserBranchId', 'getCurrentUser', 'logout', 'getUserRole']);
     branchServiceSpy = jasmine.createSpyObj('BranchService', ['getBranches']);
     branchSelectionSpy = jasmine.createSpyObj('BranchSelectionService', ['setBranches', 'initializeFromUserBranch', 'getSelectedBranchId', 'getSelectedBranchName']);
 
     branchServiceSpy.getBranches.and.returnValue(of([]));
     branchSelectionSpy.getSelectedBranchId.and.returnValue('b1');
     branchSelectionSpy.getSelectedBranchName.and.returnValue('Sucursal Centro');
+    authSpy.getUserRole.and.returnValue('cook');
 
     await TestBed.configureTestingModule({
       imports: [KitchenLayoutComponent],

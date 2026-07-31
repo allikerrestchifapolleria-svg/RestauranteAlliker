@@ -36,6 +36,14 @@ interface MethodAlloc {
   received?: number | null;
 }
 
+interface TableReleaseInfo {
+  id: string;
+  status: string;
+  familyGroupId: string | null;
+  permanentFamily: boolean;
+  hasLiveReservation: boolean;
+}
+
 @Component({
   selector: 'app-waiter-payment',
   imports: [CommonModule, FormsModule],
@@ -88,7 +96,7 @@ export class Payment implements OnInit {
   calcExpression: string = '';
   Math = Math;
   private tableName: string = '';
-  private tableIdsForCleaning: string[] = [];
+  private tablesToRelease: TableReleaseInfo[] = [];
 
   clienteDocNum: string = '';
   clienteNombre: string = '';
@@ -166,11 +174,11 @@ export class Payment implements OnInit {
             const familyGroupId = table.familyGroupId;
             if (familyGroupId && tableId.startsWith('fam_')) {
               const familyTables = tables.filter(t => t.familyGroupId === familyGroupId);
-              this.tableIdsForCleaning = familyTables.map(t => t.id);
+              this.tablesToRelease = familyTables.map(t => this.toTableReleaseInfo(t));
               const names = familyTables.map(t => t.name).join(' + ');
               this.tableName = `Mesa Familiar: ${names}`;
             } else {
-              this.tableIdsForCleaning = [table.id];
+              this.tablesToRelease = [this.toTableReleaseInfo(table)];
               this.tableName = `${table.name} — ${table.capacity} pers.`;
             }
           } else {
@@ -536,21 +544,9 @@ export class Payment implements OnInit {
         createdAt: now
       });
 
-      await this.commitWithRetry(batch);
+      this.addTableReleaseToBatch(batch);
 
-      if (this.tableIdsForCleaning.length > 0) {
-        try {
-          await Promise.all(this.tableIdsForCleaning.map(id =>
-            this.tableService.updateTable(id, {
-              status: 'maintenance',
-              currentOrderId: null,
-              occupiedTime: null
-            })
-          ));
-        } catch (err) {
-          console.error('[PAYMENT] Error al marcar mesa(s) en limpieza:', err);
-        }
-      }
+      await this.commitWithRetry(batch);
 
       const receiptItems = (order.items || []).map(item => ({
         name: item.name,
@@ -575,6 +571,69 @@ export class Payment implements OnInit {
     } finally {
       this.isProcessing = false;
       this.cdr.detectChanges();
+    }
+  }
+
+  private toTableReleaseInfo(t: {
+    id: string;
+    status: string;
+    familyGroupId?: string | null;
+    permanentFamily?: boolean;
+    reservationId?: string | null;
+    reservedUntil?: Date | null;
+  }): TableReleaseInfo {
+    const hasLiveReservation = !!t.reservationId && !!t.reservedUntil &&
+      new Date(t.reservedUntil).getTime() > Date.now();
+    return {
+      id: t.id,
+      status: t.status,
+      familyGroupId: t.familyGroupId ?? null,
+      permanentFamily: !!t.permanentFamily,
+      hasLiveReservation
+    };
+  }
+
+  /**
+   * Libera las mesas DENTRO del mismo batch de pago para que el estado de la
+   * mesa se confirme de forma atomica junto con el cobro. Antes la liberacion
+   * era un paso aparte post-commit: si la app se cerraba entre ambos, la mesa
+   * quedaba 'occupied' con un pedido pagado para siempre (pedido 3wiKdjX2ER4gGDDDgXcK).
+   *
+   * Mesa individual -> 'maintenance' (limpieza, como antes).
+   * Familia permanente -> 'family_merged' (queda visible de nuevo en reservaciones).
+   * Familia temporal -> se desmerge y queda 'available'.
+   * Con reserva vigente -> 'reserved' (no se pierde la reserva confirmada).
+   */
+  private addTableReleaseToBatch(batch: import('firebase/firestore').WriteBatch): void {
+    for (const info of this.tablesToRelease) {
+      const tableRef = doc(db, 'tables', info.id);
+
+      let releaseStatus: string;
+      let extraFields: Record<string, unknown> = {};
+
+      if (info.hasLiveReservation && info.status !== 'reserved') {
+        releaseStatus = 'reserved';
+      } else if (info.familyGroupId) {
+        if (info.permanentFamily) {
+          releaseStatus = 'family_merged';
+        } else {
+          releaseStatus = 'available';
+          extraFields = { familyGroupId: null, permanentFamily: false };
+        }
+        // Limpia una reserva ya vencida: isFamilyChildFree excluye a la familia
+        // si algun hijo conserva reservationId, asi que un lock obsoleto volveria
+        // a esconder el grupo de reservaciones.
+        extraFields = { ...extraFields, reservationId: null, reservedUntil: null };
+      } else {
+        releaseStatus = 'maintenance';
+      }
+
+      batch.update(tableRef, {
+        status: releaseStatus,
+        currentOrderId: null,
+        occupiedTime: null,
+        ...extraFields
+      });
     }
   }
 

@@ -66,6 +66,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Franjas de servicio y horario del local (service_periods/_schedule).
+    // Lectura pública para que la carta muestre/oculte platos según la hora.
+    match /service_periods/{periodId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ============================================================
     // Usuarios
     // ============================================================

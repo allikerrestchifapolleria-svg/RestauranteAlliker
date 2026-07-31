@@ -12,6 +12,7 @@ import { NotificationService } from '../../../services/notification';
 import { Notification } from '../../../models/notification';
 import { Auth, UserRole } from '../../../services/auth';
 import { MenuService } from '../../../services/menu';
+import { MenuAvailabilityService } from '../../../services/menu-availability';
 import { MenuItem } from '../../../models/menu-item';
 import { MenuCategory } from '../../../models/menu-category';
 import { Table } from '../../../models/table';
@@ -165,6 +166,7 @@ export class Orders implements OnInit, OnDestroy {
   }
   menuItems: MenuItem[] = [];
   menuCategories: MenuCategory[] = [];
+  private rawMenuItems: MenuItem[] = [];
   filteredItemLists: MenuItem[][] = [];
   showDropdown: boolean[] = [];
   selectedCategoryId: string = '';
@@ -186,6 +188,7 @@ export class Orders implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private menuService: MenuService,
+    private availabilityService: MenuAvailabilityService,
     private userService: UserService,
     private notificationService: NotificationService,
     private cdr: ChangeDetectorRef,
@@ -325,12 +328,32 @@ export class Orders implements OnInit, OnDestroy {
   }
 
   private loadMenuData() {
+    this.availabilityService.startClock();
     this.menuService.getMenuItems().subscribe(items => {
-      this.menuItems = items.filter(mi => mi.isAvailable);
+      this.rawMenuItems = items;
+      this.applyMenuAvailabilityFilter();
     });
     this.menuService.getMenuCategories().subscribe(cats => {
       this.menuCategories = cats.filter(c => c.active);
+      this.applyMenuAvailabilityFilter();
     });
+    this.availabilityService.getPeriods().subscribe(() => this.applyMenuAvailabilityFilter());
+    this.availabilityService.getSchedule().subscribe(() => this.applyMenuAvailabilityFilter());
+    this.availabilityService.now$.subscribe(() => this.applyMenuAvailabilityFilter());
+  }
+
+  private applyMenuAvailabilityFilter() {
+    this.menuItems = this.rawMenuItems.slice();
+  }
+
+  isItemCurrentlyAvailable(item: MenuItem): boolean {
+    const category = this.menuCategories.find(c => c.id === item.categoryId);
+    return this.availabilityService.isItemAvailable(item, category);
+  }
+
+  getItemPeriodLabel(item: MenuItem): string {
+    const category = this.menuCategories.find(c => c.id === item.categoryId);
+    return this.availabilityService.getItemPeriodLabel(item, category);
   }
 
   /**
@@ -626,6 +649,9 @@ export class Orders implements OnInit, OnDestroy {
   }
 
   selectItem(index: number, menuItem: MenuItem) {
+    if (!this.isItemCurrentlyAvailable(menuItem)) {
+      return;
+    }
     this.orderItems[index].menuItemId = menuItem.id;
     this.orderItems[index].name = menuItem.name;
     this.orderItems[index].price = menuItem.price;

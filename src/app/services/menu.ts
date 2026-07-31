@@ -43,6 +43,7 @@ export class MenuService {
           variants: Array.isArray(data['variants']) ? data['variants'] : [],
           modifiers: Array.isArray(data['modifiers']) ? data['modifiers'] : [],
           isAvailable: data['isAvailable'] ?? true,
+          servicePeriodIds: Array.isArray(data['servicePeriodIds']) ? data['servicePeriodIds'] : [],
           createdAt: data['createdAt']?.toDate ? data['createdAt'].toDate() : new Date(data['createdAt']),
           updatedAt: data['updatedAt']?.toDate ? data['updatedAt'].toDate() : new Date(data['updatedAt'])
         } as MenuItem);
@@ -81,6 +82,7 @@ export class MenuService {
         modifiers: item.modifiers || [],
         name: item.name,
         price: item.price,
+        servicePeriodIds: item.servicePeriodIds || [],
         tags: item.tags || [],
         updatedAt: new Date(),
         variants: item.variants || []

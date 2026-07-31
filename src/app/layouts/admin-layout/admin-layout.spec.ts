@@ -16,12 +16,13 @@ describe('AdminLayoutComponent', () => {
   let router: Router;
 
   beforeEach(async () => {
-    authSpy = jasmine.createSpyObj('Auth', ['getUserBranchId', 'getCurrentUser', 'logout']);
+    authSpy = jasmine.createSpyObj('Auth', ['getUserBranchId', 'getCurrentUser', 'logout', 'getUserRole']);
     branchServiceSpy = jasmine.createSpyObj('BranchService', ['getBranches']);
     branchSelectionSpy = jasmine.createSpyObj('BranchSelectionService', ['setBranches', 'initializeFromUserBranch', 'getSelectedBranchId', 'selectBranch']);
 
     branchServiceSpy.getBranches.and.returnValue(of([]));
     branchSelectionSpy.getSelectedBranchId.and.returnValue('b1');
+    authSpy.getUserRole.and.returnValue('admin');
 
     await TestBed.configureTestingModule({
       imports: [AdminLayoutComponent],

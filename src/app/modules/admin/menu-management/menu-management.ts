@@ -5,9 +5,11 @@ import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MenuService } from '../../../services/menu';
 import { MenuCategoryService } from '../../../services/menu-category';
+import { MenuAvailabilityService } from '../../../services/menu-availability';
 import { ImageUploadService } from '../../../services/image-upload';
 import { MenuItem, MenuVariant, MenuModifier } from '../../../models/menu-item';
 import { MenuCategory } from '../../../models/menu-category';
+import { ServicePeriod } from '../../../models/service-period';
 
 @Component({
   selector: 'app-menu-management',
@@ -29,6 +31,7 @@ export class MenuManagement implements OnInit {
   isLoading: boolean = false;
   categories: MenuCategory[] = [];
   categoryDropdownOpen: boolean = false;
+  servicePeriods: ServicePeriod[] = [];
 
   newItem: Partial<MenuItem> = {
     name: '',
@@ -45,6 +48,7 @@ export class MenuManagement implements OnInit {
   tagsString: string = '';
   formVariants: MenuVariant[] = [];
   formModifiers: MenuModifier[] = [];
+  formServicePeriodIds: string[] = [];
   selectedImageFile: File | null = null;
   imagePreviewUrl: string | null = null;
   formErrors: Record<string, string> = {};
@@ -52,6 +56,7 @@ export class MenuManagement implements OnInit {
   constructor(
     private menuService: MenuService,
     private categoryService: MenuCategoryService,
+    private availabilityService: MenuAvailabilityService,
     private imageUploadService: ImageUploadService,
     private elementRef: ElementRef<HTMLElement>,
     private cdr: ChangeDetectorRef
@@ -75,6 +80,28 @@ export class MenuManagement implements OnInit {
       this.categories = categories.filter(cat => cat.active);
       console.log('MenuManagement: Filtered active categories:', this.categories);
     });
+    this.availabilityService.getPeriods().subscribe(periods => {
+      this.servicePeriods = periods.filter(period => period.active);
+    });
+  }
+
+  toggleServicePeriod(periodId: string) {
+    const idx = this.formServicePeriodIds.indexOf(periodId);
+    if (idx >= 0) {
+      this.formServicePeriodIds.splice(idx, 1);
+    } else {
+      this.formServicePeriodIds.push(periodId);
+    }
+    this.formServicePeriodIds = [...this.formServicePeriodIds];
+  }
+
+  isServicePeriodSelected(periodId: string): boolean {
+    return this.formServicePeriodIds.includes(periodId);
+  }
+
+  getPeriodName(periodId: string): string {
+    const period = this.servicePeriods.find(p => p.id === periodId);
+    return period ? period.name : periodId;
   }
 
   onSearch() {
@@ -183,6 +210,7 @@ export class MenuManagement implements OnInit {
     this.tagsString = item.tags ? item.tags.join(', ') : '';
     this.formVariants = item.variants ? item.variants.map(v => ({ ...v })) : [];
     this.formModifiers = item.modifiers ? item.modifiers.map(m => ({ ...m })) : [];
+    this.formServicePeriodIds = item.servicePeriodIds ? [...item.servicePeriodIds] : [];
     this.selectedImageFile = null;
     this.imagePreviewUrl = null;
   }
@@ -274,7 +302,8 @@ export class MenuManagement implements OnInit {
         ...this.newItem,
         tags,
         variants,
-        modifiers
+        modifiers,
+        servicePeriodIds: this.formServicePeriodIds
       }).then(() => {
         console.log('[SAVE-ITEM] updateMenuItem resolved OK');
         this.successMessage = 'Plato actualizado exitosamente';
@@ -297,6 +326,7 @@ export class MenuManagement implements OnInit {
         tags,
         variants,
         modifiers,
+        servicePeriodIds: this.formServicePeriodIds,
         isAvailable: this.newItem.isAvailable ?? true
       };
       console.log('[SAVE-ITEM] adding new item', itemToAdd);
@@ -348,6 +378,7 @@ export class MenuManagement implements OnInit {
     this.tagsString = '';
     this.formVariants = [];
     this.formModifiers = [];
+    this.formServicePeriodIds = [];
     this.selectedImageFile = null;
     this.imagePreviewUrl = null;
     this.formErrors = {};

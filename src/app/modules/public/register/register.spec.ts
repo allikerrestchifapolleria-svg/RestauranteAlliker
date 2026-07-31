@@ -14,7 +14,7 @@ describe('Register Component', () => {
 
   beforeEach(async () => {
     userServiceSpy = jasmine.createSpyObj('UserService', ['createUser']);
-    authSpy = jasmine.createSpyObj('Auth', ['login']);
+    authSpy = jasmine.createSpyObj('Auth', ['login', 'register']);
 
     await TestBed.configureTestingModule({
       imports: [Register],
@@ -102,7 +102,7 @@ describe('Register Component', () => {
   it('should return progress class based on strength', () => {
     component.form.get('password')?.setValue('a');
     expect(component.getProgressClass()).toBe('bg-danger');
-    component.form.get('password')?.setValue('Abc123');
+    component.form.get('password')?.setValue('Abc1');
     expect(component.getProgressClass()).toBe('bg-warning');
     component.form.get('password')?.setValue('Abc123!xY');
     expect(component.getProgressClass()).toBe('bg-success');
@@ -129,8 +129,7 @@ describe('Register Component', () => {
   });
 
   it('should submit valid form', (done) => {
-    userServiceSpy.createUser.and.returnValue(Promise.resolve());
-    authSpy.login.and.returnValue(Promise.resolve({ success: true }));
+    authSpy.register.and.returnValue(Promise.resolve({ success: true }));
 
     component.form.get('nombre')?.setValue('Juan');
     component.form.get('apellidos')?.setValue('Pérez');
@@ -143,7 +142,7 @@ describe('Register Component', () => {
     component.onSubmit();
 
     setTimeout(() => {
-      expect(userServiceSpy.createUser).toHaveBeenCalled();
+      expect(authSpy.register).toHaveBeenCalled();
       expect(component.successMessage).toBe('Registro exitoso. Bienvenido!');
       done();
     }, 2500);
@@ -152,6 +151,6 @@ describe('Register Component', () => {
   it('should navigate to login', () => {
     const navigateSpy = spyOn(router, 'navigate');
     component.goToLogin();
-    expect(navigateSpy).toHaveBeenCalledWith(['/login']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/login'], { queryParams: {} });
   });
 });

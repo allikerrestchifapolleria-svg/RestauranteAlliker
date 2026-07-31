@@ -28,16 +28,21 @@
       </div>
       <div class="filter-group filter-action">
         <button class="btn btn-primary" (click)="search()" [disabled]="isLoading">
-          <i class="fas" [class.fa-spinner]="isLoading" [class.fa-search]="!isLoading"></i>
+          <i class="fas" [class.fa-spinner]="isLoading" [class.fa-spin]="isLoading" [class.fa-search]="!isLoading"></i>
           {{ isLoading ? 'Buscando...' : 'Buscar' }}
         </button>
       </div>
     </div>
   </div>
 
+  <div class="error-banner" *ngIf="errorMessage">
+    <i class="fas fa-triangle-exclamation"></i>
+    <span>{{ errorMessage }}</span>
+  </div>
+
   <div class="table-card">
     <div class="table-header">
-      <span>{{ orders.length }} resultado(s)</span>
+      <span>{{ filteredOrders.length }} resultado(s)</span>
     </div>
 
     <div class="table-responsive">
@@ -56,26 +61,26 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let order of orders">
-            <td class="order-number">#{{ order.orderNumber || order.id.slice(-6) }}</td>
-            <td>{{ order.tableName || tableService.getTableDisplayName(order.tableId) || order.tableId || '—' }}</td>
-            <td>{{ order.items.length }} plato(s)</td>
-            <td class="order-total">S/ {{ order.total.toFixed(2) }}</td>
+          <tr *ngFor="let order of filteredOrders; trackBy: trackByOrderId">
+            <td class="order-number">{{ getOrderNumber(order) }}</td>
+            <td>{{ getTableName(order) }}</td>
+            <td>{{ getItemsCount(order) }} plato(s)</td>
+            <td class="order-total">S/ {{ order.total | number:'1.2-2' }}</td>
             <td>
               <span class="status-badge" [style.background-color]="getStatusColor(order.status)">
                 {{ getStatusLabel(order.status) }}
               </span>
             </td>
             <td>
-              <span class="payment-status" [class.paid]="order.paymentStatus === 'paid'">
+              <span class="payment-status" [class.paid]="isPaid(order)">
                 {{ getPaymentStatusLabel(order.paymentStatus) }}
               </span>
             </td>
             <td>{{ getTypeLabel(order.type) }}</td>
-            <td>{{ order.waiterName || '—' }}</td>
+            <td>{{ getWaiterName(order) }}</td>
             <td class="order-date">{{ order.createdAt | date:'dd/MM/yy HH:mm' }}</td>
           </tr>
-          <tr *ngIf="orders.length === 0 && !isLoading">
+          <tr *ngIf="filteredOrders.length === 0 && !isLoading && !errorMessage">
             <td colspan="9" class="empty-state">
               <i class="fas fa-inbox fa-3x mb-2"></i>
               <p>No se encontraron órdenes. Ajuste los filtros e intente de nuevo.</p>

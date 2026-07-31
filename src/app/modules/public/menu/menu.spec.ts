@@ -3,6 +3,8 @@ import { Menu } from './menu';
 import { MenuService } from '../../../services/menu';
 import { CartService } from '../../../services/cart';
 import { MenuCategoryService } from '../../../services/menu-category';
+import { MenuAvailabilityService } from '../../../services/menu-availability';
+import { CartSidebarService } from '../../../shared/components/cart-sidebar/cart-sidebar.service';
 import { Router } from '@angular/router';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -28,17 +30,27 @@ describe('Menu Component', () => {
   let cartServiceSpy: jasmine.SpyObj<CartService>;
   let menuServiceSpy: jasmine.SpyObj<MenuService>;
   let categoryServiceSpy: jasmine.SpyObj<MenuCategoryService>;
+  let availabilityServiceSpy: jasmine.SpyObj<MenuAvailabilityService>;
+  let cartSidebarServiceSpy: jasmine.SpyObj<CartSidebarService>;
   let router: Router;
 
   beforeEach(async () => {
     cartServiceSpy = jasmine.createSpyObj('CartService', ['addToCart', 'getCartItemCount', 'getCartTotal']);
     menuServiceSpy = jasmine.createSpyObj('MenuService', ['getMenuItems']);
     categoryServiceSpy = jasmine.createSpyObj('MenuCategoryService', ['getCategories']);
+    availabilityServiceSpy = jasmine.createSpyObj('MenuAvailabilityService', ['startClock', 'getPeriods', 'getSchedule', 'isItemAvailable', 'isRestaurantOpen', 'getItemPeriodLabel']);
+    cartSidebarServiceSpy = jasmine.createSpyObj('CartSidebarService', ['open']);
 
     menuServiceSpy.getMenuItems.and.returnValue(of(mockItems));
     categoryServiceSpy.getCategories.and.returnValue(of(mockCategories));
     cartServiceSpy.getCartItemCount.and.returnValue(0);
     cartServiceSpy.getCartTotal.and.returnValue(0);
+    availabilityServiceSpy.getPeriods.and.returnValue(of([]));
+    availabilityServiceSpy.getSchedule.and.returnValue(of({ closedDays: [], closedDates: [], closedMessage: '' }));
+    availabilityServiceSpy.now$ = of(new Date()) as any;
+    availabilityServiceSpy.isItemAvailable.and.callFake((item: MenuItem) => item.isAvailable);
+    availabilityServiceSpy.isRestaurantOpen.and.returnValue(true);
+    availabilityServiceSpy.getItemPeriodLabel.and.returnValue('');
 
     await TestBed.configureTestingModule({
       imports: [Menu],
@@ -46,6 +58,8 @@ describe('Menu Component', () => {
         { provide: CartService, useValue: cartServiceSpy },
         { provide: MenuService, useValue: menuServiceSpy },
         { provide: MenuCategoryService, useValue: categoryServiceSpy },
+        { provide: MenuAvailabilityService, useValue: availabilityServiceSpy },
+        { provide: CartSidebarService, useValue: cartSidebarServiceSpy },
         provideRouter([]),
       ]
     }).compileComponents();
@@ -62,7 +76,7 @@ describe('Menu Component', () => {
 
   it('should load items and categories on init', () => {
     expect(component.allItems.length).toBe(3);
-    expect(component.allCategories.length).toBe(3);
+    expect(component.allCategories.length).toBe(4);
   });
 
   it('should filter by category', () => {
@@ -92,6 +106,28 @@ describe('Menu Component', () => {
     component.showAvailableOnly = true;
     component.applyFilters();
     expect(component.filteredItems.length).toBe(2);
+  });
+
+  it('should show items outside their sale window but mark them unavailable', () => {
+    availabilityServiceSpy.isItemAvailable.and.callFake((item: MenuItem) => item.id !== '2');
+    component.showAvailableOnly = false;
+    component.applyFilters();
+    expect(component.filteredItems.length).toBe(3);
+    expect(component.isItemCurrentlyAvailable(mockItems[1])).toBeFalse();
+    expect(component.isItemCurrentlyAvailable(mockItems[0])).toBeTrue();
+  });
+
+  it('should hide out-of-sale-window items when "Solo disponibles" is active', () => {
+    availabilityServiceSpy.isItemAvailable.and.callFake((item: MenuItem) => item.id !== '2');
+    component.showAvailableOnly = true;
+    component.applyFilters();
+    expect(component.filteredItems.length).toBe(2);
+    expect(component.filteredItems.find(i => i.id === '2')).toBeUndefined();
+  });
+
+  it('should return the sale period label of an item', () => {
+    availabilityServiceSpy.getItemPeriodLabel.and.returnValue('Noche 17:00-01:00');
+    expect(component.getItemPeriodLabel(mockItems[0])).toBe('Noche 17:00-01:00');
   });
 
   it('should filter by vegetarian', () => {
@@ -145,12 +181,9 @@ describe('Menu Component', () => {
   });
 
   it('should call tel: on callNow', () => {
-    let assignedUrl = '';
-    Object.defineProperty(window, 'location', {
-      value: { href: '', assign: (url: string) => assignedUrl = url },
-      writable: true
-    });
+    const openSpy = spyOn(window, 'open');
     component.callNow();
+    expect(openSpy).toHaveBeenCalledWith('tel:+51123456789');
   });
 
   it('should return cart item count', () => {

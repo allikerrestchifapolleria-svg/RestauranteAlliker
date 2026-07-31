@@ -4,7 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MenuCategoryService } from '../../../services/menu-category';
+import { MenuAvailabilityService } from '../../../services/menu-availability';
 import { MenuCategory } from '../../../models/menu-category';
+import { ServicePeriod } from '../../../models/service-period';
 
 @Component({
   selector: 'app-menu-category-management',
@@ -23,11 +25,16 @@ export class MenuCategoryManagement implements OnInit {
   // Form data
   newCategory: Partial<MenuCategory> = {
     name: '',
-    active: true
+    active: true,
+    defaultServicePeriodIds: []
   };
   formErrors: Record<string, string> = {};
+  servicePeriods: ServicePeriod[] = [];
 
-  constructor(private categoryService: MenuCategoryService) {
+  constructor(
+    private categoryService: MenuCategoryService,
+    private availabilityService: MenuAvailabilityService
+  ) {
     this.categories$ = this.categoryService.getCategories();
     this.filteredCategories$ = combineLatest([this.categories$, this.searchTerm$]).pipe(
       map(([categories, term]) =>
@@ -40,6 +47,29 @@ export class MenuCategoryManagement implements OnInit {
 
   ngOnInit() {
     // No need to subscribe manually, using async pipe in template
+    this.availabilityService.getPeriods().subscribe(periods => {
+      this.servicePeriods = periods.filter(period => period.active);
+    });
+  }
+
+  toggleServicePeriod(periodId: string) {
+    const current: string[] = this.newCategory.defaultServicePeriodIds || [];
+    const idx = current.indexOf(periodId);
+    if (idx >= 0) {
+      current.splice(idx, 1);
+    } else {
+      current.push(periodId);
+    }
+    this.newCategory.defaultServicePeriodIds = [...current];
+  }
+
+  isServicePeriodSelected(periodId: string): boolean {
+    return (this.newCategory.defaultServicePeriodIds || []).includes(periodId);
+  }
+
+  getPeriodName(periodId: string): string {
+    const period = this.servicePeriods.find(p => p.id === periodId);
+    return period ? period.name : periodId;
   }
 
     onSearch() {
@@ -79,7 +109,8 @@ export class MenuCategoryManagement implements OnInit {
         const categoryToAdd: Omit<MenuCategory, 'id' | 'createdAt' | 'updatedAt'> = {
           ...this.newCategory,
           name: this.newCategory.name || '',
-          active: this.newCategory.active ?? true
+          active: this.newCategory.active ?? true,
+          defaultServicePeriodIds: this.newCategory.defaultServicePeriodIds || []
         };
         console.log('About to create category:', categoryToAdd);
         await this.categoryService.createCategory(categoryToAdd);
@@ -114,7 +145,8 @@ export class MenuCategoryManagement implements OnInit {
   private resetForm() {
     this.newCategory = {
       name: '',
-      active: true
+      active: true,
+      defaultServicePeriodIds: []
     };
     this.formErrors = {};
   }

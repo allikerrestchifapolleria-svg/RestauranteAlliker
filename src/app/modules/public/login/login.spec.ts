@@ -138,7 +138,7 @@ describe('Login Component', () => {
     component.onSubmit();
 
     setTimeout(() => {
-      expect(component.errorMessage).toBe('Credenciales inválidas. Verifica tu email y contraseña.');
+      expect(component.errorMessage).toBe('Invalid credentials');
       done();
     }, 100);
   });
@@ -167,6 +167,6 @@ describe('Login Component', () => {
   it('should navigate to register', () => {
     const navigateSpy = spyOn(router, 'navigate');
     component.goToRegister();
-    expect(navigateSpy).toHaveBeenCalledWith(['/register']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/register'], { queryParams: {} });
   });
 });

@@ -1,5 +1,6 @@
 export interface Reservation {
   id: string;
+  customerId?: string;
   branchId: string;
   tableId: string;
   customerName: string;

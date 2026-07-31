@@ -16,6 +16,7 @@ import { CompanyConfig } from './company-config/company-config';
 import { Invoices } from './invoices/invoices';
 import { Ventas } from './ventas/ventas';
 import { OrderHistory } from './order-history/order-history';
+import { ScheduleManagement } from './schedule-management/schedule-management';
 
 export const routes: Routes = [
   {
@@ -33,6 +34,7 @@ export const routes: Routes = [
       { path: 'promotion-management', component: PromotionManagement },
       { path: 'table-management', component: TableManagement },
       { path: 'notification-management', component: NotificationManagement },
+      { path: 'schedule-management', component: ScheduleManagement },
       { path: 'company-config', component: CompanyConfig },
       { path: 'invoices', component: Invoices },
       { path: 'ventas', component: Ventas },

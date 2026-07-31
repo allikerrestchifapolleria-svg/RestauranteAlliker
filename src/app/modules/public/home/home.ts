@@ -12,9 +12,12 @@ import { Observable } from 'rxjs';
 
 // Asegúrate de que las rutas a tus servicios/modelos sean correctas
 import { MenuService } from '../../../services/menu';
+import { MenuAvailabilityService } from '../../../services/menu-availability';
+import { MenuCategoryService } from '../../../services/menu-category';
 import { CartService } from '../../../services/cart';
 import { CartSidebarService } from '../../../shared/components/cart-sidebar/cart-sidebar.service';
 import { MenuItem } from '../../../models/menu-item';
+import { MenuCategory } from '../../../models/menu-category';
 
 @Component({
   selector: 'app-home',
@@ -27,6 +30,8 @@ export class HomeComponent implements OnInit {
 
   menuItems$: Observable<MenuItem[]> = new Observable<MenuItem[]>();
   filteredDishes: MenuItem[] = [];
+  private allDishes: MenuItem[] = [];
+  private categories: MenuCategory[] = [];
 
   // Estado del buscador
   searchTerm: string = '';
@@ -40,6 +45,8 @@ export class HomeComponent implements OnInit {
   constructor(
     private router: Router,
     private menuService: MenuService,
+    private availabilityService: MenuAvailabilityService,
+    private categoryService: MenuCategoryService,
     private cartService: CartService,
     private cartSidebarService: CartSidebarService,
     private fb: FormBuilder,
@@ -60,12 +67,29 @@ export class HomeComponent implements OnInit {
   ngOnInit(): void {
     // Simulación: Reemplaza con tu servicio real
     this.menuItems$ = this.menuService.getMenuItems();
+    this.availabilityService.startClock();
+    this.categoryService.getCategories().subscribe(categories => {
+      this.categories = categories;
+      this.refreshFeaturedDishes();
+    });
+    this.availabilityService.getPeriods().subscribe(() => this.refreshFeaturedDishes());
+    this.availabilityService.getSchedule().subscribe(() => this.refreshFeaturedDishes());
+    this.availabilityService.now$.subscribe(() => this.refreshFeaturedDishes());
     this.menuItems$.subscribe(items => {
-      this.filteredDishes = items.slice(0, 3);
-      this.cdr.detectChanges();
+      this.allDishes = items;
+      this.refreshFeaturedDishes();
     });
 
     this.initScrollAnimations();
+  }
+
+  private refreshFeaturedDishes() {
+    const available = this.allDishes.filter(item => {
+      const category = this.categories.find(c => c.id === item.categoryId);
+      return this.availabilityService.isItemAvailable(item, category);
+    });
+    this.filteredDishes = available.slice(0, 3);
+    this.cdr.detectChanges();
   }
 
   // --- Lógica del Buscador ---
@@ -85,17 +109,17 @@ export class HomeComponent implements OnInit {
     this.searchError = '';
 
     if (this.searchTerm.trim()) {
-      this.menuItems$.subscribe(items => {
-        this.filteredDishes = items
-          .filter(item =>
-            item.name.toLowerCase().includes(this.searchTerm.toLowerCase())
-          )
-          .slice(0, 3);
+      const available = this.allDishes.filter(item => {
+        const category = this.categories.find(c => c.id === item.categoryId);
+        return this.availabilityService.isItemAvailable(item, category);
       });
+      this.filteredDishes = available
+        .filter(item =>
+          item.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+        )
+        .slice(0, 3);
     } else {
-      this.menuItems$.subscribe(items => {
-        this.filteredDishes = items.slice(0, 3);
-      });
+      this.refreshFeaturedDishes();
     }
 
     this.isSearching = false;

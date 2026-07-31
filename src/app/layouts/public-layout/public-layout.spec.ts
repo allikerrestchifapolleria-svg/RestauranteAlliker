@@ -3,6 +3,10 @@ import { PublicLayoutComponent } from './public-layout';
 import { Auth } from '../../services/auth';
 import { Router } from '@angular/router';
 import { provideRouter } from '@angular/router';
+import { NotificationService } from '../../services/notification';
+import { CartSidebarService } from '../../shared/components/cart-sidebar/cart-sidebar.service';
+import { BranchService } from '../../services/branch';
+import { of } from 'rxjs';
 
 describe('PublicLayoutComponent', () => {
   let component: PublicLayoutComponent;
@@ -11,13 +15,18 @@ describe('PublicLayoutComponent', () => {
   let router: Router;
 
   beforeEach(async () => {
-    authSpy = jasmine.createSpyObj('Auth', ['getCurrentUser', 'logout']);
+    authSpy = jasmine.createSpyObj('Auth', ['getCurrentUser', 'logout', 'getUserRole', 'isLoggedIn']);
+    authSpy.getUserRole.and.returnValue('user');
+    authSpy.isLoggedIn.and.returnValue(false);
 
     await TestBed.configureTestingModule({
       imports: [PublicLayoutComponent],
       providers: [
         { provide: Auth, useValue: authSpy },
         provideRouter([]),
+        { provide: NotificationService, useValue: { getNotifications: () => of([]) } },
+        { provide: CartSidebarService, useValue: { open: jasmine.createSpy(), isOpen$: of(false) } },
+        { provide: BranchService, useValue: { getBranches: () => of([]) } },
       ]
     }).compileComponents();
 
@@ -39,6 +48,7 @@ describe('PublicLayoutComponent', () => {
 
   it('should set isLoggedIn to true with user', () => {
     authSpy.getCurrentUser.and.returnValue({ email: 'test@test.com', role: 'user' } as any);
+    authSpy.isLoggedIn.and.returnValue(true);
     fixture.detectChanges();
     expect(component.isLoggedIn).toBeTrue();
     expect(component.isAdmin).toBeFalse();
@@ -46,6 +56,7 @@ describe('PublicLayoutComponent', () => {
 
   it('should set isAdmin for admin users', () => {
     authSpy.getCurrentUser.and.returnValue({ email: 'admin@test.com', role: 'admin' } as any);
+    authSpy.getUserRole.and.returnValue('admin');
     fixture.detectChanges();
     expect(component.isAdmin).toBeTrue();
   });

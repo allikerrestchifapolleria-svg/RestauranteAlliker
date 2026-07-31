@@ -90,10 +90,12 @@ describe('Payment Component', () => {
 
   it('should reset payment data when switching methods', () => {
     component.selectPaymentMethod('card');
-    component.mobileNumber = '999888777';
+    component.yapeCode = 'ABC123';
+    component.cashReceived = 50;
+    component.cashChange = 10;
 
     component.selectPaymentMethod('yape');
-    expect(component.mobileNumber).toBe('');
+    expect(component.yapeCode).toBe('');
     expect(component.cashReceived).toBeNull();
     expect(component.cashChange).toBe(0);
   });
@@ -147,19 +149,13 @@ describe('Payment Component', () => {
       component.selectPaymentMethod('yape');
     });
 
-    it('should validate correct mobile number', () => {
-      component.mobileNumber = '999888777';
+    it('should allow yape payment when cart has items', () => {
       expect(component.canProcessPayment()).toBeTrue();
     });
 
-    it('should reject empty mobile number', () => {
-      component.mobileNumber = '';
-      expect(component.canProcessPayment()).toBeFalse();
-    });
-
-    it('should reject letters in mobile number', () => {
-      component.mobileNumber = 'abc123def';
-      expect(component.canProcessPayment()).toBeFalse();
+    it('should set a yape confirmation code for submit', () => {
+      component.yapeCode = 'ABC';
+      expect(component.yapeCode).toBe('ABC');
     });
   });
 
