@@ -11,6 +11,8 @@ import { TableService } from '../../../services/table';
 import { Branch } from '../../../models/branch';
 import { Table } from '../../../models/table';
 
+import { environment } from '../../../../environments/environment';
+
 @Component({
   selector: 'app-reservations',
   standalone: true,
@@ -140,22 +142,9 @@ export class Reservations implements OnInit {
         ? '¡Reserva confirmada por voz!'
         : 'La reserva no fue confirmada.';
 
-      try {
-        const status = asistencia ? 'Confirmada' : 'Cancelada';
-
-        // 🔥 ENVIO A N8N
-        await fetch('https://elanderyours.app.n8n.cloud/webhook/c74b22c2-7cc7-40de-b60f-629afc42052e', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            firebaseId: this.lastReservationId,
-            status: status
-          })
-        });
-
-      } catch (err) {
-        console.error(err);
-      }
+      // La confirmacion la escribe el Workflow 3, disparado por el evento
+      // call_analyzed de Retell. No se notifica nada desde aqui: el navegador
+      // puede cerrarse antes de que el analisis post-llamada exista.
 
       // Limpiar formulario al terminar la llamada
       this.resetForm();
@@ -288,7 +277,7 @@ export class Reservations implements OnInit {
       };
 
       // 🔥 LLAMAR A N8N PARA TOKEN
-      const response = await fetch('https://elanderyours.app.n8n.cloud/webhook/c74b22c2-7cc7-40de-b60f-629afc42052e', {
+      const response = await fetch(environment.n8n.createReservationWebhook, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

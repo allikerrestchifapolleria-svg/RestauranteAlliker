@@ -10,5 +10,11 @@ export const environment = {
   },
   culqi: {
     publicKey: 'pk_test_xxxxxxxxxxxx'
+  },
+  n8n: {
+    // Workflow 2: registra la reserva, espera hasta fecha_alerta y devuelve el
+    // access_token de Retell para iniciar la llamada de confirmacion por voz.
+    createReservationWebhook:
+      'https://alliker.app.n8n.cloud/webhook/c74b22c2-7cc7-40de-b60f-629afc42052e'
   }
 };

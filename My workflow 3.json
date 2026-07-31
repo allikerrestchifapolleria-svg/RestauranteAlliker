@@ -308,7 +308,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://TU-SITIO.netlify.app/api/confirm-reservation",
+        "url": "https://polleriaalliker.netlify.app/api/confirm-reservation",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
