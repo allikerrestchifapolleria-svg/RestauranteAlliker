@@ -10,14 +10,14 @@
           "allowedOrigins": "*"
         }
       },
+      "id": "4e977bbe-e17f-4461-b4ba-d5e2ac601935",
+      "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -80,
-        -16
+        -288,
+        208
       ],
-      "id": "ccb70f7e-81ed-47d0-b491-3794050497aa",
-      "name": "Webhook",
       "webhookId": "cbbb49e9-b837-4126-9db3-32dfb96dc5c3"
     },
     {
@@ -216,33 +216,33 @@
           "cellFormat": "USER_ENTERED"
         }
       },
+      "id": "06e7e1bc-77fd-4b37-ac59-d0e946132f4f",
+      "name": "Append row in sheet",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        480,
-        -48
+        272,
+        176
       ],
-      "id": "d43ae3e0-e892-477b-a11a-fb2301604956",
-      "name": "Append row in sheet",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "9oN7u2YXeNZMv3L7",
-          "name": "Google Sheets OAuth2 API"
+          "id": "wjdrj3bJmcnty3pw",
+          "name": "Google Sheets account 2"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "// 1. Extraemos el body donde están todos los datos de tu web\nconst payload = $input.item.json.body;\n\nif (!payload) {\n  return { error: \"No se encontró el body con los datos de la reserva\" };\n}\n\ntry {\n  // 2. Procesamos la fecha y hora para la alerta\n  const fechaCita = new Date(`${payload.date}T${payload.time}:00`);\n  \n  // 3. Restamos 1 minuto (para tu prueba de examen)\n  const tiempoAlerta = new Date(fechaCita.getTime() - 1 * 60000);\n\n  // 4. Retornamos el objeto LIMPIO con todos los campos necesarios\n  return {\n    firebaseId: payload.id, // <--- AGREGAMOS EL ID AQUÍ\n    restaurantId: payload.restaurantId,\n    branchId: payload.branchId,\n    branchName: payload.branchName,\n    tableId: payload.tableId,\n    tableName: payload.tableName,\n    customerName: payload.customerName,\n    customerPhone: payload.customerPhone,\n    customerEmail: payload.customerEmail,\n    date: payload.date,\n    time: payload.time,\n    peopleCount: payload.peopleCount,\n    specialRequests: payload.specialRequests,\n    status: payload.status,\n    // Formato de fecha limpio\n    fecha_alerta: tiempoAlerta.toISOString().split('.')[0].replace('T', ' ')\n  };\n\n} catch (e) {\n  return { error: \"Error al procesar la fecha\", detalle: e.message };\n}"
+        "jsCode": "// 1. Extraemos el body donde están todos los datos de tu web\nconst payload = $input.item.json.body;\n\nif (!payload) {\n  return { error: \"No se encontró el body con los datos de la reserva\" };\n}\n\ntry {\n  // 2. Procesamos la fecha y hora para la alerta.\n  //    El offset -05:00 (Peru, sin horario de verano) va explicito: sin el,\n  //    new Date() usa la zona horaria del proceso de n8n y fecha_alerta se\n  //    desplaza segun la cuenta donde este importado el workflow.\n  const fechaCita = new Date(`${payload.date}T${payload.time}:00-05:00`);\n  \n  // 3. Restamos 1 minuto (para tu prueba de examen)\n  const tiempoAlerta = new Date(fechaCita.getTime() - 1 * 60000);\n\n  // 4. Retornamos el objeto LIMPIO con todos los campos necesarios\n  return {\n    firebaseId: payload.id, // <--- AGREGAMOS EL ID AQUÍ\n    restaurantId: payload.restaurantId,\n    branchId: payload.branchId,\n    branchName: payload.branchName,\n    tableId: payload.tableId,\n    tableName: payload.tableName,\n    customerName: payload.customerName,\n    customerPhone: payload.customerPhone,\n    customerEmail: payload.customerEmail,\n    date: payload.date,\n    time: payload.time,\n    peopleCount: payload.peopleCount,\n    specialRequests: payload.specialRequests,\n    status: payload.status,\n    // ISO-8601 completo, con la Z. Al quitarsela el nodo Wait la leia como\n    // hora local y volvia a desplazarla.\n    fecha_alerta: tiempoAlerta.toISOString()\n  };\n\n} catch (e) {\n  return { error: \"Error al procesar la fecha\", detalle: e.message };\n}"
       },
+      "id": "ec8941a4-fb24-4fd1-8d53-8f5dcd3f0e61",
+      "name": "Code in JavaScript",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        208,
-        -224
-      ],
-      "id": "478ca0f5-4884-45b5-92c1-14b2e64f3dda",
-      "name": "Code in JavaScript"
+        0,
+        0
+      ]
     },
     {
       "parameters": {
@@ -255,17 +255,17 @@
         "jsonBody": "={\n  \"agent_id\": \"agent_faf668607c7f13f7540c72e76e\",\n  \"metadata\": {\n    \"firebaseId\": \"{{ $json.firebaseId }}\",\n    \"customerName\": \"{{ $json.customerName }}\",\n    \"branchName\": \"{{ $json.branchName }}\",\n    \"tableName\": \"{{ $json.tableName }}\",\n    \"customerPhone\": \"{{ $json.customerPhone }}\"\n  },\n  \"retell_llm_dynamic_variables\": {\n    \"customerName\": \"{{ $json.customerName }}\",\n    \"branchName\": \"{{ $json.branchName }}\",\n    \"time\": \"{{ $json.time }}\",\n    \"peopleCount\": \"{{ $json.peopleCount }}\",\n    \"tableName\": \"{{ $json.tableName }}\",\n    \"specialRequests\": \"{{ $json.specialRequests }}\",\n    \"customerPhone\": \"{{ $json.customerPhone }}\"\n  }\n}",
         "options": {}
       },
+      "id": "6efcac73-bc02-4e84-99c3-1e2d587f51d0",
+      "name": "HTTP Request",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        960,
-        -176
+        752,
+        48
       ],
-      "id": "b72c004d-8e0d-4670-b657-6f68fc97a4b4",
-      "name": "HTTP Request",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "s6vdCYb0CmT9PomV",
+          "id": "dRA0fhrdYUq0yASd",
           "name": "Header Auth account"
         }
       }
@@ -275,14 +275,14 @@
         "resume": "specificTime",
         "dateTime": "={{ $json.fecha_alerta }}"
       },
+      "id": "1ad4099d-c00b-4759-8e6c-81e2184f6dee",
+      "name": "Wait",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        688,
-        -48
+        480,
+        176
       ],
-      "id": "2ef64570-48b1-4e4a-ab9f-a6049588ae0d",
-      "name": "Wait",
       "webhookId": "08fb2630-2b53-4b0b-96f6-0dcd857c85e4"
     },
     {
@@ -291,86 +291,17 @@
         "responseBody": "={\n  \"access_token\": \"{{ $json.access_token }}\"\n}",
         "options": {}
       },
+      "id": "50073cb9-52af-4497-97c1-6f7d14f578c4",
+      "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        1184,
-        -144
-      ],
-      "id": "b23d8d33-68e8-4033-a486-0e9ef0d2a492",
-      "name": "Respond to Webhook"
+        976,
+        80
+      ]
     }
   ],
-  "pinData": {
-    "Webhook": [
-      {
-        "json": {
-          "headers": {
-            "host": "elanderyours.app.n8n.cloud",
-            "user-agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36",
-            "content-length": "483",
-            "accept": "*/*",
-            "accept-encoding": "gzip, br",
-            "accept-language": "es-ES,es;q=0.9",
-            "cache-control": "no-cache",
-            "cdn-loop": "cloudflare; loops=1; subreqs=1",
-            "cf-connecting-ip": "190.42.102.124",
-            "cf-ew-via": "15",
-            "cf-ipcountry": "PE",
-            "cf-ray": "9f30bbdd3f038bc1-EZE",
-            "cf-visitor": "{\"scheme\":\"https\"}",
-            "cf-worker": "n8n.cloud",
-            "content-type": "application/json",
-            "origin": "http://localhost:4200",
-            "pragma": "no-cache",
-            "referer": "http://localhost:4200/",
-            "sec-ch-ua": "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Google Chrome\";v=\"122\"",
-            "sec-ch-ua-mobile": "?1",
-            "sec-ch-ua-platform": "\"Android\"",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "cross-site",
-            "x-forwarded-for": "190.42.102.124, 198.41.230.201",
-            "x-forwarded-host": "elanderyours.app.n8n.cloud",
-            "x-forwarded-port": "443",
-            "x-forwarded-proto": "https",
-            "x-forwarded-server": "traefik-prod-users-gwc-118-799cbb99cd-nwwl7",
-            "x-is-trusted": "yes",
-            "x-real-ip": "190.42.102.124"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "id": "V3O8rzKcwVr7M8O0uEWt",
-            "restaurantId": "RS2",
-            "branchId": "57MXUDocFbNS4B3IZQJ4",
-            "tableId": "MPF7wPI60M9ZAgY6kxrz",
-            "customerName": "as",
-            "customerPhone": "+51656165165",
-            "customerEmail": "comprador@gmail.com",
-            "date": "2026-04-27",
-            "time": "15:58",
-            "peopleCount": 1,
-            "notes": "asa",
-            "status": "pending",
-            "createdAt": "2026-04-27T20:56:24.168Z",
-            "branchName": "Trujillo",
-            "tableName": "Mesa 10",
-            "name": "as",
-            "email": "comprador@gmail.com",
-            "phone": "+51656165165",
-            "specialRequests": "asa",
-            "acceptTerms": true
-          },
-          "webhookUrl": "https://elanderyours.app.n8n.cloud/webhook/c74b22c2-7cc7-40de-b60f-629afc42052e",
-          "executionMode": "production"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ]
-  },
+  "pinData": {},
   "connections": {
     "Webhook": {
       "main": [
@@ -428,16 +359,18 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
-  "versionId": "edebf558-22fe-4439-978a-e6636acd4a2c",
+  "versionId": "91647385-4336-4587-ab99-463055bf75e7",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "0e1d63e0a7701142b62e4574e274d8095132954468b2fc2af2d698ad85369dfc"
+    "instanceId": "b2b35d4d079ac67a377b42b49c05ce19df02f22353517cf8ee41f6c9b8a19195"
   },
-  "id": "KghwGlOCnYJkdpks",
+  "nodeGroups": [],
+  "id": "Ilq1Z9rE5Y9XzivL",
   "tags": []
 }
