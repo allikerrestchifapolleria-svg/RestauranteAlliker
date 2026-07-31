@@ -14,7 +14,14 @@ import { RetellWebClient } from 'retell-client-js-sdk';
 import { BranchService } from '../../../services/branch';
 import { ReservationsService } from '../../../services/reservations';
 import { TableService } from '../../../services/table';
-import { VoiceConfirmationService, VoiceConfirmationRequest } from '../../../services/voice-confirmation';
+import {
+  VoiceConfirmationService,
+  VoiceConfirmationRequest,
+  VoiceConfirmationError,
+  TIMEOUT_STATUS
+} from '../../../services/voice-confirmation';
+import { VoiceCallLogger } from '../../../services/voice-call-logger';
+import { AppUpdateService } from '../../../services/app-update';
 
 import { Branch } from '../../../models/branch';
 import { Table } from '../../../models/table';
@@ -27,6 +34,20 @@ const MIN_PEOPLE_COUNT = 1;
 const FAMILY_TABLE_ID_PREFIX = 'fam_';
 const DEFAULT_TABLE_CAPACITY = 4;
 const UNKNOWN_LABEL = 'Desconocida';
+
+/**
+ * Todos los eventos que emite retell-client-js-sdk v2. Los tres primeros llevan
+ * logica propia; el resto solo dejan traza para poder reconstruir el ciclo de
+ * vida real de la llamada cuando algo falla.
+ */
+const RETELL_TRACE_ONLY_EVENTS = [
+  'call_ready',
+  'agent_start_talking',
+  'agent_stop_talking',
+  'metadata',
+  'update',
+  'node_transition'
+] as const;
 
 interface ReservationFormValue {
   name: string;
@@ -91,11 +112,16 @@ export class Reservations implements OnInit {
 
   private readonly retellWebClient = new RetellWebClient();
 
+  /** Id del intento en curso, para correlacionar las trazas del SDK de Retell. */
+  private currentAttemptId = '';
+
   constructor(
     private branchService: BranchService,
     private reservationsService: ReservationsService,
     private tableService: TableService,
-    private voiceConfirmationService: VoiceConfirmationService
+    private voiceConfirmationService: VoiceConfirmationService,
+    private logger: VoiceCallLogger,
+    private appUpdateService: AppUpdateService
   ) { }
 
   ngOnInit() {
@@ -182,36 +208,52 @@ export class Reservations implements OnInit {
 
   async startAICall() {
     if (this.callActive) {
+      this.logger.step(this.currentAttemptId, 'colgar-solicitado-por-el-usuario');
       this.retellWebClient.stopCall();
       return;
     }
 
+    const attemptId = this.logger.startAttempt();
+    this.currentAttemptId = attemptId;
+
     if (!this.hasValidForm('Completa todos los campos antes de iniciar la llamada')) {
+      this.logger.endAttempt(attemptId, 'formulario invalido');
       return;
     }
 
     this.isAICalling = true;
     this.errorMessage = '';
     this.successMessage = '';
+    // La recarga por version nueva esperaria a que termine la llamada.
+    this.appUpdateService.holdReload();
 
     let reservationId: string | null = null;
 
     try {
-      reservationId = await this.createPendingReservation();
+      this.logger.step(attemptId, 'formulario-valido', this.formValue);
+
+      reservationId = await this.createPendingReservation(attemptId);
       if (!reservationId) {
+        this.logger.endAttempt(attemptId, 'mesa no disponible');
         return;
       }
 
       const accessToken = await this.voiceConfirmationService.requestAccessToken(
-        this.buildVoiceConfirmationRequest(reservationId)
+        this.buildVoiceConfirmationRequest(reservationId),
+        attemptId
       );
+
+      this.logger.step(attemptId, 'retell-startCall');
       await this.retellWebClient.startCall({ accessToken });
+      this.logger.step(attemptId, 'retell-startCall-resuelto');
     } catch (error) {
-      console.error('Error al iniciar llamada IA:', error);
-      this.errorMessage = 'No se pudo iniciar la llamada con el asistente.';
-      await this.discardReservation(reservationId);
+      this.logger.failure(attemptId, 'startAICall', error);
+      this.errorMessage = this.describeVoiceCallError(error);
+      await this.discardReservation(reservationId, attemptId);
+      this.logger.endAttempt(attemptId, 'error');
     } finally {
       this.isAICalling = false;
+      this.appUpdateService.releaseReload();
     }
   }
 
@@ -230,12 +272,14 @@ export class Reservations implements OnInit {
 
   private setupRetellEvents() {
     this.retellWebClient.on('call_started', () => {
+      this.logger.step(this.currentAttemptId, 'retell:call_started');
       this.isAICalling = false;
       this.callActive = true;
       this.successMessage = 'Llamada iniciada correctamente';
     });
 
     this.retellWebClient.on('call_ended', () => {
+      this.logger.step(this.currentAttemptId, 'retell:call_ended');
       this.callActive = false;
       this.isAICalling = false;
       // Quien decide si la reserva queda confirmada o cancelada es el Workflow 3,
@@ -243,14 +287,47 @@ export class Reservations implements OnInit {
       // El navegador todavia no conoce el resultado y no debe afirmarlo.
       this.successMessage = 'Llamada finalizada. Tu reserva se actualizará en unos segundos.';
       this.resetForm();
+      this.logger.endAttempt(this.currentAttemptId, 'llamada completada');
     });
 
     this.retellWebClient.on('error', (message: string) => {
-      console.error('Error en la llamada de voz:', message);
+      this.logger.failure(this.currentAttemptId, 'retell:error', message);
       this.isAICalling = false;
       this.callActive = false;
-      this.errorMessage = 'Ocurrió un error con la llamada de voz.';
+      this.errorMessage = `Ocurrió un error con la llamada de voz: ${message}`;
     });
+
+    RETELL_TRACE_ONLY_EVENTS.forEach(eventName => {
+      this.retellWebClient.on(eventName, (payload: unknown) => {
+        this.logger.step(this.currentAttemptId, `retell:${eventName}`, payload);
+      });
+    });
+  }
+
+  /**
+   * Traduce el fallo a algo accionable. El codigo HTTP identifica en que punto
+   * de la cadena se rompio, que es justo lo que el mensaje generico ocultaba.
+   */
+  private describeVoiceCallError(error: unknown): string {
+    if (!(error instanceof VoiceConfirmationError)) {
+      return 'No se pudo iniciar la llamada con el asistente.';
+    }
+
+    switch (error.status) {
+      case 504:
+        return 'El workflow de n8n tardó demasiado en responder (504). La espera del nodo Wait supera el límite: revisa fecha_alerta y la hora de la reserva.';
+      case 404:
+        return 'El webhook de n8n no existe o el workflow está inactivo (404).';
+      case 401:
+      case 403:
+        return `n8n rechazó la petición (${error.status}). Revisa las credenciales del workflow.`;
+      case TIMEOUT_STATUS:
+        return 'El webhook de n8n no respondió a tiempo. Revisa si el workflow quedó esperando.';
+      case null:
+        return `No se pudo contactar con el webhook de n8n. ${error.message}`;
+      default:
+        return `El webhook de n8n respondió ${error.status}.`;
+    }
   }
 
   private hasValidForm(invalidMessage: string): boolean {
@@ -269,16 +346,20 @@ export class Reservations implements OnInit {
    * Revalida contra Firestore y crea la reserva. Devuelve el id, o null si la
    * mesa dejo de estar disponible (el motivo queda en `errorMessage`).
    */
-  private async createPendingReservation(): Promise<string | null> {
+  private async createPendingReservation(attemptId?: string): Promise<string | null> {
     const tables = await firstValueFrom(this.tableService.getTables());
-    const availabilityError = this.findAvailabilityError(tables);
+    this.traceIfTracked(attemptId, 'mesas-leidas', { total: tables.length });
 
+    const availabilityError = this.findAvailabilityError(tables);
     if (availabilityError) {
       this.errorMessage = availabilityError;
+      this.traceIfTracked(attemptId, 'mesa-no-disponible', { motivo: availabilityError });
       return null;
     }
 
-    return this.reservationsService.createReservation(this.buildReservation());
+    const reservationId = await this.reservationsService.createReservation(this.buildReservation());
+    this.traceIfTracked(attemptId, 'reserva-creada', { reservationId });
+    return reservationId;
   }
 
   private findAvailabilityError(tables: Table[]): string | null {
@@ -301,15 +382,23 @@ export class Reservations implements OnInit {
    * llego a iniciarse. Sin esto se acumulan documentos 'pending' que ningun
    * proceso limpia: release-expired-reservations solo mira mesas ya reservadas.
    */
-  private async discardReservation(reservationId: string | null): Promise<void> {
+  private async discardReservation(reservationId: string | null, attemptId?: string): Promise<void> {
     if (!reservationId) {
       return;
     }
 
     try {
       await this.reservationsService.deleteReservation(reservationId);
+      this.traceIfTracked(attemptId, 'reserva-descartada', { reservationId });
     } catch (error) {
       console.error('No se pudo descartar la reserva huérfana', reservationId, error);
+    }
+  }
+
+  /** `onSubmit` no abre ningun intento de llamada, asi que no tiene attemptId. */
+  private traceIfTracked(attemptId: string | undefined, phase: string, data?: unknown): void {
+    if (attemptId) {
+      this.logger.step(attemptId, phase, data);
     }
   }
 

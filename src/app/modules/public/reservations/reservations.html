@@ -343,29 +343,6 @@
           </div>
         </div>
 
-        <!-- Retell Call Confirmation Button -->
-        <div class="text-center mt-4">
-          <button type="button" [disabled]="isLoading || isAICalling"
-            class="btn btn-success btn-lg px-5 py-3 rounded-pill shadow-lg" (click)="startAICall()">
-            <span *ngIf="!isAICalling && !callActive">
-              <i class="fas fa-phone me-2"></i>
-              Confirmar Reserva por Llamada de Voz
-            </span>
-            <span *ngIf="isAICalling">
-              <i class="fas fa-spinner fa-spin me-2"></i>
-              Iniciando Llamada...
-            </span>
-            <span *ngIf="callActive">
-              <i class="fas fa-phone-slash me-2"></i>
-              Finalizar Llamada
-            </span>
-          </button>
-          <p class="mt-3 mb-0 text-muted small">
-            <i class="fas fa-info-circle me-1"></i>
-            Inicia una llamada de voz con nuestro asistente para confirmar tu reserva
-          </p>
-        </div>
-
         <!-- Success Message -->
         <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show mt-4 shadow-lg" role="alert">
           <div class="d-flex align-items-center">
