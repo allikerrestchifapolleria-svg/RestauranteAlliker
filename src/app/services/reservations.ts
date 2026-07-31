@@ -98,6 +98,19 @@ export class ReservationsService {
     }
   }
 
+  async deleteReservation(reservationId: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, 'reservations', reservationId));
+      const remaining = this.reservationsSubject.value.filter(
+        reservation => reservation.id !== reservationId
+      );
+      this.reservationsSubject.next(remaining);
+    } catch (error) {
+      console.error('Error deleting reservation:', error);
+      throw error;
+    }
+  }
+
   getReservationsByStatus(status: Reservation['status']): Observable<Reservation[]> {
     return new Observable(observer => {
       const reservations = this.reservationsSubject.value.filter(reservation => reservation.status === status);

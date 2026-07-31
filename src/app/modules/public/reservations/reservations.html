@@ -294,7 +294,11 @@
 
               <!-- Submit Button -->
               <div class="text-center">
-                <button type="submit" [disabled]="isLoading"
+                <div *ngIf="isReservationInThePast && reservationForm.get('time')?.touched"
+                  class="text-danger small mb-3">
+                  La fecha y hora de la reserva deben ser futuras
+                </div>
+                <button type="submit" [disabled]="isBusy"
                   class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-lg">
                   <span *ngIf="!isLoading">
                     <i class="fas fa-calendar-check me-2"></i>
@@ -317,7 +321,7 @@
                   <i class="fas fa-robot me-1 text-success"></i> ¿Prefieres confirmar tu reserva hablando con nuestro
                   asistente de voz inteligente?
                 </p>
-                <button type="button" [disabled]="isAICalling || isLoading"
+                <button type="button" [disabled]="isLoading || isAICalling"
                   [ngClass]="{'btn-danger': callActive, 'btn-success': !callActive}"
                   class="btn btn-lg px-5 py-3 rounded-pill shadow-lg w-100 mb-2" [style.transition]="'all 0.3s ease'"
                   [style.border]="'none'" (click)="startAICall()">
@@ -341,7 +345,7 @@
 
         <!-- Retell Call Confirmation Button -->
         <div class="text-center mt-4">
-          <button type="button" [disabled]="isAICalling || callActive"
+          <button type="button" [disabled]="isLoading || isAICalling"
             class="btn btn-success btn-lg px-5 py-3 rounded-pill shadow-lg" (click)="startAICall()">
             <span *ngIf="!isAICalling && !callActive">
               <i class="fas fa-phone me-2"></i>
