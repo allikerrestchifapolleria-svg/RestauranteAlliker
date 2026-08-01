@@ -176,11 +176,19 @@
           <div class="row g-4">
             <div class="col-md-6">
               <label class="form-label fw-semibold">Tipo de Servicio</label>
-              <select class="form-select form-select-lg" [class.select-placeholder]="!newOrder.type" [(ngModel)]="newOrder.type" name="type" required>
+              <select class="form-select form-select-lg" [class.select-placeholder]="!newOrder.type" [(ngModel)]="newOrder.type" name="type" (ngModelChange)="onOrderTypeChange()" required>
                 <option value="" disabled>Seleccionar tipo...</option>
                 <option value="dine_in">🍽️ Comer aquí</option>
                 <option value="takeout">🥡 Para llevar</option>
               </select>
+              <div class="takeout-hint mt-2" *ngIf="isTakeout && containers.length > 0">
+                <i class="fas fa-box-open me-1"></i>
+                Elige el recipiente de cada plato: se cobra aparte al cliente.
+              </div>
+              <div class="takeout-hint warning mt-2" *ngIf="isTakeout && containers.length === 0">
+                <i class="fas fa-exclamation-circle me-1"></i>
+                No hay recipientes configurados. Regístralos en Admin → Recipientes.
+              </div>
             </div>
             <div class="col-md-6" *ngIf="newOrder.type === 'dine_in'">
               <label class="form-label fw-semibold">Mesa</label>
@@ -318,13 +326,13 @@
             </div>
             <div class="mb-4" *ngIf="orderItems.length > 0">
               <div class="order-item-card mb-3 rounded-3" *ngFor="let item of orderItems; let i = index">
-                <div class="card-body p-4">
-                  <div class="d-flex align-items-start justify-content-between">
-                    <div class="d-flex align-items-start flex-grow-1 gap-3">
+                <div class="card-body">
+                  <div class="order-item-main">
+                    <div class="order-item-fields">
                       <div class="order-item-icon">
                         <i class="fas fa-utensils fa-lg"></i>
                       </div>
-                      <div class="flex-grow-1">
+                      <div class="order-item-inputs">
                         <div class="menu-search-wrapper mb-3">
                           <input type="text" class="form-control form-control-lg order-search-input"
                                  [value]="item.name"
@@ -357,17 +365,48 @@
                         <div class="row g-3">
                           <div class="col-md-6">
                             <label class="form-label small fw-semibold order-item-label">Cantidad</label>
-                            <input type="number" class="form-control" [(ngModel)]="item.qty" [name]="'itemQty' + i" #itemQty="ngModel" min="1" max="99" required placeholder="1">
-                            <div *ngIf="itemQty.invalid && (itemQty.dirty || itemQty.touched)" class="text-danger small mt-1">
+                            <div class="qty-stepper">
+                              <button type="button" class="qty-btn" (click)="decreaseQty(i)"
+                                      [disabled]="item.qty <= 1" aria-label="Quitar uno">
+                                <i class="fas fa-minus"></i>
+                              </button>
+                              <input type="number" class="form-control qty-input" [(ngModel)]="item.qty"
+                                     [name]="'itemQty' + i" #itemQty="ngModel" min="1" max="99" required
+                                     inputmode="numeric" (blur)="normalizeQty(i)">
+                              <button type="button" class="qty-btn" (click)="increaseQty(i)"
+                                      [disabled]="item.qty >= 99" aria-label="Agregar uno">
+                                <i class="fas fa-plus"></i>
+                              </button>
+                            </div>
+                            <div *ngIf="itemQty.invalid && (itemQty.dirty || itemQty.touched)" class="field-error-text mt-1">
                               <div *ngIf="itemQty.errors?.['required']">La cantidad es obligatoria.</div>
                               <div *ngIf="itemQty.errors?.['min']">La cantidad mínima es 1.</div>
                               <div *ngIf="itemQty.errors?.['max']">La cantidad máxima es 99.</div>
                             </div>
                           </div>
                           <div class="col-md-6">
-                            <label class="form-label small fw-semibold order-item-label">Precio (S/)</label>
-                            <input type="text" class="form-control order-readonly-input" [ngModel]="'S/ ' + (item.price | number:'1.2-2')" [name]="'itemPrice' + i" readonly tabindex="-1">
+                            <label class="form-label small fw-semibold order-item-label">Precio unitario</label>
+                            <div class="price-display">S/ {{ item.price | number:'1.2-2' }}</div>
                           </div>
+                        </div>
+                        <div class="container-picker mt-3" *ngIf="isTakeout && containers.length > 0"
+                             [class.has-selection]="item.containerId">
+                          <label class="form-label small fw-semibold order-item-label">
+                            <i class="fas fa-box-open me-1"></i>Recipiente para llevar
+                          </label>
+                          <select class="form-select container-select"
+                                  [(ngModel)]="item.containerId"
+                                  [name]="'itemContainer' + i"
+                                  [class.select-placeholder]="!item.containerId">
+                            <option value="">Sin recipiente — S/ 0.00</option>
+                            <option *ngFor="let c of containers" [value]="c.id">
+                              {{ c.name }} — S/ {{ c.price | number:'1.2-2' }}
+                            </option>
+                          </select>
+                          <small class="container-picker-note" *ngIf="item.containerId">
+                            {{ item.qty }} x S/ {{ getContainerPrice(item.containerId) | number:'1.2-2' }}
+                            = <strong>S/ {{ getItemContainerTotal(item) | number:'1.2-2' }}</strong> por recipientes
+                          </small>
                         </div>
                         <input type="text" class="form-control mt-3" [(ngModel)]="item.notes" [name]="'itemNotes' + i" #itemNotes="ngModel" maxlength="200" pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.,!?()-]*$" placeholder="Ej: Sin cebolla, extra picante">
                         <div *ngIf="itemNotes.invalid && (itemNotes.dirty || itemNotes.touched)" class="text-danger small mt-1">
@@ -376,12 +415,16 @@
                         </div>
                       </div>
                     </div>
-                    <div class="d-flex align-items-center gap-3">
-                      <div class="text-end">
-                        <div class="h4 fw-bold mb-0 order-item-total">S/ {{(item.price * item.qty).toFixed(2)}}</div>
-                        <small class="order-item-subtotal">{{item.qty}} x S/ {{item.price}}</small>
+                    <div class="order-item-aside">
+                      <div class="order-item-amounts">
+                        <div class="order-item-total">S/ {{ getItemTotal(item).toFixed(2) }}</div>
+                        <small class="order-item-subtotal">{{ item.qty }} x S/ {{ item.price | number:'1.2-2' }}</small>
+                        <small class="order-item-container-line" *ngIf="getItemContainerTotal(item) > 0">
+                          + S/ {{ getItemContainerTotal(item).toFixed(2) }} recipiente
+                        </small>
                       </div>
-                      <button type="button" class="btn btn-outline-danger btn-lg rounded-circle" (click)="removeItem(i)" title="Eliminar item">
+                      <button type="button" class="order-item-remove" (click)="removeItem(i)"
+                              title="Eliminar item" aria-label="Eliminar item">
                         <i class="fas fa-trash"></i>
                       </button>
                     </div>
@@ -395,9 +438,21 @@
             </button>
           </div>
 
-          <div class="mt-5 order-form-total-bar">
-            <span class="order-form-total-label">Total del pedido</span>
-            <span class="order-form-total-value">S/ {{calculateTotal().toFixed(2)}}</span>
+          <div class="mt-5 order-form-total-bar" [class.with-breakdown]="calculateContainersTotal() > 0">
+            <div class="order-form-total-breakdown" *ngIf="calculateContainersTotal() > 0">
+              <div class="breakdown-row">
+                <span>Platos</span>
+                <span>S/ {{ calculateDishesTotal().toFixed(2) }}</span>
+              </div>
+              <div class="breakdown-row">
+                <span><i class="fas fa-box-open me-1"></i>Recipientes</span>
+                <span>S/ {{ calculateContainersTotal().toFixed(2) }}</span>
+              </div>
+            </div>
+            <div class="order-form-total-main">
+              <span class="order-form-total-label">Total del pedido</span>
+              <span class="order-form-total-value">S/ {{calculateTotal().toFixed(2)}}</span>
+            </div>
           </div>
 
           <div class="mt-4 d-flex gap-3">
@@ -481,9 +536,11 @@
             <!-- Card Expanded (shown on click) -->
             <div class="card-expanded" *ngIf="expandedCards.has(order.id)">
               <div class="expanded-items">
-                <div class="expanded-item" *ngFor="let item of order.items">
+                <div class="expanded-item" *ngFor="let item of order.items" [class.is-container]="item.isContainer">
                   <span class="item-qty">{{ item.qty }}x</span>
-                  <span class="item-name">{{ item.name }}</span>
+                  <span class="item-name">
+                    <i class="fas fa-box-open me-1" *ngIf="item.isContainer"></i>{{ item.name }}
+                  </span>
                   <span class="item-price">S/ {{ (item.price * item.qty).toFixed(2) }}</span>
                 </div>
               </div>

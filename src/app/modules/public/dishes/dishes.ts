@@ -12,6 +12,10 @@ import { Router } from '@angular/router';
 import { MenuCategoryService } from '../../../services/menu-category';
 import { MenuCategory } from '../../../models/menu-category';
 
+/** Placeholder para platos que aun no tienen foto cargada en el admin. */
+const DEFAULT_DISH_IMAGE = '/assets/default-dish.svg';
+const FEATURED_DISHES_COUNT = 3;
+
 @Component({
   selector: 'app-dishes',
   imports: [CommonModule, FormsModule],
@@ -22,6 +26,16 @@ export class Dishes implements OnInit {
   menuItems$: Observable<MenuItem[]> = new Observable<MenuItem[]>();
   menuItems: MenuItem[] = [];
   filteredItems: MenuItem[] = [];
+
+  /**
+   * Platos del carrusel de cabecera. Salen de la carta real: antes eran tres
+   * imagenes fijas (ceviche/lomo/suspiro) con nombre y precio escritos a mano
+   * que no tenian por que existir en el negocio.
+   *
+   * No depende de `filteredItems` a proposito: el carrusel no debe cambiar
+   * mientras el visitante escribe en el buscador.
+   */
+  featuredItems: MenuItem[] = [];
 
   categories: MenuCategory[] = [];
 
@@ -51,6 +65,7 @@ export class Dishes implements OnInit {
     this.menuItems$ = this.menuService.getMenuItems();
     this.menuItems$.subscribe(items => {
       this.menuItems = items;
+      this.refreshFeaturedItems();
       this.applyFilters();
     });
     this.categoryService.getCategories().subscribe(categories => {
@@ -129,12 +144,38 @@ export class Dishes implements OnInit {
     console.log('Toggling favorite for:', item.name);
   }
 
+  /**
+   * Se prefieren los platos que ya tienen foto: si no, el carrusel de cabecera
+   * acabaria siendo tres placeholders identicos. Entre esos, los marcados como
+   * 'popular' en el admin van primero: el carrusel es el escaparate de la
+   * pagina, y tomando el orden crudo abria con una gaseosa.
+   */
+  private refreshFeaturedItems() {
+    const withPhoto = this.menuItems.filter(item => !!item.image);
+    const source = withPhoto.length > 0 ? withPhoto : this.menuItems;
+
+    this.featuredItems = [
+      ...source.filter(item => item.tags.includes('popular')),
+      ...source.filter(item => !item.tags.includes('popular'))
+    ].slice(0, FEATURED_DISHES_COUNT);
+  }
+
+  dishImage(item: MenuItem): string {
+    return item.image || DEFAULT_DISH_IMAGE;
+  }
+
   onDishImageLoad(item: MenuItem) {
     console.log('[DISHES-IMG] Cargada OK:', item.name, '->', item.image);
   }
 
-  onDishImageError(item: MenuItem) {
+  onDishImageError(item: MenuItem, event?: Event) {
     console.error('[DISHES-IMG] Fallo al cargar imagen:', item.name, '->', item.image);
+
+    // El guard corta el bucle si lo que falla es el propio placeholder.
+    const img = event?.target as HTMLImageElement | undefined;
+    if (img && !img.src.endsWith(DEFAULT_DISH_IMAGE)) {
+      img.src = DEFAULT_DISH_IMAGE;
+    }
   }
 
   // MODO VITRINA: modal de configuracion y carrito deshabilitados. Descomentar para reactivar.

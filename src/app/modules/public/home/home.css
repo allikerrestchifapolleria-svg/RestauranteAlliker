@@ -141,7 +141,15 @@ p, span, button, input { font-family: var(--font-body); }
   box-shadow: 0 25px 50px rgba(30, 39, 46, 0.15); transform: rotate(-2deg);
   border: 4px solid var(--border-gold);
 }
-.hero-image { width: 100%; display: block; transition: transform 0.5s; }
+/*
+ * aspect-ratio + object-fit: las fotos de los platos las sube el negocio desde
+ * el admin y llegan con proporciones dispares. Sin esto el marco dorado del
+ * hero cambia de alto segun la foto que toque.
+ */
+.hero-image {
+  width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
+  display: block; transition: transform 0.5s;
+}
 .image-wrapper:hover .hero-image { transform: scale(1.05); }
 
 .floating-card {

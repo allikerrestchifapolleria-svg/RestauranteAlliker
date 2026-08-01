@@ -35,6 +35,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     { icon: 'fas fa-utensils', label: 'Gestión del Menú', path: '/admin/menu-management' },
     { icon: 'fas fa-tags', label: 'Categorías', path: '/admin/menu-category-management' },
     { icon: 'fas fa-clock', label: 'Horarios', path: '/admin/schedule-management' },
+    { icon: 'fas fa-box-open', label: 'Recipientes', path: '/admin/container-management' },
     { icon: 'fas fa-user-friends', label: 'Clientes', path: '/admin/customer-management' },
     { icon: 'fas fa-building', label: 'Sucursales', path: '/admin/branch-management' },
     { icon: 'fas fa-percent', label: 'Promociones', path: '/admin/promotion-management' },

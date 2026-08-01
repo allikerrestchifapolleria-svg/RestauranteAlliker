@@ -94,7 +94,9 @@ export class Auth {
       console.log('[AUTH] loginWithGoogle: iniciando signInWithPopup');
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(firebaseAuth, provider);
-      console.log('[AUTH] loginWithGoogle: signInWithPopup OK. uid=', result.user.uid, 'email=', result.user.email, 'isNewUser=', !!result.user.metadata?.creationTime);
+      // Sin email: la consola del navegador es visible en equipos compartidos y en
+      // capturas de soporte. El uid basta para correlacionar la traza.
+      console.log('[AUTH] loginWithGoogle: signInWithPopup OK. uid=', result.user.uid);
       return await this.handleSocialLogin(result.user);
     } catch (error: any) {
       console.error('[AUTH] loginWithGoogle ERROR:', {
@@ -134,7 +136,7 @@ export class Auth {
     }
 
     const nameParts = (user.displayName || '').split(' ');
-    console.log('[AUTH] handleSocialLogin: creando perfil nuevo para uid=', user.uid, 'displayName=', user.displayName);
+    console.log('[AUTH] handleSocialLogin: creando perfil nuevo para uid=', user.uid);
     await setDoc(doc(db, 'users', user.uid), {
       email: user.email,
       firstName: nameParts[0] || '',
@@ -223,8 +225,54 @@ export class Auth {
     return this.currentUser;
   }
 
+  /**
+   * Rol cacheado en localStorage. Sirve para pintar la UI, NO para decidir
+   * accesos: el propio usuario puede editarlo desde las devtools. Para eso esta
+   * resolveVerifiedRole().
+   */
   getUserRole(): UserRole | null {
     return this.currentUser?.role || null;
+  }
+
+  /**
+   * Rol reconfirmado contra Firestore, que es la unica fuente fiable.
+   *
+   * Firestore y las Netlify Functions ya resuelven el rol en servidor, asi que
+   * un localStorage manipulado nunca daba acceso a datos; pero si abria el panel
+   * de admin y dejaba la app en un estado incoherente. Esto lo cierra.
+   *
+   * Espera a authStateReady() porque tras recargar la pagina Firebase restaura
+   * la sesion de forma asincrona: sin esa espera, currentUser seria null y el
+   * guard echaria a un usuario legitimo en cada F5.
+   *
+   * Ante un error de lectura devuelve null (fail secure): preferimos denegar el
+   * acceso a concederlo sin haber podido comprobarlo.
+   */
+  async resolveVerifiedRole(): Promise<UserRole | null> {
+    await firebaseAuth.authStateReady();
+    const user = firebaseAuth.currentUser;
+
+    if (!user) {
+      return null;
+    }
+
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (!snap.exists()) {
+        return null;
+      }
+
+      const role = (snap.data()['role'] as UserRole) || 'user';
+      // Realinea el cache si se habia quedado desfasado o manipulado.
+      if (this.currentUser && this.currentUser.role !== role) {
+        this.currentUser = { ...this.currentUser, role };
+        localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+      }
+      return role;
+    } catch (error) {
+      console.error('[AUTH] No se pudo verificar el rol contra Firestore:', error);
+      return null;
+    }
   }
 
   getUserBranchId(): string | null {

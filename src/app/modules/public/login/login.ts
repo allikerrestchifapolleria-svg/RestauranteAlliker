@@ -44,14 +44,14 @@ export class Login implements OnInit {
     }
 
     const { email, password } = this.loginForm.value;
-     console.log('Login.onSubmit called with email:', email);
 
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
 
     this.auth.login(email, password).then(result => {
-      console.log('Login result:', result);
+      // Se registra solo el desenlace: `result` lleva rol y sucursal del usuario.
+      console.log('[LOGIN] resultado:', result.success ? 'ok' : 'rechazado');
       this.isLoading = false;
 
       if (result.success && result.role) {

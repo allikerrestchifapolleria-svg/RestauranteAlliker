@@ -6,7 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { OrdersService } from '../../../services/orders';
 import { BranchSelectionService } from '../../../services/branch-selection';
 import { TableService } from '../../../services/table';
-import { Order } from '../../../models/order';
+import { Order, OrderItem } from '../../../models/order';
 import { Auth } from '../../../services/auth';
 
 interface KanbanColumn {
@@ -180,8 +180,17 @@ export class Orders implements OnInit, OnDestroy {
     return this.orders.filter(order => order.status === status).length;
   }
 
+  /** Los recipientes para llevar se cobran, pero no se cocinan. */
+  getCookableItems(order: Order): OrderItem[] {
+    return order.items.filter(item => !item.isContainer);
+  }
+
+  getContainerItems(order: Order): OrderItem[] {
+    return order.items.filter(item => item.isContainer);
+  }
+
   isPriorityOrder(order: Order): boolean {
-    return order.type === 'delivery' || order.items.length > 5;
+    return order.type === 'delivery' || this.getCookableItems(order).length > 5;
   }
 
   isUrgentOrder(order: Order): boolean {

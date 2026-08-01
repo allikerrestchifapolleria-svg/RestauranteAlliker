@@ -9,6 +9,7 @@ import { UserManagement } from './user-management/user-management';
 import { CustomerManagement } from './customer-management/customer-management';
 import { BranchManagement } from './branch-management/branch-management';
 import { MenuCategoryManagement } from './menu-category-management/menu-category-management';
+import { ContainerManagement } from './container-management/container-management';
 import { PromotionManagement } from './promotion-management/promotion-management';
 import { TableManagement } from './table-management/table-management';
 import { NotificationManagement } from './notification-management/notification-management';
@@ -31,6 +32,7 @@ export const routes: Routes = [
       { path: 'customer-management', component: CustomerManagement },
       { path: 'branch-management', component: BranchManagement },
       { path: 'menu-category-management', component: MenuCategoryManagement },
+      { path: 'container-management', component: ContainerManagement },
       { path: 'promotion-management', component: PromotionManagement },
       { path: 'table-management', component: TableManagement },
       { path: 'notification-management', component: NotificationManagement },

@@ -210,4 +210,97 @@ describe('Waiter Orders', () => {
     component.selectItem(0, item);
     expect(component.orderItems[0].name).toBe('Lomo');
   });
+
+  describe('filtrado de platos', () => {
+    beforeEach(() => {
+      component.menuItems = [
+        { id: 'm1', categoryId: 'cat1', name: 'Lomo Saltado', price: 25 } as any,
+        { id: 'm2', categoryId: 'cat2', name: 'Pollo a la Brasa', price: 30 } as any,
+        { id: 'm3', categoryId: 'cat1', name: 'Lomo a lo Pobre', price: 28 } as any,
+      ];
+      component.addItem();
+    });
+
+    it('should filter dishes by search term', () => {
+      component.onItemSearch(0, { target: { value: 'lomo' } } as any);
+      expect(component.filteredItemLists[0].map(i => i.id)).toEqual(['m1', 'm3']);
+    });
+
+    it('should show the whole category when the search box is cleared', () => {
+      component.selectedCategoryId = 'cat2';
+      component.onItemSearch(0, { target: { value: '' } } as any);
+      expect(component.filteredItemLists[0].map(i => i.id)).toEqual(['m2']);
+    });
+
+    it('should re-filter open dropdowns when the category changes', () => {
+      component.showItemDropdown(0);
+      expect(component.filteredItemLists[0].length).toBe(3);
+
+      component.selectedCategoryId = 'cat2';
+      component.onCategoryChange();
+
+      expect(component.filteredItemLists[0].map(i => i.id)).toEqual(['m2']);
+    });
+  });
+
+  describe('recipientes para llevar', () => {
+    beforeEach(() => {
+      component.containers = [
+        { id: 'c1', name: 'Táper plástico', price: 1, isDefault: true, active: true } as any,
+        { id: 'c2', name: 'Caja de cartón', price: 2.5, isDefault: false, active: true } as any,
+      ];
+      component.newOrder.type = 'takeout';
+      component.addItem();
+      component.orderItems[0] = { menuItemId: 'm1', name: 'Pollo', qty: 3, price: 30, notes: '', containerId: 'c2' };
+    });
+
+    it('should charge one container per dish unit', () => {
+      expect(component.getItemContainerTotal(component.orderItems[0])).toBe(7.5);
+      expect(component.getItemTotal(component.orderItems[0])).toBe(97.5);
+      expect(component.calculateContainersTotal()).toBe(7.5);
+      expect(component.calculateTotal()).toBe(97.5);
+    });
+
+    it('should not charge containers for dine-in orders', () => {
+      component.newOrder.type = 'dine_in';
+      expect(component.calculateContainersTotal()).toBe(0);
+      expect(component.calculateTotal()).toBe(90);
+    });
+
+    it('should clear container selections when switching to dine-in', () => {
+      component.newOrder.type = 'dine_in';
+      component.onOrderTypeChange();
+      expect(component.orderItems[0].containerId).toBe('');
+    });
+
+    it('should preselect the default container when switching to takeout', () => {
+      component.orderItems[0].containerId = '';
+      component.onOrderTypeChange();
+      expect(component.orderItems[0].containerId).toBe('c1');
+    });
+  });
+
+  describe('control de cantidad', () => {
+    beforeEach(() => component.addItem());
+
+    it('should clamp quantity between 1 and 99', () => {
+      component.orderItems[0].qty = 1;
+      component.decreaseQty(0);
+      expect(component.orderItems[0].qty).toBe(1);
+
+      component.orderItems[0].qty = 99;
+      component.increaseQty(0);
+      expect(component.orderItems[0].qty).toBe(99);
+    });
+
+    it('should normalize a manually typed invalid quantity', () => {
+      component.orderItems[0].qty = null as any;
+      component.normalizeQty(0);
+      expect(component.orderItems[0].qty).toBe(1);
+
+      component.orderItems[0].qty = 250;
+      component.normalizeQty(0);
+      expect(component.orderItems[0].qty).toBe(99);
+    });
+  });
 });

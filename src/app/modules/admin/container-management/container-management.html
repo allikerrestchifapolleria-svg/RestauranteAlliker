@@ -1,0 +1,111 @@
+<div class="container-management">
+  <div class="header">
+    <h2>Recipientes para Llevar</h2>
+    <button class="btn-primary" (click)="addNewContainer()">Agregar Recipiente</button>
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <input type="text" placeholder="Buscar recipientes..." [(ngModel)]="searchTerm" (input)="onSearch()">
+    </div>
+    <p class="filters-hint">
+      Estos recipientes se ofrecen al mozo cuando el pedido es <strong>Para llevar</strong> y se cobran al cliente.
+    </p>
+  </div>
+
+  <div class="container-grid" *ngIf="(filteredContainers$ | async)?.length; else emptyState">
+    <div *ngFor="let container of filteredContainers$ | async" class="container-card" [class.inactive]="!container.active">
+      <div class="container-header">
+        <h3>
+          <i class="fas fa-box-open"></i>
+          {{ container.name }}
+        </h3>
+        <div class="container-actions">
+          <button class="btn-edit" (click)="editContainer(container)">Editar</button>
+          <button class="btn-delete" (click)="deleteContainer(container)">Eliminar</button>
+        </div>
+      </div>
+
+      <div class="container-details">
+        <div class="container-price">S/ {{ container.price | number:'1.2-2' }}</div>
+        <p class="container-description" *ngIf="container.description">{{ container.description }}</p>
+
+        <div class="container-badges">
+          <span class="status" [class.active]="container.active" [class.inactive]="!container.active"
+                (click)="toggleActive(container)"
+                [title]="container.active ? 'Clic para desactivar' : 'Clic para activar'">
+            {{ container.active ? 'Activo' : 'Inactivo' }}
+          </span>
+          <span class="badge-default" *ngIf="container.isDefault">
+            <i class="fas fa-star"></i> Por defecto
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="empty-state">
+      <h3>Sin recipientes registrados</h3>
+      <p>Agrega los envases que cobras en pedidos para llevar (táper plástico, caja de cartón, bolsa).</p>
+    </div>
+  </ng-template>
+
+  <!-- Add/Edit Form Modal -->
+  <div *ngIf="showAddForm" class="modal-overlay" (click)="cancelEdit()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ editingContainer ? 'Editar Recipiente' : 'Agregar Recipiente' }}</h3>
+        <button class="close-btn" (click)="cancelEdit()">&times;</button>
+      </div>
+
+      <form (ngSubmit)="saveContainer()" class="container-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Nombre *</label>
+            <input type="text" id="name" name="name" [(ngModel)]="newContainer.name"
+                   placeholder="Ej: Táper plástico mediano"
+                   [class.invalid]="formErrors['name']">
+            <small class="field-error" *ngIf="formErrors['name']">{{ formErrors['name'] }}</small>
+          </div>
+
+          <div class="form-group">
+            <label for="price">Precio (S/) *</label>
+            <input type="number" id="price" name="price" [(ngModel)]="newContainer.price"
+                   min="0" step="0.10" placeholder="1.00"
+                   [class.invalid]="formErrors['price']">
+            <small class="field-error" *ngIf="formErrors['price']">{{ formErrors['price'] }}</small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Descripción</label>
+          <input type="text" id="description" name="description" [(ngModel)]="newContainer.description"
+                 placeholder="Ej: Para 1/8 y 1/4 de pollo">
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="isDefault" [(ngModel)]="newContainer.isDefault" class="checkbox-input">
+            <span class="checkbox-text">Sugerir por defecto en pedidos para llevar</span>
+          </label>
+          <small class="field-hint">El mozo podrá cambiarlo o quitarlo en cada plato.</small>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="active" [(ngModel)]="newContainer.active" class="checkbox-input">
+            <span class="checkbox-text">Activo</span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="cancelEdit()">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="isSaving">
+            {{ isSaving ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

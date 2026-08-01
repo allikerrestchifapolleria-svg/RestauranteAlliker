@@ -135,13 +135,18 @@
             <!-- Card Expanded (shown on click) -->
             <div class="card-expanded" *ngIf="expandedCards.has(order.id)">
               <div class="expanded-items">
-                <div class="expanded-item" *ngFor="let item of order.items">
+                <div class="expanded-item" *ngFor="let item of getCookableItems(order)">
                   <span class="item-qty">{{ item.qty }}x</span>
                   <span class="item-name">{{ item.name }}</span>
                   <span class="item-notes" *ngIf="item.notes">
                     <i class="fas fa-sticky-note"></i> {{ item.notes }}
                   </span>
                   <span class="item-price">S/ {{ (item.price * item.qty).toFixed(2) }}</span>
+                </div>
+                <div class="expanded-item packing-note" *ngFor="let c of getContainerItems(order)">
+                  <span class="item-qty">{{ c.qty }}x</span>
+                  <span class="item-name"><i class="fas fa-box-open me-1"></i>{{ c.name }}</span>
+                  <span class="item-notes">Empaque</span>
                 </div>
               </div>
               <div class="expanded-summary">

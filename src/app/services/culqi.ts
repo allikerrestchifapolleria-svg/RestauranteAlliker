@@ -37,6 +37,24 @@ export interface CulqiResult {
   error?: string;
 }
 
+/**
+ * DECISION DE NEGOCIO (no es un descuido): aqui NO se cobra el cargo en servidor.
+ *
+ * El checkout de Culqi devuelve un TOKEN, no un cobro. Formalizar la pasarela
+ * exigiria canjear ese token contra la API con la secret key y, con ello, dejar
+ * toda la operacion declarada ante SUNAT. La empresa ha decidido que eso no le
+ * conviene, asi que el circuito de cobro es presencial:
+ *
+ *   - Yape: el mozo verifica visualmente el comprobante en el movil del cliente.
+ *   - Tarjeta: el mozo verifica el voucher del POS fisico.
+ *   - Efectivo: se cobra en caja.
+ *
+ * Consecuencia de seguridad que SI esta cubierta: como el pago lo valida una
+ * persona, el cliente no debe poder declararse pagado por su cuenta. Por eso las
+ * reglas de Firestore limitan 'payments' y 'sales' a 'create: if isStaff()'
+ * (ver firestore.rules). No aflojar esa regla sin poner antes un cobro real en
+ * servidor: seria la puerta para marcar pedidos como pagados sin pagarlos.
+ */
 @Injectable({
   providedIn: 'root'
 })

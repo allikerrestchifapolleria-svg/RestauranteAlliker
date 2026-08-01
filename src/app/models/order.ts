@@ -28,4 +28,9 @@ export interface OrderItem {
   modifiers: any[];
   variant?: { name: string; price: number };
   notes: string;
+  /** Marca las líneas de recipiente para llevar, que no se cocinan. */
+  isContainer?: boolean;
+  /** En un plato: recipiente elegido para llevarlo. Solo informativo, el cobro va en su propia línea. */
+  containerId?: string;
+  containerName?: string;
 }

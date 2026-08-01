@@ -5,16 +5,27 @@ const ATTEMPT_ID_LENGTH = 6;
 const MAX_BODY_LENGTH = 1000;
 
 /**
+ * Claves cuyo valor no debe llegar a la consola. Para diagnosticar el 504 hace
+ * falta la ESTRUCTURA del payload y los tiempos, no los datos personales del
+ * cliente: se conserva lo primero y se enmascara lo segundo.
+ */
+const REDACTED_KEYS = [
+  'customerphone', 'customeremail', 'customername',
+  'phone', 'email', 'name', 'access_token', 'accesstoken'
+];
+
+/**
  * Trazas del flujo de confirmacion por voz.
  *
  * Cada intento recibe un id corto que acompaña a todas sus lineas. Sin el, los
  * logs del webhook, de Firestore y de los eventos del SDK de Retell se mezclan
  * y no hay forma de seguir un intento concreto.
  *
- * NOTA: registra el payload completo, que incluye telefono y email del cliente.
- * Es deliberado mientras se persigue el 504 en produccion, porque el fallo no
- * se reproduce en local. Cuando el flujo este estable conviene reducirlo a
- * estructura y tiempos (ver `describePayload`).
+ * Los datos personales del cliente (telefono, email, nombre) y el access_token
+ * se enmascaran antes de imprimirse: la consola del navegador es visible en
+ * equipos compartidos y acaba en las capturas de soporte. Lo que hace falta para
+ * perseguir el 504 --la estructura del payload y los tiempos-- se conserva
+ * intacto (ver `redact`).
  */
 @Injectable({ providedIn: 'root' })
 export class VoiceCallLogger {
@@ -29,7 +40,29 @@ export class VoiceCallLogger {
   }
 
   step(attemptId: string, phase: string, data?: unknown): void {
-    console.info(`${LOG_PREFIX} ${attemptId} · ${phase} · ${this.elapsedLabel(attemptId)}`, data ?? '');
+    console.info(`${LOG_PREFIX} ${attemptId} · ${phase} · ${this.elapsedLabel(attemptId)}`, this.redact(data) ?? '');
+  }
+
+  /**
+   * Enmascara datos personales conservando la forma del objeto. Recorre en
+   * profundidad porque el payload del webhook va anidado ({ url, payload }).
+   */
+  private redact(data: unknown): unknown {
+    if (Array.isArray(data)) {
+      return data.map(item => this.redact(item));
+    }
+
+    if (data === null || typeof data !== 'object') {
+      return data;
+    }
+
+    const output: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+      output[key] = REDACTED_KEYS.includes(key.toLowerCase())
+        ? '[oculto]'
+        : this.redact(value);
+    }
+    return output;
   }
 
   failure(attemptId: string, phase: string, error: unknown): void {

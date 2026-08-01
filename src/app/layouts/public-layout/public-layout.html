@@ -147,10 +147,13 @@
         <div class="col-lg-4">
           <h6 class="footer-title">Enlaces Rápidos</h6>
           <ul class="footer-links">
-            <li><a href="#">Sobre Nosotros</a></li>
-            <li><a href="#">Nuestro Menú</a></li>
-            <li><a href="#">Reservaciones</a></li>
-            <li><a href="#">Contacto</a></li>
+            <li><a routerLink="/">Sobre Nosotros</a></li>
+            <li><a routerLink="/menu">Nuestro Menú</a></li>
+            <li><a routerLink="/dishes">Nuestros Platos</a></li>
+            <!-- RESERVACIONES DESHABILITADO (posible implementación futura).
+            <li><a routerLink="/reservations">Reservaciones</a></li>
+            -->
+            <li><a [href]="'mailto:' + (companyData.email || 'info@alliker.com')">Contacto</a></li>
           </ul>
         </div>
         <div class="col-lg-4">

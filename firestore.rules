@@ -73,6 +73,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Recipientes que se cobran en pedidos para llevar.
+    // Lectura pública: el mozo y la carta necesitan sus precios para cotizar.
+    match /takeout_containers/{containerId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ============================================================
     // Usuarios
     // ============================================================
@@ -207,14 +214,23 @@ service cloud.firestore {
       allow read, write: if isStaff();
     }
 
+    // La app consulta con where('userId','==',uid) para clientes y sin filtro para
+    // staff/admin (ver notification.ts: listenToNotifications y cleanupExpired).
+    //
+    // OJO con la forma de comparar: isOwner('userId') compara el uid contra la
+    // CADENA literal "userId", asi que nunca se cumple y el cliente se queda sin
+    // ver sus propias notificaciones. Hay que leer el campo del documento.
+    // Se usa .get('userId', '') porque las notificaciones de difusion (targetRole)
+    // no traen ese campo, y acceder a una clave inexistente deniega la peticion.
     match /notifications/{notificationId} {
-      // La app re-consulta notificaciones con un filtro where('userId','==',uid)
-      // para clientes y sin filtro para staff/admin. Las reglas validan ese acceso:
-      // - clientes solo leen/escriben sus propias notificaciones;
-      // - staff/admin (incluido waiter) leen y gestionan las notificaciones del local.
-      allow read, create, update, delete: if isStaff();
-      allow read: if isAuthenticated() && isOwner('userId');
-      allow create, update, delete: if isAuthenticated() && isOwner('userId');
+      allow read: if isStaff() || isOwner(resource.data.get('userId', ''));
+      // Las emite el sistema o el personal (orders.ts y el panel de admin);
+      // un cliente final nunca crea notificaciones.
+      allow create: if isStaff();
+      // El destinatario necesita marcar la suya como leida (read / readBy) y
+      // limpiar las suyas ya expiradas.
+      allow update: if isStaff() || isOwner(resource.data.get('userId', ''));
+      allow delete: if isStaff() || isOwner(resource.data.get('userId', ''));
     }
 
     match /reports/{reportId} {

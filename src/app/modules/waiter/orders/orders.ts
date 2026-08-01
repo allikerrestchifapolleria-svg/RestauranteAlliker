@@ -16,6 +16,19 @@ import { MenuAvailabilityService } from '../../../services/menu-availability';
 import { MenuItem } from '../../../models/menu-item';
 import { MenuCategory } from '../../../models/menu-category';
 import { Table } from '../../../models/table';
+import { ContainerService } from '../../../services/container';
+import { TakeoutContainer } from '../../../models/container';
+
+/** Fila del formulario de creación de órdenes (aún no es un OrderItem persistido). */
+interface OrderFormItem {
+  menuItemId: string | null;
+  name: string;
+  qty: number;
+  price: number;
+  notes: string;
+  /** Recipiente elegido. Solo aplica a pedidos para llevar. */
+  containerId?: string;
+}
 
 interface KanbanColumn {
   id: string;
@@ -70,7 +83,7 @@ export class Orders implements OnInit, OnDestroy {
     tableId: '',
     status: 'pending'
   };
-  orderItems: { menuItemId: string | null; name: string; qty: number; price: number; notes: string }[] = [];
+  orderItems: OrderFormItem[] = [];
   currentBranchId: string = '';
   branchTables: Table[] = [];
   familyTables: any[] = [];
@@ -166,6 +179,7 @@ export class Orders implements OnInit, OnDestroy {
   }
   menuItems: MenuItem[] = [];
   menuCategories: MenuCategory[] = [];
+  containers: TakeoutContainer[] = [];
   private rawMenuItems: MenuItem[] = [];
   filteredItemLists: MenuItem[][] = [];
   showDropdown: boolean[] = [];
@@ -189,6 +203,7 @@ export class Orders implements OnInit, OnDestroy {
     private router: Router,
     private menuService: MenuService,
     private availabilityService: MenuAvailabilityService,
+    private containerService: ContainerService,
     private userService: UserService,
     private notificationService: NotificationService,
     private cdr: ChangeDetectorRef,
@@ -229,6 +244,7 @@ export class Orders implements OnInit, OnDestroy {
     });
 
     this.loadMenuData();
+    this.loadContainers();
 
     this.userService.getUsers().subscribe(users => {
       this.cachedUsers = users;
@@ -325,6 +341,103 @@ export class Orders implements OnInit, OnDestroy {
           } as Table & { _displayName: string; _children: Table[] };
         });
     });
+  }
+
+  private loadContainers() {
+    this.containerService.getContainers().subscribe(containers => {
+      this.containers = containers.filter(c => c.active);
+      this.cdr.markForCheck();
+    });
+  }
+
+  /** Recipiente que se preselecciona al agregar un item en un pedido para llevar. */
+  private getDefaultContainerId(): string {
+    return this.containers.find(c => c.isDefault)?.id || '';
+  }
+
+  get isTakeout(): boolean {
+    return this.newOrder.type === 'takeout';
+  }
+
+  /** Al pasar a "comer aquí" no se cobra recipiente, así que se limpian las selecciones. */
+  onOrderTypeChange() {
+    if (this.isTakeout) {
+      const defaultId = this.getDefaultContainerId();
+      this.orderItems.forEach(item => {
+        if (!item.containerId) item.containerId = defaultId;
+      });
+    } else {
+      this.orderItems.forEach(item => item.containerId = '');
+    }
+  }
+
+  increaseQty(index: number) {
+    const item = this.orderItems[index];
+    item.qty = Math.min(99, (Number(item.qty) || 0) + 1);
+  }
+
+  decreaseQty(index: number) {
+    const item = this.orderItems[index];
+    item.qty = Math.max(1, (Number(item.qty) || 2) - 1);
+  }
+
+  /** Evita que quede vacío o fuera de rango si el mozo escribe la cantidad a mano. */
+  normalizeQty(index: number) {
+    const item = this.orderItems[index];
+    const qty = Math.floor(Number(item.qty));
+    item.qty = isNaN(qty) || qty < 1 ? 1 : Math.min(99, qty);
+  }
+
+  getContainerPrice(containerId: string): number {
+    return this.containers.find(c => c.id === containerId)?.price || 0;
+  }
+
+  getContainerName(containerId: string): string {
+    return this.containers.find(c => c.id === containerId)?.name || '';
+  }
+
+  /** Cada unidad del plato se lleva en su propio recipiente. */
+  getItemContainerTotal(item: OrderFormItem): number {
+    if (!this.isTakeout || !item.containerId) return 0;
+    return this.getContainerPrice(item.containerId) * (item.qty || 0);
+  }
+
+  getItemTotal(item: OrderFormItem): number {
+    return (item.price * item.qty) + this.getItemContainerTotal(item);
+  }
+
+  calculateDishesTotal(): number {
+    return this.orderItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  }
+
+  calculateContainersTotal(): number {
+    return this.orderItems.reduce((sum, item) => sum + this.getItemContainerTotal(item), 0);
+  }
+
+  /**
+   * Agrupa los recipientes elegidos en los items para cobrarlos como líneas propias
+   * de la orden (así el recargo viaja al pago, la boleta y el ticket sin lógica extra).
+   */
+  private buildContainerLines(): OrderItem[] {
+    if (!this.isTakeout) return [];
+
+    const totals = new Map<string, number>();
+    for (const item of this.orderItems) {
+      if (!item.containerId) continue;
+      totals.set(item.containerId, (totals.get(item.containerId) || 0) + item.qty);
+    }
+
+    return Array.from(totals.entries())
+      .filter(([containerId]) => this.getContainerPrice(containerId) > 0)
+      .map(([containerId, qty]) => ({
+        itemId: `container:${containerId}`,
+        name: this.getContainerName(containerId),
+        price: this.getContainerPrice(containerId),
+        qty,
+        modifiers: [],
+        notes: '',
+        isContainer: true
+      }));
   }
 
   private loadMenuData() {
@@ -613,7 +726,10 @@ export class Orders implements OnInit, OnDestroy {
   }
 
   addItem() {
-    this.orderItems.push({ menuItemId: null, name: '', qty: 1, price: 0, notes: '' });
+    this.orderItems.push({
+      menuItemId: null, name: '', qty: 1, price: 0, notes: '',
+      containerId: this.isTakeout ? this.getDefaultContainerId() : ''
+    });
     this.filteredItemLists.push([]);
     this.showDropdown.push(false);
   }
@@ -624,27 +740,38 @@ export class Orders implements OnInit, OnDestroy {
     this.showDropdown.splice(index, 1);
   }
 
+  /**
+   * Cambiar de categoría debe re-filtrar lo que ya está en pantalla: antes solo
+   * cerraba los desplegables, así que el filtro parecía no hacer nada.
+   */
   onCategoryChange() {
-    this.hideAllDropdowns();
+    this.orderItems.forEach((item, index) => {
+      this.filteredItemLists[index] = this.filterMenuItems(item.name);
+      if (this.showDropdown[index]) {
+        this.showDropdown[index] = this.filteredItemLists[index].length > 0;
+      }
+    });
+    this.cdr.detectChanges();
+  }
+
+  /** Única fuente de verdad del filtrado de platos: texto + categoría seleccionada. */
+  private filterMenuItems(rawTerm: string): MenuItem[] {
+    const term = (rawTerm || '').toLowerCase().trim();
+    return this.menuItems
+      .filter(mi => {
+        const matchesSearch = !term || mi.name.toLowerCase().includes(term);
+        const matchesCategory = !this.selectedCategoryId || mi.categoryId === this.selectedCategoryId;
+        return matchesSearch && matchesCategory;
+      })
+      .slice(0, 20);
   }
 
   onItemSearch(index: number, event: Event) {
     const term = (event.target as HTMLInputElement).value.toLowerCase().trim();
     this.orderItems[index].name = term;
 
-    if (!term) {
-      this.filteredItemLists[index] = [];
-      this.showDropdown[index] = false;
-      return;
-    }
-
-    let filtered = this.menuItems.filter(mi => {
-      const matchesSearch = mi.name.toLowerCase().includes(term);
-      const matchesCategory = !this.selectedCategoryId || mi.categoryId === this.selectedCategoryId;
-      return matchesSearch && matchesCategory;
-    });
-
-    this.filteredItemLists[index] = filtered.slice(0, 20);
+    // Al borrar el texto se muestran los platos de la categoría, no una lista vacía.
+    this.filteredItemLists[index] = this.filterMenuItems(term);
     this.showDropdown[index] = this.filteredItemLists[index].length > 0;
   }
 
@@ -664,13 +791,7 @@ export class Orders implements OnInit, OnDestroy {
   }
 
   showItemDropdown(index: number, event?: Event) {
-    const term = (this.orderItems[index].name || '').toLowerCase().trim();
-    let filtered = this.menuItems.filter(mi => {
-      const matchesSearch = !term || mi.name.toLowerCase().includes(term);
-      const matchesCategory = !this.selectedCategoryId || mi.categoryId === this.selectedCategoryId;
-      return matchesSearch && matchesCategory;
-    });
-    this.filteredItemLists[index] = filtered.slice(0, 20);
+    this.filteredItemLists[index] = this.filterMenuItems(this.orderItems[index].name);
     this.showDropdown[index] = this.filteredItemLists[index].length > 0;
     if (this.showDropdown[index]) {
       this.scrollTriggerIntoView(event, 'center');
@@ -686,7 +807,7 @@ export class Orders implements OnInit, OnDestroy {
   }
 
   calculateTotal(): number {
-    return this.orderItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    return this.calculateDishesTotal() + this.calculateContainersTotal();
   }
 
   private getWaiterDisplayName(): string {
@@ -746,14 +867,23 @@ export class Orders implements OnInit, OnDestroy {
       return;
     }
 
-    const items: OrderItem[] = this.orderItems.map(item => ({
-      itemId: item.menuItemId || item.name.toLowerCase().replace(/\s+/g, '-'),
-      name: item.name,
-      price: item.price,
-      qty: item.qty,
-      modifiers: [],
-      notes: item.notes
-    }));
+    const dishItems: OrderItem[] = this.orderItems.map(item => {
+      const mapped: OrderItem = {
+        itemId: item.menuItemId || item.name.toLowerCase().replace(/\s+/g, '-'),
+        name: item.name,
+        price: item.price,
+        qty: item.qty,
+        modifiers: [],
+        notes: item.notes
+      };
+      if (this.isTakeout && item.containerId) {
+        mapped.containerId = item.containerId;
+        mapped.containerName = this.getContainerName(item.containerId);
+      }
+      return mapped;
+    });
+
+    const items: OrderItem[] = [...dishItems, ...this.buildContainerLines()];
     console.log('[WAITER ORDERS] Items mapeados:', JSON.stringify(items));
 
     const subtotal = this.calculateTotal();

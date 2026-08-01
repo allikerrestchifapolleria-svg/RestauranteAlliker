@@ -62,43 +62,24 @@
       <div class="col-lg-6">
         <div class="showcase-visual">
           <!-- Featured Dish Carousel -->
-          <div id="featuredDishesCarousel" class="carousel slide shadow-lg rounded-4 overflow-hidden" data-bs-ride="carousel">
+          <div id="featuredDishesCarousel" class="carousel slide shadow-lg rounded-4 overflow-hidden"
+               data-bs-ride="carousel" *ngIf="featuredItems.length">
             <div class="carousel-indicators">
-              <button type="button" data-bs-target="#featuredDishesCarousel" data-bs-slide-to="0" class="active"></button>
-              <button type="button" data-bs-target="#featuredDishesCarousel" data-bs-slide-to="1"></button>
-              <button type="button" data-bs-target="#featuredDishesCarousel" data-bs-slide-to="2"></button>
+              <button type="button" *ngFor="let item of featuredItems; let i = index"
+                      data-bs-target="#featuredDishesCarousel" [attr.data-bs-slide-to]="i"
+                      [class.active]="i === 0" [attr.aria-label]="item.name"></button>
             </div>
 
             <div class="carousel-inner">
-              <div class="carousel-item active">
+              <div class="carousel-item" *ngFor="let item of featuredItems; let i = index"
+                   [class.active]="i === 0">
                 <div class="featured-dish-slide">
-                  <img src="/assets/ceviche.svg" class="d-block w-100" alt="Ceviche" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkM3NTdkIiBmb250LXNpemU9IjE2Ij5DZXZpY2hlIFBlcnVhbm88L3RleHQ+Cjwvc3ZnPg=='">
+                  <img [src]="dishImage(item)" [alt]="item.name" class="d-block w-100"
+                       (error)="onDishImageError(item, $event)">
                   <div class="carousel-caption d-none d-md-block">
-                    <h5>Ceviche Clásico</h5>
-                    <p>Pescado fresco marinado en limón con ají y cebolla</p>
-                    <span class="badge bg-primary">S/ 32.00</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="carousel-item">
-                <div class="featured-dish-slide">
-                  <img src="/assets/lomo-saltado.svg" class="d-block w-100" alt="Lomo Saltado" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkM3NTdkIiBmb250LXNpemU9IjE2Ij5Mb21vIFNhbHRhZG88L3RleHQ+Cjwvc3ZnPg=='">
-                  <div class="carousel-caption d-none d-md-block">
-                    <h5>Lomo Saltado</h5>
-                    <p>Saltado de lomo con papas fritas y verduras</p>
-                    <span class="badge bg-primary">S/ 28.00</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="carousel-item">
-                <div class="featured-dish-slide">
-                  <img src="/assets/suspiro.svg" class="d-block w-100" alt="Suspiro Limeño" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkM3NTdkIiBmb250LXNpemU9IjE2Ij5TdXNwaXJvIExpbWVuw7FvPC90ZXh0Pgo8L3N2Zz4='">
-                  <div class="carousel-caption d-none d-md-block">
-                    <h5>Suspiro Limeño</h5>
-                    <p>Postre tradicional con manjar blanco y galleta</p>
-                    <span class="badge bg-primary">S/ 18.00</span>
+                    <h5>{{ item.name }}</h5>
+                    <p>{{ item.description }}</p>
+                    <span class="badge bg-primary">S/ {{ item.price | number:'1.2-2' }}</span>
                   </div>
                 </div>
               </div>

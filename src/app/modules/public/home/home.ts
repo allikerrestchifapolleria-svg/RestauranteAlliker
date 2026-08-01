@@ -20,6 +20,9 @@ import { MenuCategoryService } from '../../../services/menu-category';
 import { MenuItem } from '../../../models/menu-item';
 import { MenuCategory } from '../../../models/menu-category';
 
+/** Placeholder para platos que aun no tienen foto cargada en el admin. */
+const DEFAULT_DISH_IMAGE = '/assets/default-dish.svg';
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -31,6 +34,16 @@ export class HomeComponent implements OnInit {
 
   menuItems$: Observable<MenuItem[]> = new Observable<MenuItem[]>();
   filteredDishes: MenuItem[] = [];
+
+  /**
+   * Plato de la imagen grande del hero. Sale de la carta real: antes era el
+   * logo del negocio con alt "Plato principal peruano".
+   *
+   * Se calcula sobre `allDishes` y no sobre `filteredDishes` a proposito: la
+   * foto de portada no debe cambiar mientras el visitante usa el buscador.
+   */
+  heroDish: MenuItem | null = null;
+
   private allDishes: MenuItem[] = [];
   private categories: MenuCategory[] = [];
 
@@ -79,10 +92,41 @@ export class HomeComponent implements OnInit {
     this.availabilityService.now$.subscribe(() => this.refreshFeaturedDishes());
     this.menuItems$.subscribe(items => {
       this.allDishes = items;
+      this.refreshHeroDish();
       this.refreshFeaturedDishes();
     });
 
     this.initScrollAnimations();
+  }
+
+  /**
+   * Se prefiere un plato con foto y marcado como 'popular'; si ninguno lo esta,
+   * vale cualquiera con foto. Sin el criterio de 'popular' la portada abria con
+   * el primer registro de la carta, que puede ser una bebida.
+   */
+  private refreshHeroDish() {
+    const withPhoto = this.allDishes.filter(item => !!item.image);
+
+    this.heroDish = withPhoto.find(item => item.tags.includes('popular'))
+      ?? withPhoto[0]
+      ?? this.allDishes[0]
+      ?? null;
+  }
+
+  get heroImage(): string {
+    return this.heroDish?.image || DEFAULT_DISH_IMAGE;
+  }
+
+  get heroAlt(): string {
+    return this.heroDish?.name || 'Plato de la casa';
+  }
+
+  onHeroImageError(event: Event) {
+    // El guard corta el bucle si lo que falla es el propio placeholder.
+    const img = event.target as HTMLImageElement;
+    if (!img.src.endsWith(DEFAULT_DISH_IMAGE)) {
+      img.src = DEFAULT_DISH_IMAGE;
+    }
   }
 
   private refreshFeaturedDishes() {
