@@ -214,6 +214,14 @@ service cloud.firestore {
       allow read, write: if isStaff();
     }
 
+    // Catalogo de tipos de notificacion (CRUD del panel de admin, ver
+    // notification-type.ts). Sin esta regla quedaba denegada por defecto al
+    // cerrar el modo prueba y el panel dejaba de cargar.
+    match /notification_types/{typeId} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
     // La app consulta con where('userId','==',uid) para clientes y sin filtro para
     // staff/admin (ver notification.ts: listenToNotifications y cleanupExpired).
     //
