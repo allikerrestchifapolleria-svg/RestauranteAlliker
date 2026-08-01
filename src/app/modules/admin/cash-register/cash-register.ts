@@ -11,6 +11,7 @@ import { BranchSelectionService } from '../../../services/branch-selection';
 import { Sale } from '../../../models/sale';
 import { Order } from '../../../models/order';
 import { Branch } from '../../../models/branch';
+import { startOfDay, endOfDay, parseLocalDate } from '../../../services/date-utils';
 
 interface PaymentSummary {
   method: string;
@@ -93,9 +94,9 @@ export class CashRegister implements OnInit, OnDestroy {
     this.loading = true;
     this.errorMessage = '';
 
-    const baseDate = this.selectedDate ? new Date(this.selectedDate) : new Date();
-    const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 0, 0, 0, 0);
-    const end = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 23, 59, 59, 999);
+    const baseDate = this.selectedDate ? parseLocalDate(this.selectedDate) : new Date();
+    const start = startOfDay(baseDate);
+    const end = endOfDay(baseDate);
 
     this.salesSubscription = this.salesService
       .getSalesByDateRange(start, end)
@@ -142,8 +143,8 @@ export class CashRegister implements OnInit, OnDestroy {
               if (o.orderNumber) this.orderNumberMap.set(o.id, String(o.orderNumber));
               if (o.tableName || o.tableId) this.tableNameMap.set(o.id, o.tableName || o.tableId || '');
             }
-            const oStart = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 0, 0, 0, 0);
-            const oEnd = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 23, 59, 59, 999);
+            const oStart = start;
+            const oEnd = end;
             this.orders = all.filter(o => {
               const d = new Date(o.createdAt);
               return d >= oStart && d <= oEnd;

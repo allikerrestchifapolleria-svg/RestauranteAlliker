@@ -23,7 +23,6 @@ const mockTables: Table[] = [
 const mockOrders: Order[] = [
   { id: 'o1', branchId: 'b1', tableId: '2', customerId: null, type: 'dine_in', status: 'pending', items: [], subtotal: 50, tax: 9, total: 59, paymentMethod: 'cash', paymentStatus: 'pending', createdAt: new Date(), updatedAt: new Date() },
 ];
-
 describe('Waiter Tables', () => {
   let component: Tables;
   let fixture: ComponentFixture<Tables>;
@@ -225,5 +224,71 @@ describe('Waiter Tables', () => {
     component.selectedTable.set(mockTables[0]);
     component.freeTable();
     expect(tableServiceSpy.updateTable).toHaveBeenCalledWith('t1', { status: 'available', currentOrderId: null, occupiedTime: null });
+  });
+
+  it('should return a served order only when the order is delivered and unpaid', () => {
+    const table = mockTables[1];
+    (component as any)._orders.set([{ ...mockOrders[0], status: 'delivered', paymentStatus: 'pending' } as any]);
+    fixture.detectChanges();
+    expect(component.getServedOrderForTable(table)?.id).toBe('o1');
+  });
+
+  it('should not return a served order while the order is not delivered', () => {
+    const table = mockTables[1];
+    (component as any)._orders.set([{ ...mockOrders[0], status: 'confirmed', paymentStatus: 'pending' } as any]);
+    fixture.detectChanges();
+    expect(component.getServedOrderForTable(table)).toBeNull();
+  });
+
+  it('should not return a served order for a delivered but already paid order', () => {
+    const table = mockTables[1];
+    (component as any)._orders.set([{ ...mockOrders[0], status: 'delivered', paymentStatus: 'paid' } as any]);
+    fixture.detectChanges();
+    expect(component.getServedOrderForTable(table)).toBeNull();
+  });
+
+  it('should not return a served order for a cancelled order', () => {
+    const table = mockTables[1];
+    (component as any)._orders.set([{ ...mockOrders[0], status: 'cancelled', paymentStatus: 'pending' } as any]);
+    fixture.detectChanges();
+    expect(component.getCurrentOrderForTable(table)).toBeNull();
+    expect(component.getServedOrderForTable(table)).toBeNull();
+  });
+
+  it('should navigate to payment from a table with a served order', () => {
+    (component as any)._orders.set([{ ...mockOrders[0], status: 'delivered', paymentStatus: 'pending' } as any]);
+    fixture.detectChanges();
+    const navigateSpy = spyOn(router, 'navigateByUrl');
+    component.goToPayment(mockTables[1]);
+    expect(navigateSpy).toHaveBeenCalledWith('/waiter/payment?orderId=o1&tableId=2');
+  });
+
+  it('should not navigate to payment from a table whose order is not served', () => {
+    (component as any)._orders.set([{ ...mockOrders[0], status: 'confirmed', paymentStatus: 'pending' } as any]);
+    fixture.detectChanges();
+    const navigateSpy = spyOn(router, 'navigateByUrl');
+    component.goToPayment(mockTables[1]);
+    expect(navigateSpy).not.toHaveBeenCalled();
+  });
+
+  it('should navigate to payment from a family table with a served order using fam_ tableId', () => {
+    const famTable = component.familyComposites().find(f => f.familyGroupId === 'fam1')!;
+    (component as any)._orders.set([{ id: 'of1', branchId: 'b1', tableId: 'fam1', customerId: null, type: 'dine_in', status: 'delivered', items: [], subtotal: 100, tax: 18, total: 118, paymentMethod: 'cash', paymentStatus: 'pending', createdAt: new Date(), updatedAt: new Date() } as any]);
+    (component as any)._tables.update((tables: Table[]) => tables.map(t =>
+      t.familyGroupId === 'fam1' ? { ...t, status: 'occupied', currentOrderId: 'of1', occupiedTime: new Date() } : t
+    ));
+    fixture.detectChanges();
+    const navigateSpy = spyOn(router, 'navigateByUrl');
+    component.goToPayment(famTable);
+    expect(navigateSpy).toHaveBeenCalledWith('/waiter/payment?orderId=of1&tableId=fam_fam1');
+  });
+
+  it('should return the order status label for an occupied table', () => {
+    (component as any)._orders.set([{ ...mockOrders[0], status: 'preparing', paymentStatus: 'pending' } as any]);
+    fixture.detectChanges();
+    expect(component.getOrderStatusLabel(mockTables[1])).toBe('En preparación');
+    (component as any)._orders.set([]);
+    fixture.detectChanges();
+    expect(component.getOrderStatusLabel(mockTables[1])).toBe('Ocupada');
   });
 });

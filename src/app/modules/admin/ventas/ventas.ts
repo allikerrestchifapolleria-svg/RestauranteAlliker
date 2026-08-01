@@ -11,6 +11,7 @@ import { OrdersService } from '../../../services/orders';
 import { BranchService } from '../../../services/branch';
 import { BranchSelectionService } from '../../../services/branch-selection';
 import { Branch } from '../../../models/branch';
+import { formatLocalDate } from '../../../services/date-utils';
 
 interface VentasRow {
   index: number;
@@ -56,8 +57,8 @@ export class Ventas implements OnInit, OnDestroy {
 
   ngOnInit() {
     const now = new Date();
-    this.dateStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-    this.dateEnd = now.toISOString().slice(0, 10);
+    this.dateStart = formatLocalDate(new Date(now.getFullYear(), now.getMonth(), 1));
+    this.dateEnd = formatLocalDate(now);
 
     this.selectedBranchId = this.branchSelection.getSelectedBranchId();
     this.subs.push(

@@ -212,17 +212,36 @@ export class Tables implements OnInit {
   }
 
   getCurrentOrderForTable(table: Table) {
-    const order = this.activeOrders().find(o => o.id === table.currentOrderId);
+    const order = this._orders().find(o => o.id === table.currentOrderId && o.status !== 'cancelled');
     if (order) return order;
 
     if (table.familyGroupId) {
       const children = this.getFamilyChildren(table);
       for (const child of children) {
-        const childOrder = this.activeOrders().find(o => o.id === child.currentOrderId);
+        const childOrder = this._orders().find(o => o.id === child.currentOrderId && o.status !== 'cancelled');
         if (childOrder) return childOrder;
       }
     }
     return null;
+  }
+
+  getServedOrderForTable(table: Table) {
+    const order = this.getCurrentOrderForTable(table);
+    if (order && order.status === 'delivered' && order.paymentStatus !== 'paid') return order;
+    return null;
+  }
+
+  getOrderStatusLabel(table: Table): string {
+    const order = this.getCurrentOrderForTable(table);
+    if (!order) return 'Ocupada';
+    const labels: Record<string, string> = {
+      pending: 'Pendiente',
+      confirmed: 'En cocina',
+      preparing: 'En preparación',
+      ready: 'Listo',
+      delivered: 'Servido'
+    };
+    return labels[order.status] || order.status;
   }
 
   getTableNameByOrderId(orderId: string): string {
@@ -338,7 +357,7 @@ export class Tables implements OnInit {
 
   // --- Navigation ---
   goToPayment(table: Table) {
-    const order = this.getCurrentOrderForTable(table);
+    const order = this.getServedOrderForTable(table);
     if (order) {
       const tableId = table.familyGroupId
         ? 'fam_' + table.familyGroupId

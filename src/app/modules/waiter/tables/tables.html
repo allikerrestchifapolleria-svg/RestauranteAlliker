@@ -114,9 +114,14 @@
             <button *ngSwitchCase="'available'" class="btn btn-action btn-open" (click)="onNewOrder(table)">
               <i class="fas fa-play"></i> ABRIR MESA
             </button>
-            <button *ngSwitchCase="'occupied'" class="btn btn-action btn-view" (click)="goToPayment(table)">
-              <i class="fas fa-eye"></i> VER CUENTA
-            </button>
+            <ng-container *ngSwitchCase="'occupied'">
+              <button *ngIf="getServedOrderForTable(table)" class="btn btn-action btn-view" (click)="goToPayment(table)">
+                <i class="fas fa-eye"></i> VER CUENTA
+              </button>
+              <button *ngIf="!getServedOrderForTable(table)" class="btn btn-action btn-blocked" disabled>
+                <i class="fas fa-utensils"></i> {{ getOrderStatusLabel(table) | uppercase }}
+              </button>
+            </ng-container>
             <button *ngSwitchDefault class="btn btn-action btn-blocked" disabled>
               <i class="fas fa-lock"></i> {{ getStatusLabel(table.status) | uppercase }}
             </button>
@@ -178,8 +183,11 @@
           <button class="btn btn-action btn-view" (click)="onNewOrder(table)" *ngIf="!getCurrentOrderForTable(table)">
             <i class="fas fa-play"></i> NUEVA ORDEN
           </button>
-          <button class="btn btn-action btn-view" (click)="viewOrder(table)" *ngIf="getCurrentOrderForTable(table)">
+          <button class="btn btn-action btn-view" (click)="goToPayment(table)" *ngIf="getServedOrderForTable(table)">
             <i class="fas fa-eye"></i> VER CUENTA
+          </button>
+          <button class="btn btn-action btn-blocked" disabled *ngIf="getCurrentOrderForTable(table) && !getServedOrderForTable(table)">
+            <i class="fas fa-utensils"></i> {{ getOrderStatusLabel(table) | uppercase }}
           </button>
           <button *ngIf="!table.permanentFamily" class="btn btn-action btn-separate" (click)="separateTables(table)">
             <i class="fas fa-unlink"></i> SEPARAR

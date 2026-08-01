@@ -13,6 +13,7 @@ import { Order } from '../../../models/order';
 import { Table } from '../../../models/table';
 import { Sale } from '../../../models/sale';
 import { Reservation } from '../../../models/reservation';
+import { startOfDay, endOfDay } from '../../../services/date-utils';
 
 Chart.register(...registerables);
 
@@ -158,8 +159,8 @@ export class Dashboard implements OnInit, OnDestroy, AfterViewInit {
       const t = s.saleDate.getTime();
       return t >= start.getTime() && t <= end.getTime();
     });
-    const yesterdayStart = this.getStartOfDay(new Date(Date.now() - 86400000));
-    const yesterdayEnd = this.getEndOfDay(new Date(Date.now() - 86400000));
+    const yesterdayStart = startOfDay(new Date(Date.now() - 86400000));
+    const yesterdayEnd = endOfDay(new Date(Date.now() - 86400000));
     const yesterdaySales = branchSales.filter(s => {
       const t = s.saleDate.getTime();
       return t >= yesterdayStart.getTime() && t <= yesterdayEnd.getTime();
@@ -563,27 +564,19 @@ export class Dashboard implements OnInit, OnDestroy, AfterViewInit {
   private getDateRange(): { start: Date; end: Date } {
     const now = new Date();
     let start: Date;
-    const end = this.getEndOfDay(now);
+    const end = endOfDay(now);
 
     if (this.dateRange === 'today') {
-      start = this.getStartOfDay(now);
+      start = startOfDay(now);
     } else if (this.dateRange === 'week') {
       const day = now.getDay();
       const diff = day === 0 ? 6 : day - 1;
-      start = this.getStartOfDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff));
+      start = startOfDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff));
     } else {
-      start = this.getStartOfDay(new Date(now.getFullYear(), now.getMonth(), 1));
+      start = startOfDay(new Date(now.getFullYear(), now.getMonth(), 1));
     }
 
     return { start, end };
-  }
-
-  private getStartOfDay(date: Date): Date {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
-  }
-
-  private getEndOfDay(date: Date): Date {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
   }
 
   getStatusLabel(status: string): string {
