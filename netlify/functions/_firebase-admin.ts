@@ -31,6 +31,38 @@ export class HttpError extends Error {
  * usuario tiene role 'admin' en Firestore. Lanza HttpError si no.
  */
 export async function requireAdmin(authHeader: string | undefined) {
+  const decoded = await requireAuthenticated(authHeader);
+
+  const userSnap = await adminDb.collection('users').doc(decoded.uid).get();
+  if (!userSnap.exists || userSnap.data()?.['role'] !== 'admin') {
+    throw new HttpError(403, 'Solo un administrador puede realizar esta accion');
+  }
+
+  return decoded;
+}
+
+const STAFF_ROLES = ['admin', 'cook', 'waiter'];
+
+/**
+ * Verifica el ID token de Firebase y confirma que el usuario es personal
+ * (admin, cook o waiter) en Firestore. Lanza HttpError si no.
+ */
+export async function requireStaff(authHeader: string | undefined) {
+  const decoded = await requireAuthenticated(authHeader);
+
+  const userSnap = await adminDb.collection('users').doc(decoded.uid).get();
+  const role = userSnap.exists ? userSnap.data()?.['role'] : undefined;
+  if (!STAFF_ROLES.includes(role)) {
+    throw new HttpError(403, 'Solo el personal autorizado puede realizar esta accion');
+  }
+
+  return decoded;
+}
+
+/**
+ * Verifica el ID token de Firebase enviado por el cliente. Lanza HttpError si no.
+ */
+export async function requireAuthenticated(authHeader: string | undefined) {
   if (!authHeader?.startsWith('Bearer ')) {
     throw new HttpError(401, 'Falta el token de autenticacion');
   }
@@ -39,11 +71,6 @@ export async function requireAdmin(authHeader: string | undefined) {
   const decoded = await adminAuth.verifyIdToken(idToken).catch(() => {
     throw new HttpError(401, 'Token invalido o expirado');
   });
-
-  const userSnap = await adminDb.collection('users').doc(decoded.uid).get();
-  if (!userSnap.exists || userSnap.data()?.['role'] !== 'admin') {
-    throw new HttpError(403, 'Solo un administrador puede realizar esta accion');
-  }
 
   return decoded;
 }

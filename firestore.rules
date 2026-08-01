@@ -104,14 +104,18 @@ service cloud.firestore {
 
     match /tables/{tableId} {
       allow read: if isStaff() && belongsToBranch(resource.data.branchId);
-      allow create: if isStaff();
+      // Admin puede crear mesas en cualquier sucursal; el staff solo en la suya.
+      allow create: if isAdmin() || (isStaff() && belongsToBranch(request.resource.data.branchId));
       allow update: if isStaff() && belongsToBranch(resource.data.branchId);
       allow delete: if isAdmin();
     }
 
     match /orders/{orderId} {
       allow read: if isOwner(resource.data.customerId) || (isStaff() && belongsToBranch(resource.data.branchId));
-      allow create: if isAuthenticated();
+      // Solo el staff crea pedidos desde el POS. El checkout publico (deshabilitado
+      // en modo vitrina) debe crear el pedido desde una funcion backend (Admin SDK)
+      // que valide precios y cobre el pago antes de escribirlo.
+      allow create: if isStaff();
       // Staff de la sucursal puede actualizar el pedido completo (estado, cocina, pago, etc).
       // El cliente dueno del pedido SOLO puede cancelarlo (status) y nunca tocar total/paymentStatus.
       allow update: if (isStaff() && belongsToBranch(resource.data.branchId)) ||
@@ -133,23 +137,25 @@ service cloud.firestore {
     // ============================================================
 
     match /sales/{saleId} {
-      allow read: if isStaff() || ownsOrder(resource.data.orderId);
-      // El cliente solo puede crear la venta de SU PROPIO pedido (checkout publico).
-      allow create: if isStaff() || ownsOrder(request.resource.data.orderId);
+      allow read: if isStaff();
+      // Solo el staff registra ventas desde el POS (efectivo/yape/tarjeta en tienda).
+      // El cliente final NO puede auto-reportar una venta como pagada: el checkout
+      // publico (modo vitrina) debe escribirlas desde una funcion backend que cobre
+      // el cargo real (ej: Culqi con secret key) antes de marcarlas 'completed'.
+      allow create: if isStaff();
       allow update, delete: if isAdmin();
     }
 
     match /payments/{paymentId} {
-      allow read: if isStaff() || ownsOrder(resource.data.orderId);
-      allow create: if isStaff() || ownsOrder(request.resource.data.orderId);
+      allow read: if isStaff();
+      allow create: if isStaff();
       allow update, delete: if isAdmin();
     }
 
-    // NOTA IMPORTANTE: esta regla evita que un desconocido lea/escriba pagos ajenos,
-    // pero NO evita que un cliente reporte su propio pago como 'completed' sin haber
-    // pagado de verdad (el token de Culqi no se valida en servidor todavia). Eso
-    // requiere una funcion backend que confirme el cargo antes de que el pago se
-    // pueda marcar como pagado - ver conversacion sobre CulqiService.
+    // NOTA IMPORTANTE: un cliente ya no puede crear payments/sales por su cuenta
+    // (se elimino el 'ownsOrder' del create). Si en el futuro se reactiva el checkout
+    // publico, hacerlo SIEMPRE via funcion backend que valide montos contra el
+    // catalogo y confirme el cargo (Culqi) antes de escribir nada.
 
     // ============================================================
     // Nota: 'inventory_items' y 'stock_movements' existen en Firestore pero
@@ -202,7 +208,13 @@ service cloud.firestore {
     }
 
     match /notifications/{notificationId} {
-      allow read, write: if isAuthenticated();
+      // La app re-consulta notificaciones con un filtro where('userId','==',uid)
+      // para clientes y sin filtro para staff/admin. Las reglas validan ese acceso:
+      // - clientes solo leen/escriben sus propias notificaciones;
+      // - staff/admin (incluido waiter) leen y gestionan las notificaciones del local.
+      allow read, create, update, delete: if isStaff();
+      allow read: if isAuthenticated() && isOwner('userId');
+      allow create, update, delete: if isAuthenticated() && isOwner('userId');
     }
 
     match /reports/{reportId} {

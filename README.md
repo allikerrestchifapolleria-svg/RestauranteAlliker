@@ -70,19 +70,6 @@ El proyecto se despliega en **Netlify**, con el repositorio conectado para despl
 
 Las funciones serverless (`netlify/functions/`) resuelven consultas de DNI/RUC (RENIEC/SUNAT) que no pueden hacerse directamente desde el navegador.
 
-## Credenciales de prueba
-
-Visibles también en la pantalla de login de la aplicación:
-
-| Rol | Correo | Contraseña |
-|---|---|---|
-| Administrador | `anderson@gmail.com` | `anderson123` |
-| Cocinero | `diana@gmail.com` | `diana123` |
-| Mozo | `Fabrizio@gmail.com` | `fabrizio123` |
-| Cliente | `cristian@gmail.com` | `cristian123` |
-
-Antes de un despliegue a producción con clientes reales, estas cuentas deben eliminarse o desactivarse desde **Gestión de Usuarios**, y debe quitarse el bloque de credenciales de demostración en `src/app/modules/public/login/login.html`.
-
 ## Recursos adicionales
 
 Para más información sobre Angular CLI, ver la [documentación oficial](https://angular.dev/tools/cli).

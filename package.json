@@ -37,7 +37,7 @@
     "bootstrap": "^5.3.8",
     "chart.js": "^4.5.1",
     "firebase": "^12.6.0",
-    "firebase-admin": "^13.10.0",
+    "firebase-admin": "^14.2.0",
     "pdfmake": "^0.3.11",
     "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
@@ -47,6 +47,9 @@
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^21.0.3",

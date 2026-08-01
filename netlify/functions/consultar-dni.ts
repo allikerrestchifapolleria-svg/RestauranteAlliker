@@ -1,4 +1,5 @@
 import type { Handler } from '@netlify/functions';
+import { requireStaff, HttpError } from './_firebase-admin';
 
 interface ConsultasPeruResponse {
   success: boolean;
@@ -9,14 +10,60 @@ interface ConsultasPeruResponse {
   };
 }
 
+// Rate limit simple (best-effort): Netlify functions son efimeras/stateless, asi
+// que este limite es por instancia y por memoria; no sustituye un rate limiter
+// real (p. ej. en un WAF/CDN). Suficiente para frenar abuso trivial.
+const RATE_LIMIT_MAX_REQUESTS = 20;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const rateBuckets = new Map<string, { count: number; resetAt: number }>();
+
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const bucket = rateBuckets.get(ip);
+  if (!bucket || bucket.resetAt <= now) {
+    rateBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+  bucket.count += 1;
+  return bucket.count > RATE_LIMIT_MAX_REQUESTS;
+}
+
+function clientIp(event: { headers?: Record<string, string | undefined> }): string {
+  const fwd = event.headers?.['x-forwarded-for'];
+  if (fwd) {
+    const first = fwd.split(',')[0].trim();
+    if (first) return first;
+  }
+  return event.headers?.['x-real-ip'] || 'unknown';
+}
+
 export const handler: Handler = async (event, context) => {
   try {
-    console.log('[CONSULTAR-DNI] Iniciando handler');
-
     if (event.httpMethod !== 'POST') {
       return {
         statusCode: 405,
         body: JSON.stringify({ success: false, message: 'Método no permitido' }),
+      };
+    }
+
+    // Solo el personal (staff) autenticado puede consultar DNI: evita abuso de la
+    // API pagada y la enumeracion de datos personales desde internet.
+    try {
+      await requireStaff(event.headers.authorization);
+    } catch (error) {
+      if (error instanceof HttpError) {
+        return {
+          statusCode: error.statusCode,
+          body: JSON.stringify({ success: false, message: error.message }),
+        };
+      }
+      throw error;
+    }
+
+    if (rateLimited(clientIp(event))) {
+      return {
+        statusCode: 429,
+        body: JSON.stringify({ success: false, message: 'Demasiadas consultas. Intente más tarde.' }),
       };
     }
 
@@ -31,7 +78,6 @@ export const handler: Handler = async (event, context) => {
     }
 
     const dni = (body.dni || '').trim();
-    console.log('[CONSULTAR-DNI] DNI recibido:', dni);
 
     if (!/^\d{8}$/.test(dni)) {
       return {
@@ -41,7 +87,6 @@ export const handler: Handler = async (event, context) => {
     }
 
     const token = process.env.CONSULTAS_PERU_TOKEN;
-    console.log('[CONSULTAR-DNI] Token presente:', !!token);
 
     if (!token) {
       console.error('[CONSULTAR-DNI] Token no configurado');
@@ -51,8 +96,7 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
-    console.log('[CONSULTAR-DNI] Consultando API externa...');
-    const apiResponse = await fetch('http://api.consultasperu.com/api/v1/query', {
+    const apiResponse = await fetch('https://api.consultasperu.com/api/v1/query', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -61,29 +105,26 @@ export const handler: Handler = async (event, context) => {
       body: JSON.stringify({ type: 'dni', document: dni }),
     });
 
-    console.log('[CONSULTAR-DNI] Status API:', apiResponse.status);
-
     if (!apiResponse.ok) {
       const errorText = await apiResponse.text().catch(() => '');
-      console.error('[CONSULTAR-DNI] Error API:', apiResponse.status, errorText);
+      console.error('[CONSULTAR-DNI] Error API:', apiResponse.status);
       return {
         statusCode: 404,
         body: JSON.stringify({
           success: false,
-          message: 'No se encontraron datos para el DNI ' + dni + '. Ingrese el nombre manualmente.',
+          message: 'No se encontraron datos para el DNI. Ingrese el nombre manualmente.',
         }),
       };
     }
 
     const data = (await apiResponse.json()) as ConsultasPeruResponse;
-    console.log('[CONSULTAR-DNI] Respuesta:', JSON.stringify(data));
 
     if (!data.success || !data.data) {
       return {
         statusCode: 404,
         body: JSON.stringify({
           success: false,
-          message: 'No se encontraron datos para el DNI ' + dni + '. Ingrese el nombre manualmente.',
+          message: 'No se encontraron datos para el DNI. Ingrese el nombre manualmente.',
         }),
       };
     }
@@ -102,12 +143,10 @@ export const handler: Handler = async (event, context) => {
         statusCode: 404,
         body: JSON.stringify({
           success: false,
-          message: 'No se encontraron datos para el DNI ' + dni + '. Ingrese el nombre manualmente.',
+          message: 'No se encontraron datos para el DNI. Ingrese el nombre manualmente.',
         }),
       };
     }
-
-    console.log('[CONSULTAR-DNI] Nombre encontrado:', fullName);
 
     return {
       statusCode: 200,
@@ -115,9 +154,6 @@ export const handler: Handler = async (event, context) => {
     };
   } catch (error) {
     console.error('[CONSULTAR-DNI] Error inesperado:', error);
-    if (error instanceof Error) {
-      console.error('[CONSULTAR-DNI] Stack:', error.stack);
-    }
     return {
       statusCode: 500,
       body: JSON.stringify({

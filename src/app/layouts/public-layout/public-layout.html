@@ -23,9 +23,11 @@
           <li class="nav-item" (click)="closeNavbar()">
             <a class="nav-link" routerLink="/dishes" routerLinkActive="active">Platos</a>
           </li>
+          <!-- RESERVACIONES DESHABILITADO (posible implementación futura).
           <li class="nav-item" *ngIf="!isCook && !isWaiter && !isAdmin" (click)="closeNavbar()">
             <a class="nav-link" routerLink="/reservations" routerLinkActive="active">Reservaciones</a>
           </li>
+          -->
         </ul>
         <ul class="navbar-nav align-items-center">
           <li class="nav-item" *ngIf="isAdmin" (click)="closeNavbar()">
@@ -49,12 +51,14 @@
               <span class="staff-return-text"><small>Volver a</small>Mesas</span>
             </button>
           </li>
+          <!-- MODO VITRINA: icono de carrito deshabilitado. Descomentar para reactivar.
           <li class="nav-item nav-item-inline" *ngIf="!isCook && !isWaiter && !isAdmin">
             <a class="nav-link cart-link" (click)="openCartSidebar()" role="button" style="cursor: pointer;">
               <i class="fas fa-shopping-cart"></i>
               <span class="cart-badge" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
             </a>
           </li>
+          -->
           <li class="nav-item nav-item-inline notification-wrapper" *ngIf="isCustomer">
             <button class="nav-link btn-notification-public" (click)="toggleNotifications()" title="Notificaciones" type="button">
               <i class="fas fa-bell"></i>
@@ -120,8 +124,9 @@
     <router-outlet></router-outlet>
   </main>
 
-  <!-- Cart Sidebar -->
+  <!-- MODO VITRINA: sidebar de carrito deshabilitado. Descomentar para reactivar.
   <app-cart-sidebar></app-cart-sidebar>
+  -->
 
   <!-- Footer -->
   <footer class="layout-footer">

@@ -1,3 +1,4 @@
+/* MODO VITRINA: flujo de compra (carrito) deshabilitado. Descomentar para reactivar los tests del carrito.
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Cart } from './cart';
 import { CartService } from '../../../services/cart';
@@ -150,3 +151,4 @@ describe('Cart Component', () => {
     expect(component.cartItems[0].quantity).toBe(5);
   });
 });
+*/

@@ -1,8 +1,12 @@
 import { Injectable, OnDestroy, NgZone } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Notification } from '../models/notification';
-import { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, writeBatch, getDocs, query, where, arrayUnion, Unsubscribe } from 'firebase/firestore';
-import { db } from '../firebase.config';
+import { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, writeBatch, getDocs, query, where, arrayUnion, Unsubscribe, Query, getDoc } from 'firebase/firestore';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { db, auth as firebaseAuth } from '../firebase.config';
+import { Auth } from './auth';
+
+const STAFF_ROLES = ['admin', 'cook', 'waiter'];
 
 @Injectable({
   providedIn: 'root'
@@ -13,18 +17,23 @@ export class NotificationService implements OnDestroy {
   private unsubscribeSnapshot: Unsubscribe | null = null;
   private cleanupInterval: ReturnType<typeof setInterval> | null = null;
   private pendingDeletions = new Map<string, ReturnType<typeof setTimeout>>();
+  private currentUid: string | null = null;
+  private currentRole: string | null = null;
 
-  constructor(private ngZone: NgZone) {
-    this.listenToNotifications();
-    this.cleanupExpired();
+  constructor(private ngZone: NgZone, private auth: Auth) {
+    // Re-escuchamos notificaciones segun la sesion: clientes solo ven las suyas
+    // (filtro por userId), staff/admin ven todas. Esto tambien evita que el
+    // listener de un cliente lea notificaciones de otros (denegado por reglas).
+    onAuthStateChanged(firebaseAuth, (user) => {
+      this.ngZone.run(() => {
+        this.handleAuthChange(user);
+      });
+    });
     this.cleanupInterval = setInterval(() => this.cleanupExpired(), 30 * 60 * 1000);
   }
 
   ngOnDestroy() {
-    if (this.unsubscribeSnapshot) {
-      this.unsubscribeSnapshot();
-      this.unsubscribeSnapshot = null;
-    }
+    this.teardownListener();
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
       this.cleanupInterval = null;
@@ -33,10 +42,56 @@ export class NotificationService implements OnDestroy {
     this.pendingDeletions.clear();
   }
 
+  private async handleAuthChange(user: FirebaseUser | null) {
+    this.teardownListener();
+    this.pendingDeletions.forEach(timeout => clearTimeout(timeout));
+    this.pendingDeletions.clear();
+
+    if (!user) {
+      this.currentUid = null;
+      this.currentRole = null;
+      this.notificationsSubject.next([]);
+      return;
+    }
+
+    this.currentUid = user.uid;
+    this.currentRole = await this.resolveRole(user.uid);
+    this.listenToNotifications();
+    this.cleanupExpired();
+  }
+
+  private async resolveRole(uid: string): Promise<string | null> {
+    const cached = this.auth.getUserRole();
+    if (cached) return cached;
+    try {
+      const userSnap = await getDoc(doc(db, 'users', uid));
+      return (userSnap.data()?.['role'] as string) || null;
+    } catch (error) {
+      console.error('[NOTIFICATION] Error al leer el rol del usuario:', error);
+      return null;
+    }
+  }
+
+  private isStaffRole(role: string | null): boolean {
+    return role !== null && STAFF_ROLES.includes(role);
+  }
+
+  private teardownListener() {
+    if (this.unsubscribeSnapshot) {
+      this.unsubscribeSnapshot();
+      this.unsubscribeSnapshot = null;
+    }
+  }
+
   private listenToNotifications() {
     try {
-      const notificationsCollection = collection(db, 'notifications');
-      this.unsubscribeSnapshot = onSnapshot(notificationsCollection, (snapshot) => {
+      let notificationsQuery: Query = collection(db, 'notifications');
+      // Los clientes solo deben escuchar sus propias notificaciones; el filtro
+      // coincide con las reglas (isOwner('userId')) para no leer datos ajenos.
+      if (!this.isStaffRole(this.currentRole) && this.currentUid) {
+        notificationsQuery = query(notificationsQuery, where('userId', '==', this.currentUid));
+      }
+      this.unsubscribeSnapshot = onSnapshot(notificationsQuery, (snapshot) => {
         this.ngZone.run(() => {
           const now = new Date();
           const notifications: Notification[] = [];
@@ -237,11 +292,18 @@ export class NotificationService implements OnDestroy {
 
   async cleanupExpired(): Promise<void> {
     try {
+      if (!this.currentUid) return;
+
       const now = new Date();
-      const q = query(
+      let q = query(
         collection(db, 'notifications'),
         where('expiresAt', '<', now)
       );
+      // Un cliente solo puede limpiar sus propias notificaciones expiradas
+      // (las reglas le impiden leer/eliminar las ajenas).
+      if (!this.isStaffRole(this.currentRole)) {
+        q = query(q, where('userId', '==', this.currentUid));
+      }
       const snapshot = await getDocs(q);
       if (snapshot.empty) return;
 

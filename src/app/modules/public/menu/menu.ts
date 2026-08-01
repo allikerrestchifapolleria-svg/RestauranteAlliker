@@ -6,11 +6,12 @@ import { Observable, combineLatest } from 'rxjs';
 import { startWith, map } from 'rxjs/operators';
 import { MenuService } from '../../../services/menu';
 import { MenuAvailabilityService } from '../../../services/menu-availability';
-import { CartService } from '../../../services/cart';
+// MODO VITRINA: carrito deshabilitado. Descomentar para reactivar.
+// import { CartService } from '../../../services/cart';
 import { MenuCategoryService } from '../../../services/menu-category';
 import { MenuItem, MenuVariant, MenuModifier } from '../../../models/menu-item';
 import { MenuCategory } from '../../../models/menu-category';
-import { CartSidebarService } from '../../../shared/components/cart-sidebar/cart-sidebar.service';
+// import { CartSidebarService } from '../../../shared/components/cart-sidebar/cart-sidebar.service';
 
 @Component({
   selector: 'app-menu',
@@ -42,11 +43,12 @@ export class Menu implements OnInit {
   constructor(
     private menuService: MenuService,
     private availabilityService: MenuAvailabilityService,
-    private cartService: CartService,
+    // MODO VITRINA: carrito deshabilitado. Descomentar para reactivar.
+    // private cartService: CartService,
     private categoryService: MenuCategoryService,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    private cartSidebarService: CartSidebarService
+    // private cartSidebarService: CartSidebarService
   ) {}
 
   ngOnInit() {
@@ -128,72 +130,73 @@ export class Menu implements OnInit {
     return this.allItems.filter(item => item.categoryId === categoryId).length;
   }
 
-  openConfigModal(item: MenuItem) {
-    this.configItem = item;
-    this.selectedVariant = null;
-    this.selectedModifiers = [];
-    this.configQuantity = 1;
-    this.showConfigModal = true;
-    document.body.style.overflow = 'hidden';
-  }
-
-  closeConfigModal() {
-    this.showConfigModal = false;
-    this.configItem = null;
-    document.body.style.overflow = '';
-  }
-
-  selectVariant(variant: MenuVariant | null) {
-    this.selectedVariant = variant;
-  }
-
-  toggleModifier(modifier: MenuModifier) {
-    const idx = this.selectedModifiers.findIndex(m => m.name === modifier.name);
-    if (idx >= 0) {
-      this.selectedModifiers.splice(idx, 1);
-    } else {
-      this.selectedModifiers.push({ ...modifier });
-    }
-  }
-
-  isModifierSelected(modifier: MenuModifier): boolean {
-    return this.selectedModifiers.some(m => m.name === modifier.name);
-  }
-
-  getConfigBasePrice(): number {
-    return this.selectedVariant?.price ?? this.configItem?.price ?? 0;
-  }
-
-  getConfigExtrasTotal(): number {
-    return this.selectedModifiers.reduce((sum, m) => sum + (m.price || 0), 0);
-  }
-
-  getConfigTotal(): number {
-    return (this.getConfigBasePrice() + this.getConfigExtrasTotal()) * this.configQuantity;
-  }
-
-  confirmAddToCart() {
-    if (!this.configItem) return;
-    this.cartService.addToCart(this.configItem, this.configQuantity, this.selectedVariant, this.selectedModifiers);
-    this.closeConfigModal();
-    this.cartSidebarService.open();
-  }
-
-  addToCart(item: MenuItem) {
-    if (item.variants && item.variants.length > 0) {
-      this.openConfigModal(item);
-    } else {
-      this.cartService.addToCart(item);
-    }
-  }
-
-  getCartItemCount(): number {
-    return this.cartService.getCartItemCount();
-  }
-
-  getCartTotal(): number {
-    return this.cartService.getCartTotal();
-  }
+  // MODO VITRINA: modal de configuracion y carrito deshabilitados. Descomentar para reactivar.
+  // openConfigModal(item: MenuItem) {
+  //   this.configItem = item;
+  //   this.selectedVariant = null;
+  //   this.selectedModifiers = [];
+  //   this.configQuantity = 1;
+  //   this.showConfigModal = true;
+  //   document.body.style.overflow = 'hidden';
+  // }
+  //
+  // closeConfigModal() {
+  //   this.showConfigModal = false;
+  //   this.configItem = null;
+  //   document.body.style.overflow = '';
+  // }
+  //
+  // selectVariant(variant: MenuVariant | null) {
+  //   this.selectedVariant = variant;
+  // }
+  //
+  // toggleModifier(modifier: MenuModifier) {
+  //   const idx = this.selectedModifiers.findIndex(m => m.name === modifier.name);
+  //   if (idx >= 0) {
+  //     this.selectedModifiers.splice(idx, 1);
+  //   } else {
+  //     this.selectedModifiers.push({ ...modifier });
+  //   }
+  // }
+  //
+  // isModifierSelected(modifier: MenuModifier): boolean {
+  //   return this.selectedModifiers.some(m => m.name === modifier.name);
+  // }
+  //
+  // getConfigBasePrice(): number {
+  //   return this.selectedVariant?.price ?? this.configItem?.price ?? 0;
+  // }
+  //
+  // getConfigExtrasTotal(): number {
+  //   return this.selectedModifiers.reduce((sum, m) => sum + (m.price || 0), 0);
+  // }
+  //
+  // getConfigTotal(): number {
+  //   return (this.getConfigBasePrice() + this.getConfigExtrasTotal()) * this.configQuantity;
+  // }
+  //
+  // confirmAddToCart() {
+  //   if (!this.configItem) return;
+  //   this.cartService.addToCart(this.configItem, this.configQuantity, this.selectedVariant, this.selectedModifiers);
+  //   this.closeConfigModal();
+  //   this.cartSidebarService.open();
+  // }
+  //
+  // addToCart(item: MenuItem) {
+  //   if (item.variants && item.variants.length > 0) {
+  //     this.openConfigModal(item);
+  //   } else {
+  //     this.cartService.addToCart(item);
+  //   }
+  // }
+  //
+  // getCartItemCount(): number {
+  //   return this.cartService.getCartItemCount();
+  // }
+  //
+  // getCartTotal(): number {
+  //   return this.cartService.getCartTotal();
+  // }
 
   viewItemDetails(item: MenuItem) {
     console.log('Viewing details for:', item.name);
@@ -217,17 +220,19 @@ export class Menu implements OnInit {
     this.applyFilters();
   }
 
-  openCartSidebar() {
-    this.cartSidebarService.open();
-  }
+  // MODO VITRINA: navegacion a carrito deshabilitada. Descomentar para reactivar.
+  // openCartSidebar() {
+  //   this.cartSidebarService.open();
+  // }
+  //
+  // goToCart() {
+  //   this.router.navigate(['/cart']);
+  // }
 
-  goToCart() {
-    this.router.navigate(['/cart']);
-  }
-
-  goToReservations() {
-    this.router.navigate(['/reservations']);
-  }
+  // RESERVACIONES DESHABILITADO (posible implementación futura).
+  // goToReservations() {
+  //   this.router.navigate(['/reservations']);
+  // }
 
   callNow() {
     window.open('tel:+51123456789');

@@ -50,6 +50,10 @@ Thumbs.db
 *service-account*.json
 firebase-adminsdk*.json
 
+# Workflows de n8n: contienen JWT de Retell, credenciales de Google Sheets y
+# telefonos de clientes. Se rotan y se mantienen fuera del repositorio.
+/My workflow*.json
+
 # Claude Code local worktrees (never commit these)
 .claude/worktrees/
 

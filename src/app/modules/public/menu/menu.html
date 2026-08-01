@@ -237,7 +237,7 @@
     </div>
   </div>
 
-  <!-- Config Modal -->
+  <!-- MODO VITRINA: modal de variantes/extras deshabilitado (solo servia para agregar al carrito). Descomentar para reactivar.
   <div class="modal-overlay" *ngIf="showConfigModal" (click)="closeConfigModal()">
     <div class="config-modal" (click)="$event.stopPropagation()">
       <button class="modal-close-btn" (click)="closeConfigModal()"><i class="fas fa-times"></i></button>
@@ -251,7 +251,6 @@
       </div>
 
       <div class="modal-body" *ngIf="configItem">
-        <!-- Variants -->
         <div class="config-section" *ngIf="configItem.variants && configItem.variants.length > 0">
           <h4 class="config-section-title">Elige una variante</h4>
           <div class="variant-options">
@@ -271,7 +270,6 @@
           </div>
         </div>
 
-        <!-- Modifiers -->
         <div class="config-section" *ngIf="configItem.modifiers && configItem.modifiers.length > 0">
           <h4 class="config-section-title">Extras</h4>
           <div class="modifier-options">
@@ -283,7 +281,6 @@
           </div>
         </div>
 
-        <!-- Quantity -->
         <div class="config-section">
           <h4 class="config-section-title">Cantidad</h4>
           <div class="quantity-controls">
@@ -308,6 +305,7 @@
       </div>
     </div>
   </div>
+  -->
 </div>
 
 <!-- Menu Grid -->
@@ -367,6 +365,7 @@
 
           <div class="d-flex justify-content-between align-items-center mt-auto">
             <span class="h5 mb-0 text-primary fw-bold">S/ {{ item.price.toFixed(2) }}</span>
+            <!-- MODO VITRINA: boton de agregar al carrito deshabilitado. Descomentar para reactivar.
             <button class="btn btn-primary btn-sm rounded-pill px-3"
                     (click)="addToCart(item)"
                     [disabled]="!isItemCurrentlyAvailable(item)"
@@ -375,6 +374,7 @@
               <span class="d-none d-sm-inline">{{ isItemCurrentlyAvailable(item) ? 'Agregar' : (item.isAvailable ? 'Fuera de horario' : 'No disponible') }}</span>
               <span class="d-sm-none">{{ isItemCurrentlyAvailable(item) ? '+' : '✗' }}</span>
             </button>
+            -->
           </div>
         </div>
       </div>
@@ -408,20 +408,23 @@
     </div>
   </div>
 
-  <!-- Floating Cart FAB -->
+  <!-- MODO VITRINA: boton flotante de carrito deshabilitado. Descomentar para reactivar.
   <button class="cart-fab" *ngIf="getCartItemCount() > 0" (click)="openCartSidebar()">
     <span class="cart-fab-count">{{ getCartItemCount() }}</span>
     <i class="fas fa-shopping-cart"></i>
   </button>
+  -->
 
   <!-- Quick Action Buttons -->
   <div class="container-fluid py-3" *ngIf="filteredItems.length > 0">
     <div class="row justify-content-center">
       <div class="col-lg-10">
         <div class="d-flex justify-content-end gap-2">
+          <!-- RESERVACIONES DESHABILITADO (posible implementación futura).
           <button class="btn btn-outline-primary rounded-pill px-4" (click)="goToReservations()">
             <i class="fas fa-calendar-alt me-2"></i>Reservar Mesa
           </button>
+          -->
           <button class="btn btn-warning rounded-pill px-4" (click)="callNow()">
             <i class="fas fa-phone me-2"></i>Llamar Ahora
           </button>

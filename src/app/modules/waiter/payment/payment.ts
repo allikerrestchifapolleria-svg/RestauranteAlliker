@@ -10,6 +10,7 @@ import { InvoiceService } from '../../../services/invoice.service';
 import { InvoiceBuilderService } from '../../../services/invoice-builder.service';
 import { PdfReceiptService } from '../../../services/pdf-receipt.service';
 import { TicketPrintService } from '../../../services/ticket-print.service';
+import { Auth } from '../../../services/auth';
 import { CustomerData, CompanyData, SunatDocType } from '../../../models/invoice';
 import { firstValueFrom } from 'rxjs';
 import { db } from '../../../firebase.config';
@@ -118,6 +119,7 @@ export class Payment implements OnInit {
     private invoiceBuilder: InvoiceBuilderService,
     private pdfReceipt: PdfReceiptService,
     private ticketPrint: TicketPrintService,
+    private auth: Auth,
     private router: Router,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef,
@@ -833,9 +835,13 @@ export class Payment implements OnInit {
     this.clienteNombreDisabled = true;
 
     try {
+      const idToken = await this.auth.getIdToken();
       const response = await fetch('/.netlify/functions/consultar-dni', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(idToken ? { Authorization: 'Bearer ' + idToken } : {}),
+        },
         body: JSON.stringify({ dni }),
       });
 

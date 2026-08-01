@@ -1,4 +1,5 @@
 import type { Handler } from '@netlify/functions';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { Timestamp } from 'firebase-admin/firestore';
 import { adminDb } from './_firebase-admin';
 
@@ -25,6 +26,13 @@ async function tableDocsForTableId(tableId: string) {
   return doc.exists ? [doc] : [];
 }
 
+function safeSecretEquals(provided: string | undefined, expected: string): boolean {
+  if (!provided) return false;
+  const providedHash = createHmac('sha256', expected).update(provided).digest();
+  const expectedHash = createHmac('sha256', expected).update(expected).digest();
+  return timingSafeEqual(providedHash, expectedHash);
+}
+
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ success: false, message: 'Metodo no permitido' }) };
@@ -35,7 +43,7 @@ export const handler: Handler = async (event) => {
     console.error('[CONFIRM-RESERVATION] N8N_WEBHOOK_SECRET no esta configurada en Netlify');
     return { statusCode: 500, body: JSON.stringify({ success: false, message: 'Webhook no configurado' }) };
   }
-  if (event.headers['x-webhook-secret'] !== expectedSecret) {
+  if (!safeSecretEquals(event.headers['x-webhook-secret'], expectedSecret)) {
     return { statusCode: 401, body: JSON.stringify({ success: false, message: 'No autorizado' }) };
   }
 

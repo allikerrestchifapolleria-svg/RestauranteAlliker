@@ -24,7 +24,8 @@ require('./app/modules/public/menu/menu.spec');
 require('./app/modules/public/home/home.spec');
 require('./app/modules/public/login/login.spec');
 require('./app/modules/public/register/register.spec');
-require('./app/modules/public/reservations/reservations.spec');
+// RESERVACIONES DESHABILITADO (posible implementación futura).
+// require('./app/modules/public/reservations/reservations.spec');
 require('./app/modules/public/no-branch/no-branch.spec');
 require('./app/layouts/public-layout/public-layout.spec');
 require('./app/layouts/waiter-layout/waiter-layout.spec');

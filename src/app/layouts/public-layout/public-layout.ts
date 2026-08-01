@@ -4,9 +4,10 @@ import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { Auth } from '../../services/auth';
-import { CartService } from '../../services/cart';
-import { CartSidebarService } from '../../shared/components/cart-sidebar/cart-sidebar.service';
-import { CartSidebarComponent } from '../../shared/components/cart-sidebar/cart-sidebar';
+// MODO VITRINA: carrito deshabilitado. Descomentar para reactivar.
+// import { CartService } from '../../services/cart';
+// import { CartSidebarService } from '../../shared/components/cart-sidebar/cart-sidebar.service';
+// import { CartSidebarComponent } from '../../shared/components/cart-sidebar/cart-sidebar';
 import { CompanyService } from '../../services/company.service';
 import { CompanyData } from '../../models/invoice';
 import { NotificationService } from '../../services/notification';
@@ -16,7 +17,9 @@ import { Notification } from '../../models/notification';
   selector: 'app-public-layout',
   templateUrl: './public-layout.html',
   styleUrl: './public-layout.css',
-  imports: [CommonModule, RouterModule, CartSidebarComponent]
+  imports: [CommonModule, RouterModule]
+  // MODO VITRINA: quitar CartSidebarComponent de imports para reactivar el carrito.
+  // imports: [CommonModule, RouterModule, CartSidebarComponent]
 })
 export class PublicLayoutComponent implements OnInit, OnDestroy {
   isScrolled: boolean = false;
@@ -62,15 +65,17 @@ export class PublicLayoutComponent implements OnInit, OnDestroy {
     return this.auth.getCurrentUser()?.email || '';
   }
 
-  get cartItemCount(): number {
-    return this.cartService.getCartItemCount();
-  }
+  // MODO VITRINA: contador de carrito deshabilitado. Descomentar para reactivar.
+  // get cartItemCount(): number {
+  //   return this.cartService.getCartItemCount();
+  // }
 
   constructor(
     private auth: Auth,
     private router: Router,
-    private cartService: CartService,
-    private cartSidebarService: CartSidebarService,
+    // MODO VITRINA: carrito deshabilitado. Descomentar para reactivar.
+    // private cartService: CartService,
+    // private cartSidebarService: CartSidebarService,
     private companyService: CompanyService,
     private cdr: ChangeDetectorRef,
     private notificationService: NotificationService
@@ -155,10 +160,11 @@ export class PublicLayoutComponent implements OnInit, OnDestroy {
     this.router.navigate(['/']);
   }
 
-  openCartSidebar() {
-    this.cartSidebarService.open();
-    this.closeNavbar();
-  }
+  // MODO VITRINA: apertura del carrito deshabilitada. Descomentar para reactivar.
+  // openCartSidebar() {
+  //   this.cartSidebarService.open();
+  //   this.closeNavbar();
+  // }
 
   closeNavbar() {
     const navbarCollapse = document.getElementById('navbarNav');

@@ -45,10 +45,19 @@ export class Auth {
     // Si Firebase reporta que ya no hay sesion (token revocado, logout en otra
     // pestana, etc.) invalidamos el cache local para que los guards no confien
     // en una sesion que ya no existe.
+    // Si hay sesion y hay cache, refrescamos el perfil desde Firestore: evita
+    // que un role/branchId antiguo almacenado en localStorage quede vigente
+    // (por ejemplo si un admin le quito el rol a un usuario o lo movio de sucursal).
     onAuthStateChanged(firebaseAuth, (user) => {
       if (!user && this.currentUser) {
         this.currentUser = null;
         localStorage.removeItem('currentUser');
+        return;
+      }
+      if (user && this.currentUser) {
+        this.loadUserProfile(user.uid, user.email).catch((error) => {
+          console.error('[AUTH] Error al refrescar perfil desde Firestore:', error);
+        });
       }
     });
   }
@@ -186,6 +195,16 @@ export class Auth {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('selectedBranchId');
     signOut(firebaseAuth).catch((error) => console.error('[AUTH] Error signing out:', error));
+  }
+
+  async getIdToken(): Promise<string | null> {
+    try {
+      const user = firebaseAuth.currentUser;
+      return user ? await user.getIdToken() : null;
+    } catch (error) {
+      console.error('[AUTH] Error al obtener el ID token:', error);
+      return null;
+    }
   }
 
   getCurrentUser() {

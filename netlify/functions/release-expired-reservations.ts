@@ -5,6 +5,10 @@ import { adminDb } from './_firebase-admin';
 // Se ejecuta cada 5 minutos (ver netlify.toml) y libera las mesas cuya
 // reserva confirmada ya paso su ventana (reservedUntil), sin que nadie
 // haya intervenido manualmente (ej: el mesero ya la marco 'occupied').
+// NOTA DE SEGURIDAD: esta funcion queda accesible por HTTP publico (llamada
+// cron). Es idempotente y no expone datos; solo libera mesas vencidas, por lo
+// que no se le exige autenticacion. Si en el futuro escribiera datos sensibles,
+// moverla a un schedule de Firebase o exigir un header secreto.
 export const handler: Handler = async () => {
   try {
     const now = Timestamp.now();

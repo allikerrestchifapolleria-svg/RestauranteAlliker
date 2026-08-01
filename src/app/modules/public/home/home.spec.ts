@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HomeComponent } from './home';
 import { MenuService } from '../../../services/menu';
-import { CartService } from '../../../services/cart';
-import { CartSidebarService } from '../../../shared/components/cart-sidebar/cart-sidebar.service';
+// MODO VITRINA: carrito deshabilitado.
+// import { CartService } from '../../../services/cart';
+// import { CartSidebarService } from '../../../shared/components/cart-sidebar/cart-sidebar.service';
 import { Router } from '@angular/router';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -19,22 +20,25 @@ describe('HomeComponent', () => {
   let component: HomeComponent;
   let fixture: ComponentFixture<HomeComponent>;
   let menuServiceSpy: jasmine.SpyObj<MenuService>;
-  let cartServiceSpy: jasmine.SpyObj<CartService>;
-  let cartSidebarServiceSpy: jasmine.SpyObj<CartSidebarService>;
+  // MODO VITRINA: carrito deshabilitado.
+  // let cartServiceSpy: jasmine.SpyObj<CartService>;
+  // let cartSidebarServiceSpy: jasmine.SpyObj<CartSidebarService>;
   let router: Router;
 
   beforeEach(async () => {
     menuServiceSpy = jasmine.createSpyObj('MenuService', ['getMenuItems']);
     menuServiceSpy.getMenuItems.and.returnValue(of(mockItems));
-    cartServiceSpy = jasmine.createSpyObj('CartService', ['addToCart', 'getCartItemCount']);
-    cartSidebarServiceSpy = jasmine.createSpyObj('CartSidebarService', ['open']);
+    // MODO VITRINA: carrito deshabilitado.
+    // cartServiceSpy = jasmine.createSpyObj('CartService', ['addToCart', 'getCartItemCount']);
+    // cartSidebarServiceSpy = jasmine.createSpyObj('CartSidebarService', ['open']);
 
     await TestBed.configureTestingModule({
       imports: [HomeComponent],
       providers: [
         { provide: MenuService, useValue: menuServiceSpy },
-        { provide: CartService, useValue: cartServiceSpy },
-        { provide: CartSidebarService, useValue: cartSidebarServiceSpy },
+        // MODO VITRINA: carrito deshabilitado.
+        // { provide: CartService, useValue: cartServiceSpy },
+        // { provide: CartSidebarService, useValue: cartSidebarServiceSpy },
         provideRouter([]),
       ]
     }).compileComponents();
@@ -103,11 +107,12 @@ describe('HomeComponent', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/menu']);
   });
 
-  it('should navigate to reservations', () => {
-    const navigateSpy = spyOn(router, 'navigate');
-    component.onReserveTable();
-    expect(navigateSpy).toHaveBeenCalledWith(['/reservations']);
-  });
+  // RESERVACIONES DESHABILITADO (posible implementación futura).
+  // it('should navigate to reservations', () => {
+  //   const navigateSpy = spyOn(router, 'navigate');
+  //   component.onReserveTable();
+  //   expect(navigateSpy).toHaveBeenCalledWith(['/reservations']);
+  // });
 
   it('should track dish by id', () => {
     const dish = mockItems[0];
@@ -118,18 +123,19 @@ describe('HomeComponent', () => {
     expect(component.f).toBe(component.newsletterForm.controls);
   });
 
-  it('should add to cart on onAddToCart', () => {
-    component.onAddToCart(mockItems[0]);
-    expect(cartServiceSpy.addToCart).toHaveBeenCalledWith(mockItems[0]);
-  });
-
-  it('should get cart item count', () => {
-    cartServiceSpy.getCartItemCount.and.returnValue(3);
-    expect(component.getCartItemCount()).toBe(3);
-  });
-
-  it('should open cart sidebar', () => {
-    component.openCartSidebar();
-    expect(cartSidebarServiceSpy.open).toHaveBeenCalled();
-  });
+  // MODO VITRINA: tests de carrito deshabilitados. Descomentar para reactivar.
+  // it('should add to cart on onAddToCart', () => {
+  //   component.onAddToCart(mockItems[0]);
+  //   expect(cartServiceSpy.addToCart).toHaveBeenCalledWith(mockItems[0]);
+  // });
+  //
+  // it('should get cart item count', () => {
+  //   cartServiceSpy.getCartItemCount.and.returnValue(3);
+  //   expect(component.getCartItemCount()).toBe(3);
+  // });
+  //
+  // it('should open cart sidebar', () => {
+  //   component.openCartSidebar();
+  //   expect(cartSidebarServiceSpy.open).toHaveBeenCalled();
+  // });
 });

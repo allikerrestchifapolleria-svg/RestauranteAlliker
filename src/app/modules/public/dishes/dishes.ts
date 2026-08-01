@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MenuService } from '../../../services/menu';
 import { MenuAvailabilityService } from '../../../services/menu-availability';
-import { CartService } from '../../../services/cart';
+// MODO VITRINA: carrito deshabilitado. Descomentar para reactivar.
+// import { CartService } from '../../../services/cart';
 import { MenuItem, MenuVariant, MenuModifier } from '../../../models/menu-item';
 import { Router } from '@angular/router';
-import { CartSidebarService } from '../../../shared/components/cart-sidebar/cart-sidebar.service';
+// import { CartSidebarService } from '../../../shared/components/cart-sidebar/cart-sidebar.service';
 import { MenuCategoryService } from '../../../services/menu-category';
 import { MenuCategory } from '../../../models/menu-category';
 
@@ -39,9 +40,10 @@ export class Dishes implements OnInit {
   constructor(
     private menuService: MenuService,
     private availabilityService: MenuAvailabilityService,
-    private cartService: CartService,
+    // MODO VITRINA: carrito deshabilitado. Descomentar para reactivar.
+    // private cartService: CartService,
     private router: Router,
-    private cartSidebarService: CartSidebarService,
+    // private cartSidebarService: CartSidebarService,
     private categoryService: MenuCategoryService
   ) {}
 
@@ -127,80 +129,82 @@ export class Dishes implements OnInit {
     console.log('Toggling favorite for:', item.name);
   }
 
-  openConfigModal(item: MenuItem) {
-    this.configItem = item;
-    this.selectedVariant = null;
-    this.selectedModifiers = [];
-    this.configQuantity = 1;
-    this.showConfigModal = true;
-    document.body.style.overflow = 'hidden';
-  }
+  // MODO VITRINA: modal de configuracion y carrito deshabilitados. Descomentar para reactivar.
+  // openConfigModal(item: MenuItem) {
+  //   this.configItem = item;
+  //   this.selectedVariant = null;
+  //   this.selectedModifiers = [];
+  //   this.configQuantity = 1;
+  //   this.showConfigModal = true;
+  //   document.body.style.overflow = 'hidden';
+  // }
+  //
+  // closeConfigModal() {
+  //   this.showConfigModal = false;
+  //   this.configItem = null;
+  //   document.body.style.overflow = '';
+  // }
+  //
+  // selectVariant(variant: MenuVariant | null) {
+  //   this.selectedVariant = variant;
+  // }
+  //
+  // toggleModifier(modifier: MenuModifier) {
+  //   const idx = this.selectedModifiers.findIndex(m => m.name === modifier.name);
+  //   if (idx >= 0) {
+  //     this.selectedModifiers.splice(idx, 1);
+  //   } else {
+  //     this.selectedModifiers.push({ ...modifier });
+  //   }
+  // }
+  //
+  // isModifierSelected(modifier: MenuModifier): boolean {
+  //   return this.selectedModifiers.some(m => m.name === modifier.name);
+  // }
+  //
+  // getConfigBasePrice(): number {
+  //   return this.selectedVariant?.price ?? this.configItem?.price ?? 0;
+  // }
+  //
+  // getConfigExtrasTotal(): number {
+  //   return this.selectedModifiers.reduce((sum, m) => sum + (m.price || 0), 0);
+  // }
+  //
+  // getConfigTotal(): number {
+  //   return (this.getConfigBasePrice() + this.getConfigExtrasTotal()) * this.configQuantity;
+  // }
+  //
+  // confirmAddToCart() {
+  //   if (!this.configItem) return;
+  //   this.cartService.addToCart(this.configItem, this.configQuantity, this.selectedVariant, this.selectedModifiers);
+  //   this.closeConfigModal();
+  //   this.cartSidebarService.open();
+  // }
+  //
+  // addToCart(item: MenuItem) {
+  //   if (item.variants && item.variants.length > 0) {
+  //     this.openConfigModal(item);
+  //   } else {
+  //     this.cartService.addToCart(item);
+  //   }
+  // }
+  //
+  // getCartItemCount(): number {
+  //   return this.cartService.getCartItemCount();
+  // }
+  //
+  // getCartTotal(): number {
+  //   return this.cartService.getCartTotal();
+  // }
+  //
+  // openCartSidebar() {
+  //   this.cartSidebarService.open();
+  // }
 
-  closeConfigModal() {
-    this.showConfigModal = false;
-    this.configItem = null;
-    document.body.style.overflow = '';
-  }
-
-  selectVariant(variant: MenuVariant | null) {
-    this.selectedVariant = variant;
-  }
-
-  toggleModifier(modifier: MenuModifier) {
-    const idx = this.selectedModifiers.findIndex(m => m.name === modifier.name);
-    if (idx >= 0) {
-      this.selectedModifiers.splice(idx, 1);
-    } else {
-      this.selectedModifiers.push({ ...modifier });
-    }
-  }
-
-  isModifierSelected(modifier: MenuModifier): boolean {
-    return this.selectedModifiers.some(m => m.name === modifier.name);
-  }
-
-  getConfigBasePrice(): number {
-    return this.selectedVariant?.price ?? this.configItem?.price ?? 0;
-  }
-
-  getConfigExtrasTotal(): number {
-    return this.selectedModifiers.reduce((sum, m) => sum + (m.price || 0), 0);
-  }
-
-  getConfigTotal(): number {
-    return (this.getConfigBasePrice() + this.getConfigExtrasTotal()) * this.configQuantity;
-  }
-
-  confirmAddToCart() {
-    if (!this.configItem) return;
-    this.cartService.addToCart(this.configItem, this.configQuantity, this.selectedVariant, this.selectedModifiers);
-    this.closeConfigModal();
-    this.cartSidebarService.open();
-  }
-
-  addToCart(item: MenuItem) {
-    if (item.variants && item.variants.length > 0) {
-      this.openConfigModal(item);
-    } else {
-      this.cartService.addToCart(item);
-    }
-  }
-
-  getCartItemCount(): number {
-    return this.cartService.getCartItemCount();
-  }
-
-  getCartTotal(): number {
-    return this.cartService.getCartTotal();
-  }
-
-  openCartSidebar() {
-    this.cartSidebarService.open();
-  }
-
-  goToReservations() {
-    this.router.navigate(['/reservations']);
-  }
+  // RESERVACIONES DESHABILITADO (posible implementación futura).
+  // goToReservations() {
+  //   this.router.navigate(['/reservations']);
+  // }
 
   callNow() {
     window.open('tel:+51123456789');

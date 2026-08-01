@@ -7,7 +7,12 @@ import { db } from '../../../firebase.config';
 import { CartService, CartItem } from '../../../services/cart';
 import { OrdersService } from '../../../services/orders';
 import { PaymentMethod } from '../../../services/payment';
-import { CulqiService } from '../../../services/culqi';
+// MODO VITRINA: metodo de pago publico (Culqi) deshabilitado. Este componente NO
+// esta rutado (ver public-routing-module.ts). Al reactivar el checkout, el pago
+// debe procesarse SIEMPRE via funcion backend que cobre el token con la secret
+// key de Culqi y valide montos contra el catalogo, porque las reglas de Firestore
+// ya no permiten que un cliente escriba payments/sales directamente.
+// import { CulqiService } from '../../../services/culqi';
 import { Auth } from '../../../services/auth';
 import { CompanyService } from '../../../services/company.service';
 import { InvoiceService } from '../../../services/invoice.service';
@@ -61,7 +66,8 @@ export class Payment implements OnInit {
   constructor(
     private cartService: CartService,
     private ordersService: OrdersService,
-    private culqiService: CulqiService,
+    // MODO VITRINA: Culqi deshabilitado.
+    // private culqiService: CulqiService,
     private auth: Auth,
     private companyService: CompanyService,
     private invoiceService: InvoiceService,
@@ -193,31 +199,33 @@ export class Payment implements OnInit {
     };
   }
 
-  private openCulqiCheckout(total: number, orderId: string): Promise<{ id: string; cardLastFour: string; cardBrand: string } | null> {
-    return new Promise((resolve) => {
-      this.culqiService.openCheckout({
-        amount: total,
-        email: 'cliente@alliker.pe',
-        title: 'Alliker - Pago de Pedido',
-        description: 'Pedido ' + orderId,
-        metadata: { orderId }
-      }).then(result => {
-        if (result.success && result.charge) {
-          const charge = result.charge;
-          resolve({
-            id: charge.id,
-            cardLastFour: (charge.card_number || '').slice(-4),
-            cardBrand: charge.card_brand || charge.source_type || 'card'
-          });
-        } else {
-          if (result.error) {
-            this.errorMessage = result.error;
-          }
-          resolve(null);
-        }
-      });
-    });
-  }
+  // MODO VITRINA: checkout de Culqi deshabilitado. Descomentar cuando exista la
+  // funcion backend de cobro (CULQI_SECRET_KEY) que procese el token en servidor.
+  // private openCulqiCheckout(total: number, orderId: string): Promise<{ id: string; cardLastFour: string; cardBrand: string } | null> {
+  //   return new Promise((resolve) => {
+  //     this.culqiService.openCheckout({
+  //       amount: total,
+  //       email: 'cliente@alliker.pe',
+  //       title: 'Alliker - Pago de Pedido',
+  //       description: 'Pedido ' + orderId,
+  //       metadata: { orderId }
+  //     }).then(result => {
+  //       if (result.success && result.charge) {
+  //         const charge = result.charge;
+  //         resolve({
+  //           id: charge.id,
+  //           cardLastFour: (charge.card_number || '').slice(-4),
+  //           cardBrand: charge.card_brand || charge.source_type || 'card'
+  //         });
+  //       } else {
+  //         if (result.error) {
+  //           this.errorMessage = result.error;
+  //         }
+  //         resolve(null);
+  //       }
+  //     });
+  //   });
+  // }
 
   private async createOrderFromCart(): Promise<{ id: string; orderNumber: number }> {
     const items: any[] = this.cartItems.map(ci => {
@@ -372,22 +380,32 @@ export class Payment implements OnInit {
 
       let paymentExtra: Record<string, unknown> = {};
 
-      if (this.selectedMethod === 'card') {
-        const culqiCharge = await this.openCulqiCheckout(total, realOrderId);
-        if (!culqiCharge) {
-          return;
-        }
+      // MODO VITRINA: el cobro por tarjeta (Culqi) esta deshabilitado. Cuando se
+      // reactive el checkout, el token de Culqi debe enviarse a una funcion backend
+      // (/api/process-payment) que lo cobre con la secret key y escriba order+payment
+      // +sale; el cliente ya no puede escribir estos documentos directamente.
+      // if (this.selectedMethod === 'card') {
+      //   const culqiCharge = await this.openCulqiCheckout(total, realOrderId);
+      //   if (!culqiCharge) {
+      //     return;
+      //   }
+      //
+      //   this.cardPaymentProcessed = true;
+      //   paymentExtra = {
+      //     culqiChargeId: culqiCharge.id,
+      //     cardLastFour: culqiCharge.cardLastFour,
+      //     cardBrand: culqiCharge.cardBrand
+      //   };
+      // } else {
+      //   await new Promise(resolve => setTimeout(resolve, 500));
+      //   paymentExtra = { yapeCode: this.yapeCode || '' };
+      // }
+      await new Promise(resolve => setTimeout(resolve, 500));
+      paymentExtra = { yapeCode: this.yapeCode || '' };
 
-        this.cardPaymentProcessed = true;
-        paymentExtra = {
-          culqiChargeId: culqiCharge.id,
-          cardLastFour: culqiCharge.cardLastFour,
-          cardBrand: culqiCharge.cardBrand
-        };
-      } else {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        paymentExtra = { yapeCode: this.yapeCode || '' };
-      }
+      // NOTA MODO VITRINA: este batch directo quedara bloqueado por las reglas de
+      // Firestore (payments/sales create: solo staff). Al reactivar el checkout,
+      // reemplazar TODO este bloque por la llamada a la funcion backend process-payment.
 
       // El pago, la actualizacion del pedido y la venta se escriben juntos en un solo
       // batch atomico: si algo interrumpe el flujo (se cierra la pestana, se corta la

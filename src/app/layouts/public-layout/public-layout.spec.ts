@@ -4,7 +4,8 @@ import { Auth } from '../../services/auth';
 import { Router } from '@angular/router';
 import { provideRouter } from '@angular/router';
 import { NotificationService } from '../../services/notification';
-import { CartSidebarService } from '../../shared/components/cart-sidebar/cart-sidebar.service';
+// MODO VITRINA: carrito deshabilitado.
+// import { CartSidebarService } from '../../shared/components/cart-sidebar/cart-sidebar.service';
 import { BranchService } from '../../services/branch';
 import { of } from 'rxjs';
 
@@ -25,7 +26,8 @@ describe('PublicLayoutComponent', () => {
         { provide: Auth, useValue: authSpy },
         provideRouter([]),
         { provide: NotificationService, useValue: { getNotifications: () => of([]) } },
-        { provide: CartSidebarService, useValue: { open: jasmine.createSpy(), isOpen$: of(false) } },
+        // MODO VITRINA: carrito deshabilitado.
+        // { provide: CartSidebarService, useValue: { open: jasmine.createSpy(), isOpen$: of(false) } },
         { provide: BranchService, useValue: { getBranches: () => of([]) } },
       ]
     }).compileComponents();

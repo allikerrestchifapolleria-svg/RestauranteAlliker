@@ -55,10 +55,12 @@
                 <i class="fas fa-arrow-right ms-2"></i>
               </span>
             </button>
+            <!-- RESERVACIONES DESHABILITADO (posible implementación futura).
             <button class="btn btn-outline-light btn-lg mb-3" (click)="onReserveTable()">
               <i class="fas fa-calendar-check me-2"></i>
               Reservar Mesa
             </button>
+            -->
           </div>
 
           <!-- Statistics -->
@@ -478,11 +480,13 @@
         <div *ngFor="let dish of filteredDishes; let i = index; trackBy: trackByDish" class="menu-item-card">
           <div class="item-header">
             <h3>{{dish.name}}</h3>
+            <!-- MODO VITRINA: boton de agregar al carrito deshabilitado. Descomentar para reactivar.
             <div class="item-actions">
               <button class="btn-primary" (click)="onAddToCart(dish)">
                 <i class="fas fa-cart-plus me-1"></i> Agregar al Carrito
               </button>
             </div>
+            -->
           </div>
 
           <div class="item-content">
@@ -673,9 +677,11 @@
           Reserva tu mesa ahora y déjanos crear momentos especiales para ti y tus seres queridos.
         </p>
         <div class="d-flex gap-3 justify-content-center flex-wrap">
+          <!-- RESERVACIONES DESHABILITADO (posible implementación futura).
           <button class="btn btn-light btn-lg rounded-pill px-4 btn-modern" (click)="onReserveTable()">
             <i class="fas fa-calendar-check me-2"></i> Reservar Ahora
           </button>
+          -->
           <button class="btn btn-outline-light btn-lg rounded-pill px-4 btn-modern">
             <i class="fas fa-phone me-2"></i> Llamar: (01) 123-4567
           </button>
@@ -708,11 +714,12 @@
   <!-- Toasts will be inserted here by TypeScript -->
 </div>
 
-<!-- Floating Cart FAB -->
+<!-- MODO VITRINA: boton flotante de carrito deshabilitado. Descomentar para reactivar.
 <button class="cart-fab" *ngIf="getCartItemCount() > 0" (click)="openCartSidebar()">
   <span class="cart-fab-count">{{ getCartItemCount() }}</span>
   <i class="fas fa-shopping-cart"></i>
 </button>
+-->
 
 <!-- Custom Styles -->
 <style>

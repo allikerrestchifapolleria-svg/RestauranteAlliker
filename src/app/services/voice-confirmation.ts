@@ -60,6 +60,8 @@ export class VoiceConfirmationService {
    * del gateway de n8n, la peticion muere con 504 en vez de devolver el token.
    */
   async requestAccessToken(request: VoiceConfirmationRequest, attemptId: string): Promise<string> {
+    this.validateRequest(request, attemptId);
+
     const url = environment.n8n.createReservationWebhook;
     const payload = this.toWebhookPayload(request);
 
@@ -91,6 +93,44 @@ export class VoiceConfirmationService {
     const accessToken = this.extractAccessToken(rawBody, attemptId);
     this.logger.step(attemptId, 'access-token-recibido', { length: accessToken.length });
     return accessToken;
+  }
+
+  /**
+   * El webhook de n8n es publico y dispara llamadas de Retell pagadas, asi que
+   * la app valida sus propios datos antes de enviar cualquier cosa a la red.
+   * Los numeros de telefono no se deben loguear (PII).
+   */
+  private validateRequest(request: VoiceConfirmationRequest, attemptId: string): void {
+    const fail = (field: string) => {
+      this.logger.step(attemptId, 'webhook-validacion', { field });
+      throw new VoiceConfirmationError(`Datos de reserva invalidos: ${field}`, null);
+    };
+
+    if (!request.reservationId || request.reservationId.length > 64) fail('reservationId');
+    if (!request.branchId || request.branchId.length > 64) fail('branchId');
+    if (!request.branchName || request.branchName.trim().length > 120) fail('branchName');
+    if (!request.tableId || request.tableId.length > 64) fail('tableId');
+    if (!request.tableName || request.tableName.trim().length > 120) fail('tableName');
+
+    if (!request.customerName || request.customerName.trim().length > 160) fail('customerName');
+
+    const phone = (request.customerPhone || '').replace(/[\s-]/g, '');
+    if (!/^(\+51)?9\d{8}$/.test(phone)) fail('customerPhone');
+
+    const email = (request.customerEmail || '').trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) fail('customerEmail');
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(request.date)) fail('date');
+    const parsedDate = new Date(request.date + 'T00:00:00');
+    if (isNaN(parsedDate.getTime())) fail('date');
+
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(request.time)) fail('time');
+
+    if (!Number.isInteger(request.peopleCount) || request.peopleCount < 1 || request.peopleCount > 50) {
+      fail('peopleCount');
+    }
+
+    if ((request.specialRequests || '').length > 500) fail('specialRequests');
   }
 
   private async postWithTimeout(

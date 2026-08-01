@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Menu } from './menu';
 import { MenuService } from '../../../services/menu';
-import { CartService } from '../../../services/cart';
+// MODO VITRINA: carrito deshabilitado.
+// import { CartService } from '../../../services/cart';
 import { MenuCategoryService } from '../../../services/menu-category';
 import { MenuAvailabilityService } from '../../../services/menu-availability';
-import { CartSidebarService } from '../../../shared/components/cart-sidebar/cart-sidebar.service';
+// import { CartSidebarService } from '../../../shared/components/cart-sidebar/cart-sidebar.service';
 import { Router } from '@angular/router';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -27,24 +28,27 @@ const mockCategories: MenuCategory[] = [
 describe('Menu Component', () => {
   let component: Menu;
   let fixture: ComponentFixture<Menu>;
-  let cartServiceSpy: jasmine.SpyObj<CartService>;
+  // MODO VITRINA: carrito deshabilitado.
+  // let cartServiceSpy: jasmine.SpyObj<CartService>;
   let menuServiceSpy: jasmine.SpyObj<MenuService>;
   let categoryServiceSpy: jasmine.SpyObj<MenuCategoryService>;
   let availabilityServiceSpy: jasmine.SpyObj<MenuAvailabilityService>;
-  let cartSidebarServiceSpy: jasmine.SpyObj<CartSidebarService>;
+  // let cartSidebarServiceSpy: jasmine.SpyObj<CartSidebarService>;
   let router: Router;
 
   beforeEach(async () => {
-    cartServiceSpy = jasmine.createSpyObj('CartService', ['addToCart', 'getCartItemCount', 'getCartTotal']);
+    // MODO VITRINA: carrito deshabilitado.
+    // cartServiceSpy = jasmine.createSpyObj('CartService', ['addToCart', 'getCartItemCount', 'getCartTotal']);
     menuServiceSpy = jasmine.createSpyObj('MenuService', ['getMenuItems']);
     categoryServiceSpy = jasmine.createSpyObj('MenuCategoryService', ['getCategories']);
     availabilityServiceSpy = jasmine.createSpyObj('MenuAvailabilityService', ['startClock', 'getPeriods', 'getSchedule', 'isItemAvailable', 'isRestaurantOpen', 'getItemPeriodLabel']);
-    cartSidebarServiceSpy = jasmine.createSpyObj('CartSidebarService', ['open']);
+    // cartSidebarServiceSpy = jasmine.createSpyObj('CartSidebarService', ['open']);
 
     menuServiceSpy.getMenuItems.and.returnValue(of(mockItems));
     categoryServiceSpy.getCategories.and.returnValue(of(mockCategories));
-    cartServiceSpy.getCartItemCount.and.returnValue(0);
-    cartServiceSpy.getCartTotal.and.returnValue(0);
+    // MODO VITRINA: carrito deshabilitado.
+    // cartServiceSpy.getCartItemCount.and.returnValue(0);
+    // cartServiceSpy.getCartTotal.and.returnValue(0);
     availabilityServiceSpy.getPeriods.and.returnValue(of([]));
     availabilityServiceSpy.getSchedule.and.returnValue(of({ closedDays: [], closedDates: [], closedMessage: '' }));
     availabilityServiceSpy.now$ = of(new Date()) as any;
@@ -55,11 +59,12 @@ describe('Menu Component', () => {
     await TestBed.configureTestingModule({
       imports: [Menu],
       providers: [
-        { provide: CartService, useValue: cartServiceSpy },
+        // MODO VITRINA: carrito deshabilitado.
+        // { provide: CartService, useValue: cartServiceSpy },
         { provide: MenuService, useValue: menuServiceSpy },
         { provide: MenuCategoryService, useValue: categoryServiceSpy },
         { provide: MenuAvailabilityService, useValue: availabilityServiceSpy },
-        { provide: CartSidebarService, useValue: cartSidebarServiceSpy },
+        // { provide: CartSidebarService, useValue: cartSidebarServiceSpy },
         provideRouter([]),
       ]
     }).compileComponents();
@@ -163,22 +168,24 @@ describe('Menu Component', () => {
     expect(component.getCategoryName('unknown')).toBe('unknown');
   });
 
-  it('should call addToCart on cart service', () => {
-    component.addToCart(mockItems[0]);
-    expect(cartServiceSpy.addToCart).toHaveBeenCalledWith(mockItems[0]);
-  });
+  // MODO VITRINA: tests de carrito deshabilitados. Descomentar para reactivar.
+  // it('should call addToCart on cart service', () => {
+  //   component.addToCart(mockItems[0]);
+  //   expect(cartServiceSpy.addToCart).toHaveBeenCalledWith(mockItems[0]);
+  // });
+  //
+  // it('should navigate to cart', () => {
+  //   const navigateSpy = spyOn(router, 'navigate');
+  //   component.goToCart();
+  //   expect(navigateSpy).toHaveBeenCalledWith(['/cart']);
+  // });
 
-  it('should navigate to cart', () => {
-    const navigateSpy = spyOn(router, 'navigate');
-    component.goToCart();
-    expect(navigateSpy).toHaveBeenCalledWith(['/cart']);
-  });
-
-  it('should navigate to reservations', () => {
-    const navigateSpy = spyOn(router, 'navigate');
-    component.goToReservations();
-    expect(navigateSpy).toHaveBeenCalledWith(['/reservations']);
-  });
+  // RESERVACIONES DESHABILITADO (posible implementación futura).
+  // it('should navigate to reservations', () => {
+  //   const navigateSpy = spyOn(router, 'navigate');
+  //   component.goToReservations();
+  //   expect(navigateSpy).toHaveBeenCalledWith(['/reservations']);
+  // });
 
   it('should call tel: on callNow', () => {
     const openSpy = spyOn(window, 'open');
@@ -186,13 +193,14 @@ describe('Menu Component', () => {
     expect(openSpy).toHaveBeenCalledWith('tel:+51123456789');
   });
 
-  it('should return cart item count', () => {
-    cartServiceSpy.getCartItemCount.and.returnValue(3);
-    expect(component.getCartItemCount()).toBe(3);
-  });
-
-  it('should return cart total', () => {
-    cartServiceSpy.getCartTotal.and.returnValue(100);
-    expect(component.getCartTotal()).toBe(100);
-  });
+  // MODO VITRINA: tests de carrito deshabilitados. Descomentar para reactivar.
+  // it('should return cart item count', () => {
+  //   cartServiceSpy.getCartItemCount.and.returnValue(3);
+  //   expect(component.getCartItemCount()).toBe(3);
+  // });
+  //
+  // it('should return cart total', () => {
+  //   cartServiceSpy.getCartTotal.and.returnValue(100);
+  //   expect(component.getCartTotal()).toBe(100);
+  // });
 });

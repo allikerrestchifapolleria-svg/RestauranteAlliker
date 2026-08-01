@@ -14,8 +14,9 @@ import { Observable } from 'rxjs';
 import { MenuService } from '../../../services/menu';
 import { MenuAvailabilityService } from '../../../services/menu-availability';
 import { MenuCategoryService } from '../../../services/menu-category';
-import { CartService } from '../../../services/cart';
-import { CartSidebarService } from '../../../shared/components/cart-sidebar/cart-sidebar.service';
+// MODO VITRINA: carrito deshabilitado. Descomentar para reactivar.
+// import { CartService } from '../../../services/cart';
+// import { CartSidebarService } from '../../../shared/components/cart-sidebar/cart-sidebar.service';
 import { MenuItem } from '../../../models/menu-item';
 import { MenuCategory } from '../../../models/menu-category';
 
@@ -47,8 +48,9 @@ export class HomeComponent implements OnInit {
     private menuService: MenuService,
     private availabilityService: MenuAvailabilityService,
     private categoryService: MenuCategoryService,
-    private cartService: CartService,
-    private cartSidebarService: CartSidebarService,
+    // MODO VITRINA: carrito deshabilitado. Descomentar para reactivar.
+    // private cartService: CartService,
+    // private cartSidebarService: CartSidebarService,
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef
   ) {
@@ -152,22 +154,24 @@ export class HomeComponent implements OnInit {
     this.router.navigate(['/menu']);
   }
 
-  onReserveTable(): void {
-    this.router.navigate(['/reservations']);
-  }
+  // RESERVACIONES DESHABILITADO (posible implementación futura).
+  // onReserveTable(): void {
+  //   this.router.navigate(['/reservations']);
+  // }
 
   // --- Utilidades ---
-  onAddToCart(dish: MenuItem): void {
-    this.cartService.addToCart(dish);
-  }
-
-  getCartItemCount(): number {
-    return this.cartService.getCartItemCount();
-  }
-
-  openCartSidebar() {
-    this.cartSidebarService.open();
-  }
+  // MODO VITRINA: carrito deshabilitado. Descomentar para reactivar.
+  // onAddToCart(dish: MenuItem): void {
+  //   this.cartService.addToCart(dish);
+  // }
+  //
+  // getCartItemCount(): number {
+  //   return this.cartService.getCartItemCount();
+  // }
+  //
+  // openCartSidebar() {
+  //   this.cartSidebarService.open();
+  // }
 
   // Asegúrate de que tu modelo MenuItem tenga 'id'. Si no, usa otro campo único.
   trackByDish(index: number, dish: MenuItem): string | number {
