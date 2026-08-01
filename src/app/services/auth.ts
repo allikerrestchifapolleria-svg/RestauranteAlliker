@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import {
   GoogleAuthProvider,
@@ -35,12 +36,15 @@ interface AuthResult {
 })
 export class Auth {
   private currentUser: StoredUser | null = null;
+  private currentUserSubject = new BehaviorSubject<StoredUser | null>(null);
+  public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor() {
     const stored = localStorage.getItem('currentUser');
     if (stored) {
       this.currentUser = JSON.parse(stored);
     }
+    this.currentUserSubject.next(this.currentUser);
 
     // Si Firebase reporta que ya no hay sesion (token revocado, logout en otra
     // pestana, etc.) invalidamos el cache local para que los guards no confien
@@ -52,6 +56,7 @@ export class Auth {
       if (!user && this.currentUser) {
         this.currentUser = null;
         localStorage.removeItem('currentUser');
+        this.currentUserSubject.next(null);
         return;
       }
       if (user && this.currentUser) {
@@ -60,6 +65,10 @@ export class Auth {
         });
       }
     });
+  }
+
+  private emitUser(): void {
+    this.currentUserSubject.next(this.currentUser);
   }
 
   private async loadUserProfile(uid: string, email: string | null): Promise<AuthResult> {
@@ -75,6 +84,7 @@ export class Auth {
 
     this.currentUser = { uid, email: email || data['email'] || '', role, branchId };
     localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+    this.emitUser();
 
     return { success: true, role, branchId };
   }
@@ -132,6 +142,7 @@ export class Auth {
       const branchId = data['branchId'] || null;
       this.currentUser = { uid: user.uid, email: user.email || data['email'] || '', role, branchId };
       localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+      this.emitUser();
       console.log('[AUTH] handleSocialLogin: usuario ya existia. role=', role, 'branchId=', branchId);
       return { success: true, role, branchId, isNewUser: false };
     }
@@ -149,6 +160,7 @@ export class Auth {
 
     this.currentUser = { uid: user.uid, email: user.email || '', role: 'user', branchId: null };
     localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+    this.emitUser();
     console.log('[AUTH] handleSocialLogin: perfil creado OK (role=user)');
     return { success: true, role: 'user', branchId: null, isNewUser: true };
   }
@@ -227,6 +239,7 @@ export class Auth {
   logout(): void {
     this.currentUser = null;
     localStorage.removeItem('currentUser');
+    this.emitUser();
     localStorage.removeItem('selectedBranchId');
     signOut(firebaseAuth).catch((error) => console.error('[AUTH] Error signing out:', error));
   }
@@ -287,6 +300,7 @@ export class Auth {
       if (this.currentUser && this.currentUser.role !== role) {
         this.currentUser = { ...this.currentUser, role };
         localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+        this.emitUser();
       }
       return role;
     } catch (error) {

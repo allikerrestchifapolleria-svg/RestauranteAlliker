@@ -5,11 +5,10 @@
 
 /* ============================================
    Font Awesome — @font-face propias.
-   angular.json carga 'fontawesome.min.css' (solo los glifos, sin @font-face)
-   en vez de 'all.min.css', para declarar aqui las fuentes con rutas ESTABLES
-   bajo /fonts. Angular hashea lo que importa desde node_modules, y una ruta
-   hasheada no se puede preargar desde index.html. Sin preload los iconos
-   tardan en aparecer, que era el sintoma reportado.
+   angular.json carga 'all.min.css' (bundle completo: glifos + @font-face
+   internos hacia webfonts hasheados). Estas @font-face van despues en el
+   bundle y sobreescriben las internas con rutas ESTABLES bajo /fonts, que
+   se pueden preargar desde index.html y no dependen del hash de Angular.
    ============================================ */
 @font-face {
   font-family: 'Font Awesome 6 Free';

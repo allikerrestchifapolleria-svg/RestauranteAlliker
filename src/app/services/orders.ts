@@ -1,9 +1,10 @@
 import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject, Observable, map } from 'rxjs';
 import { Order } from '../models/order';
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, runTransaction, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, runTransaction, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../firebase.config';
 import { NotificationService } from './notification';
+import { Auth } from './auth';
 
 @Injectable({
   providedIn: 'root'
@@ -15,9 +16,22 @@ export class OrdersService {
 
   constructor(
     private notificationService: NotificationService,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private auth: Auth
   ) {
-    this.listenOrders();
+    // BehaviorSubject emite el valor actual de forma sincrona al suscribirse,
+    // por lo que el primer listenOrders() se dispara aqui mismo.
+    this.auth.currentUser$.subscribe(() => this.listenOrders());
+  }
+
+  private ordersQuery() {
+    const ordersCollection = collection(db, 'orders');
+    const role = this.auth.getUserRole();
+    const branchId = this.auth.getUserBranchId();
+    if ((role === 'waiter' || role === 'cook') && branchId) {
+      return query(ordersCollection, where('branchId', '==', branchId));
+    }
+    return ordersCollection;
   }
 
   private listenOrders() {
@@ -25,10 +39,10 @@ export class OrdersService {
       this.unsubscribeSnapshot();
     }
 
-    const ordersCollection = collection(db, 'orders');
-    const q = query(ordersCollection, orderBy('createdAt', 'desc'));
-
-    this.unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+    // Sin orderBy('createdAt') en la query: combinado con el where('branchId')
+    // exigiria un indice compuesto en Firestore que quizas no existe. Se ordena
+    // aqui en cliente tras mapear los documentos.
+    this.unsubscribeSnapshot = onSnapshot(this.ordersQuery(), (snapshot) => {
       this.ngZone.run(() => {
         const orders: Order[] = [];
         snapshot.forEach(doc => {
@@ -61,6 +75,12 @@ export class OrdersService {
           } catch (docError) {
             console.error('[ORDERS] Error procesando documento', doc.id, ':', docError);
           }
+        });
+
+        orders.sort((a, b) => {
+          const aTime = new Date(a.createdAt).getTime();
+          const bTime = new Date(b.createdAt).getTime();
+          return bTime - aTime;
         });
 
         this.ordersSubject.next(orders);

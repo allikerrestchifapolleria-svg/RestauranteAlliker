@@ -1,8 +1,9 @@
 import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Table } from '../models/table';
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../firebase.config';
+import { Auth } from './auth';
 
 @Injectable({
   providedIn: 'root'
@@ -13,16 +14,27 @@ export class TableService {
   private loaded = false;
   private unsubscribeSnapshot: (() => void) | null = null;
 
-  constructor(private ngZone: NgZone) {
-    this.listenTables();
+  constructor(private ngZone: NgZone, private auth: Auth) {
+    // BehaviorSubject emite el valor actual de forma sincrona al suscribirse,
+    // por lo que el primer listenTables() se dispara aqui mismo.
+    this.auth.currentUser$.subscribe(() => this.listenTables());
+  }
+
+  private tablesQuery() {
+    const tablesCollection = collection(db, 'tables');
+    const role = this.auth.getUserRole();
+    const branchId = this.auth.getUserBranchId();
+    if ((role === 'waiter' || role === 'cook') && branchId) {
+      return query(tablesCollection, where('branchId', '==', branchId));
+    }
+    return tablesCollection;
   }
 
   private listenTables() {
     if (this.unsubscribeSnapshot) {
       this.unsubscribeSnapshot();
     }
-    const tablesCollection = collection(db, 'tables');
-    this.unsubscribeSnapshot = onSnapshot(tablesCollection, (snapshot) => {
+    this.unsubscribeSnapshot = onSnapshot(this.tablesQuery(), (snapshot) => {
       this.ngZone.run(() => {
         const tables: Table[] = [];
         snapshot.forEach(doc => {
@@ -54,8 +66,7 @@ export class TableService {
 
   private async loadTablesFromFirestore() {
     try {
-      const tablesCollection = collection(db, 'tables');
-      const tablesSnapshot = await getDocs(tablesCollection);
+      const tablesSnapshot = await getDocs(this.tablesQuery());
       const tables: Table[] = [];
       tablesSnapshot.forEach(doc => {
         const data = doc.data();

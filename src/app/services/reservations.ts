@@ -1,8 +1,9 @@
 import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Reservation } from '../models/reservation';
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../firebase.config';
+import { Auth } from './auth';
 
 @Injectable({
   providedIn: 'root'
@@ -12,16 +13,27 @@ export class ReservationsService {
   public reservations$ = this.reservationsSubject.asObservable();
   private unsubscribeSnapshot: (() => void) | null = null;
 
-  constructor(private ngZone: NgZone) {
-    this.listenReservations();
+  constructor(private ngZone: NgZone, private auth: Auth) {
+    // BehaviorSubject emite el valor actual de forma sincrona al suscribirse,
+    // por lo que el primer listenReservations() se dispara aqui mismo.
+    this.auth.currentUser$.subscribe(() => this.listenReservations());
+  }
+
+  private reservationsQuery() {
+    const reservationsCollection = collection(db, 'reservations');
+    const role = this.auth.getUserRole();
+    const branchId = this.auth.getUserBranchId();
+    if ((role === 'waiter' || role === 'cook') && branchId) {
+      return query(reservationsCollection, where('branchId', '==', branchId));
+    }
+    return reservationsCollection;
   }
 
   private listenReservations() {
     if (this.unsubscribeSnapshot) {
       this.unsubscribeSnapshot();
     }
-    const reservationsCollection = collection(db, 'reservations');
-    this.unsubscribeSnapshot = onSnapshot(reservationsCollection, (snapshot) => {
+    this.unsubscribeSnapshot = onSnapshot(this.reservationsQuery(), (snapshot) => {
       this.ngZone.run(() => {
         const reservations: Reservation[] = [];
         snapshot.forEach(doc => {
