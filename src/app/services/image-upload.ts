@@ -59,8 +59,21 @@ export class ImageUploadService {
     }
     console.log('[IMG-UPLOAD] 4/6 cloudinary-sign responded. status =', signResponse.status, signResponse.ok);
 
-    const signData: CloudinarySignResponse = await signResponse.json();
-    console.log('[IMG-UPLOAD] 4/6 cloudinary-sign body =', signData);
+    const signBody = await signResponse.text();
+    console.log('[IMG-UPLOAD] 4/6 cloudinary-sign body =', signBody);
+
+    let signData: CloudinarySignResponse;
+    try {
+      signData = JSON.parse(signBody);
+    } catch {
+      console.error('[IMG-UPLOAD] cloudinary-sign devolvio JSON invalido. status=', signResponse.status, 'body=', signBody);
+      // Netlify devuelve los errores de inicializacion como texto plano "Error: ...".
+      const readable = signBody.startsWith('Error:')
+        ? signBody.slice('Error: '.length)
+        : 'No se pudo autorizar la subida de la imagen.';
+      throw new Error(readable);
+    }
+
     if (!signResponse.ok || !signData.success) {
       console.error('[IMG-UPLOAD] cloudinary-sign failed', signResponse.status, signData);
       throw new Error(signData.message || 'No se pudo autorizar la subida de la imagen.');
@@ -86,8 +99,17 @@ export class ImageUploadService {
     }
     console.log('[IMG-UPLOAD] 5/6 Cloudinary responded. status =', uploadResponse.status, uploadResponse.ok);
 
-    const uploadData = await uploadResponse.json();
-    console.log('[IMG-UPLOAD] 5/6 Cloudinary body =', uploadData);
+    const uploadBody = await uploadResponse.text();
+    console.log('[IMG-UPLOAD] 5/6 Cloudinary body =', uploadBody);
+
+    let uploadData: any;
+    try {
+      uploadData = JSON.parse(uploadBody);
+    } catch {
+      console.error('[IMG-UPLOAD] Cloudinary devolvio JSON invalido', uploadResponse.status, uploadBody);
+      throw new Error(uploadBody || 'Error al subir la imagen a Cloudinary.');
+    }
+
     if (!uploadResponse.ok || !uploadData.secure_url) {
       console.error('[IMG-UPLOAD] Cloudinary upload failed', uploadResponse.status, uploadData);
       throw new Error(uploadData?.error?.message || 'Error al subir la imagen a Cloudinary.');
