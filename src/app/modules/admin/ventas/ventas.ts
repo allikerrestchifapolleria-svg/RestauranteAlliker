@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angula
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { take, timeout } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
 import { Sale } from '../../../models/sale';
 import { Payment, PaymentMethod } from '../../../services/payment';
 import { SalesService } from '../../../services/sales';
@@ -116,10 +116,6 @@ export class Ventas implements OnInit, OnDestroy {
 
     this.salesSubscription = this.salesService
       .getSales()
-      .pipe(
-        take(1),
-        timeout(10000)
-      )
       .subscribe({
         next: async (allSales) => {
           const branchMap = new Map<string, string>();

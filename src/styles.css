@@ -3,6 +3,62 @@
    Modern Design System
    ============================================ */
 
+/* ============================================
+   Font Awesome — @font-face propias.
+   angular.json carga 'fontawesome.min.css' (solo los glifos, sin @font-face)
+   en vez de 'all.min.css', para declarar aqui las fuentes con rutas ESTABLES
+   bajo /fonts. Angular hashea lo que importa desde node_modules, y una ruta
+   hasheada no se puede preargar desde index.html. Sin preload los iconos
+   tardan en aparecer, que era el sintoma reportado.
+   ============================================ */
+@font-face {
+  font-family: 'Font Awesome 6 Free';
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+  src: url('/fonts/fa-solid-900.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Font Awesome 6 Free';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('/fonts/fa-regular-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Font Awesome 6 Brands';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('/fonts/fa-brands-400.woff2') format('woff2');
+}
+
+/* Reglas de familia que venian en solid/regular/brands.min.css */
+:root {
+  --fa-style-family-classic: 'Font Awesome 6 Free';
+  --fa-font-solid: normal 900 1em/1 'Font Awesome 6 Free';
+  --fa-style-family-brands: 'Font Awesome 6 Brands';
+  --fa-font-brands: normal 400 1em/1 'Font Awesome 6 Brands';
+}
+
+.fa-solid,
+.fas {
+  font-weight: 900;
+}
+
+.fa-regular,
+.far {
+  font-weight: 400;
+}
+
+.fa-brands,
+.fab {
+  font-family: 'Font Awesome 6 Brands';
+  font-weight: 400;
+}
+
 /* -- CSS Variables (overridden per layout via :host) -- */
 :root {
   --transition-speed: 0.3s;
@@ -346,4 +402,106 @@ h1, h2, h3, h4, h5, h6 {
 
 .number-stepper-sm .stepper-btn {
   font-size: 0.6rem;
+}
+
+/* ============================================
+   Animate.css compatible classes (subset usado
+   por el front publico). Se definen a mano para
+   no agregar la dependencia completa (~70KB).
+   ============================================ */
+.animate__animated {
+  -webkit-animation-duration: 1s;
+  animation-duration: 1s;
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+}
+
+.animate__infinite {
+  -webkit-animation-iteration-count: infinite;
+  animation-iteration-count: infinite;
+}
+
+.animate__delay-1s {
+  -webkit-animation-delay: 1s;
+  animation-delay: 1s;
+}
+
+.animate__delay-2s {
+  -webkit-animation-delay: 2s;
+  animation-delay: 2s;
+}
+
+.animate__delay-3s {
+  -webkit-animation-delay: 3s;
+  animation-delay: 3s;
+}
+
+.animate__fadeInLeft {
+  -webkit-animation-name: animateFadeInLeft;
+  animation-name: animateFadeInLeft;
+}
+
+.animate__fadeInUp {
+  -webkit-animation-name: animateFadeInUp;
+  animation-name: animateFadeInUp;
+}
+
+.animate__pulse {
+  -webkit-animation-name: animatePulse;
+  animation-name: animatePulse;
+}
+
+@keyframes animateFadeInLeft {
+  from {
+    opacity: 0;
+    -webkit-transform: translate3d(-100%, 0, 0);
+    transform: translate3d(-100%, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes animateFadeInUp {
+  from {
+    opacity: 0;
+    -webkit-transform: translate3d(0, 100%, 0);
+    transform: translate3d(0, 100%, 0);
+  }
+
+  to {
+    opacity: 1;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes animatePulse {
+  from {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+
+  50% {
+    -webkit-transform: scale3d(1.05, 1.05, 1.05);
+    transform: scale3d(1.05, 1.05, 1.05);
+  }
+
+  to {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+/* Reduce motion: desactivar animaciones si el usuario lo pide */
+@media (prefers-reduced-motion: reduce) {
+  .animate__animated {
+    -webkit-animation-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    -webkit-animation-iteration-count: 1 !important;
+    animation-iteration-count: 1 !important;
+  }
 }

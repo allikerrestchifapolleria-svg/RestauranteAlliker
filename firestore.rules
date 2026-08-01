@@ -127,31 +127,33 @@ service cloud.firestore {
     // ============================================================
 
     match /tables/{tableId} {
-      allow read: if isStaff() && belongsToBranch(resource.data.get('branchId', ''));
-      // Admin puede crear mesas en cualquier sucursal; el staff solo en la suya.
+      // Admin ve y gestiona mesas de TODAS las sucursales; el staff solo las suyas.
+      allow read: if isAdmin() || (isStaff() && belongsToBranch(resource.data.get('branchId', '')));
       allow create: if isAdmin() || (isStaff() && belongsToBranch(request.resource.data.branchId));
-      allow update: if isStaff() && belongsToBranch(resource.data.get('branchId', ''));
+      allow update: if isAdmin() || (isStaff() && belongsToBranch(resource.data.get('branchId', '')));
       allow delete: if isAdmin();
     }
 
     match /orders/{orderId} {
-      allow read: if isOwner(resource.data.get('customerId', '')) || (isStaff() && belongsToBranch(resource.data.get('branchId', '')));
+      // Admin ve y gestiona pedidos de TODAS las sucursales; el staff solo los suyos.
+      allow read: if isAdmin() || isOwner(resource.data.get('customerId', '')) || (isStaff() && belongsToBranch(resource.data.get('branchId', '')));
       // Solo el staff crea pedidos desde el POS. El checkout publico (deshabilitado
       // en modo vitrina) debe crear el pedido desde una funcion backend (Admin SDK)
       // que valide precios y cobre el pago antes de escribirlo.
       allow create: if isStaff();
       // Staff de la sucursal puede actualizar el pedido completo (estado, cocina, pago, etc).
       // El cliente dueno del pedido SOLO puede cancelarlo (status) y nunca tocar total/paymentStatus.
-      allow update: if (isStaff() && belongsToBranch(resource.data.get('branchId', ''))) ||
+      allow update: if isAdmin() || (isStaff() && belongsToBranch(resource.data.get('branchId', ''))) ||
         (isOwner(resource.data.get('customerId', '')) &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']));
       allow delete: if isAdmin();
     }
 
     match /reservations/{reservationId} {
-      allow read: if isOwner(resource.data.get('customerId', '')) || (isStaff() && belongsToBranch(resource.data.get('branchId', '')));
+      // Admin ve y gestiona reservas de TODAS las sucursales; el staff solo las suyas.
+      allow read: if isAdmin() || isOwner(resource.data.get('customerId', '')) || (isStaff() && belongsToBranch(resource.data.get('branchId', '')));
       allow create: if isAuthenticated();
-      allow update: if isOwner(resource.data.get('customerId', '')) || (isStaff() && belongsToBranch(resource.data.get('branchId', '')));
+      allow update: if isAdmin() || isOwner(resource.data.get('customerId', '')) || (isStaff() && belongsToBranch(resource.data.get('branchId', '')));
       allow delete: if isAdmin();
     }
 

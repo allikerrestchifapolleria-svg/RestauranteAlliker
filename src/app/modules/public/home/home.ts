@@ -97,6 +97,7 @@ export class HomeComponent implements OnInit {
     });
 
     this.initScrollAnimations();
+    this.initCounters();
   }
 
   /**
@@ -139,14 +140,23 @@ export class HomeComponent implements OnInit {
   }
 
   // --- Lógica del Buscador ---
-  onSearch(): void {
+  // Recibe el valor nuevo via (ngModelChange): leer this.searchTerm dentro del
+  // (input) daba un valor desactualizado (la app iba un carácter por detrás),
+  // por eso el buscador parecía no funcionar.
+  onSearch(term?: string): void {
     this.isSearching = true;
+
+    if (typeof term === 'string') {
+      this.searchTerm = term;
+    }
+
+    const query = this.searchTerm ?? '';
 
     // MEJORA: Regex actualizado para permitir tildes y ñ (Español)
     // Antes: /^[a-zA-Z0-9\s]*$/
     const validPattern = /^[a-zA-Z0-9\s\u00C0-\u00FF]*$/;
 
-    if (!validPattern.test(this.searchTerm)) {
+    if (!validPattern.test(query)) {
       this.searchError = 'Por favor, usa solo letras y números.';
       this.isSearching = false;
       return;
@@ -154,14 +164,14 @@ export class HomeComponent implements OnInit {
 
     this.searchError = '';
 
-    if (this.searchTerm.trim()) {
+    if (query.trim()) {
       const available = this.allDishes.filter(item => {
         const category = this.categories.find(c => c.id === item.categoryId);
         return this.availabilityService.isItemAvailable(item, category);
       });
       this.filteredDishes = available
         .filter(item =>
-          item.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+          item.name.toLowerCase().includes(query.toLowerCase())
         )
         .slice(0, 3);
     } else {
@@ -169,6 +179,12 @@ export class HomeComponent implements OnInit {
     }
 
     this.isSearching = false;
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.searchError = '';
+    this.refreshFeaturedDishes();
   }
 
   // --- Lógica del Formulario ---
@@ -240,5 +256,53 @@ export class HomeComponent implements OnInit {
       const elements = document.querySelectorAll('.animate-on-scroll');
       elements.forEach(el => observer.observe(el));
     }, 100);
+  }
+
+  /**
+   * Los contadores del bloque de estadisticas se escriben en el HTML como
+   * `<div class="counter-number" data-target="500">0</div>`: el 0 es solo el
+   * estado inicial de la animacion, que nunca se implemento, asi que en
+   * produccion los cuatro numeros se quedaban en 0.
+   */
+  private initCounters(): void {
+    const observer = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          this.animateCounter(entry.target as HTMLElement);
+          obs.unobserve(entry.target); // se anima una sola vez
+        });
+      },
+      { threshold: 0.4 }
+    );
+
+    setTimeout(() => {
+      document.querySelectorAll<HTMLElement>('.counter-number[data-target]')
+        .forEach(el => observer.observe(el));
+    }, 100);
+  }
+
+  private animateCounter(el: HTMLElement): void {
+    const target = Number(el.dataset['target']) || 0;
+    const suffix = el.dataset['suffix'] ?? '+';
+
+    // Respeta a quien pidio reducir animaciones: muestra el valor final y listo.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.textContent = `${target}${suffix}`;
+      return;
+    }
+
+    const DURATION_MS = 1600;
+    const start = performance.now();
+
+    const step = (now: number) => {
+      const progress = Math.min((now - start) / DURATION_MS, 1);
+      // easeOutCubic: arranca rapido y desacelera al final
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = `${Math.round(target * eased)}${progress === 1 ? suffix : ''}`;
+      if (progress < 1) requestAnimationFrame(step);
+    };
+
+    requestAnimationFrame(step);
   }
 }

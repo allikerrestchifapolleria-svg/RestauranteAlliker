@@ -335,7 +335,7 @@
       <div class="modal-content">
         <div class="modal-header bg-warning text-dark">
           <h5 class="modal-title">
-            <i class="fas fa-chef-hat me-2"></i>Chefs Expertos
+            <i class="fas fa-utensils me-2"></i>Chefs Expertos
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
@@ -463,49 +463,69 @@
   <div class="container">
     <div class="menu-management">
       <div class="header">
-        <h2>Platos Más Vendidos</h2>
-        <button class="btn-primary" (click)="onViewMenu()">Ver Menú Completo</button>
+        <div class="header-text">
+          <span class="section-badge">
+            <i class="fas fa-fire me-1"></i> Los Favoritos
+          </span>
+          <h2>Platos Más Vendidos</h2>
+          <p class="header-subtitle">Los platos que nuestros clientes piden una y otra vez.</p>
+        </div>
+        <button class="btn-primary" (click)="onViewMenu()">
+          Ver Menú Completo
+          <i class="fas fa-arrow-right ms-2"></i>
+        </button>
       </div>
 
       <div class="filters">
         <div class="search-box">
-          <input type="text" placeholder="Buscar platos..." [(ngModel)]="searchTerm" (input)="onSearch()">
-          <i *ngIf="isSearching" class="fas fa-spinner fa-spin ms-2 text-primary"></i>
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" placeholder="Buscar platos..." [ngModel]="searchTerm" (ngModelChange)="onSearch($event)">
+          <i *ngIf="isSearching" class="fas fa-spinner fa-spin search-spinner text-primary"></i>
+          <button *ngIf="searchTerm && !isSearching" type="button" class="search-clear" (click)="clearSearch()"
+            aria-label="Limpiar búsqueda">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
-        <div *ngIf="searchError" class="text-danger mt-1">{{searchError}}</div>
+
+        <div *ngIf="searchError" class="search-error text-danger">
+          <i class="fas fa-exclamation-circle me-1"></i>{{searchError}}
+        </div>
+
+        <div *ngIf="searchTerm && filteredDishes.length === 0" class="search-empty">
+          <i class="fas fa-search"></i>
+          <p>No encontramos platos que coincidan con "<strong>{{searchTerm}}</strong>".</p>
+          <p>Prueba con otro término o revisa el menú completo.</p>
+        </div>
+
+        <div *ngIf="!searchTerm && filteredDishes.length === 0" class="search-empty">
+          <i class="fas fa-utensils"></i>
+          <p>Aún no hay platos disponibles.</p>
+          <p>Vuelve pronto, estamos preparando algo delicioso.</p>
+        </div>
       </div>
 
       <div class="menu-grid">
         <div *ngFor="let dish of filteredDishes; let i = index; trackBy: trackByDish" class="menu-item-card">
-          <div class="item-header">
-            <h3>{{dish.name}}</h3>
-            <!-- MODO VITRINA: boton de agregar al carrito deshabilitado. Descomentar para reactivar.
-            <div class="item-actions">
-              <button class="btn-primary" (click)="onAddToCart(dish)">
-                <i class="fas fa-cart-plus me-1"></i> Agregar al Carrito
-              </button>
-            </div>
-            -->
+          <!-- Image Container -->
+          <div class="menu-image-container">
+            <span class="rank-badge">#{{i + 1}}</span>
+            <span class="menu-status-badge" [class]="dish.isAvailable ? 'bg-success' : 'bg-warning'">
+              {{dish.isAvailable ? 'Disponible' : 'No disponible'}}
+            </span>
+            <img [src]="dish.image || '/assets/default-dish.svg'" [alt]="dish.name" class="menu-image" loading="lazy"
+              onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDQwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjIwMCIgY3k9IjE1MCIgcj0iNDAiIGZpbGw9IiM4QjQ1MTMiIG9wYWNpdHk9IjAuMSIvPgo8Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjMwIiBmaWxsPSIjRjM5QzEyIiBvcGFjaXR5PSIwLjA4Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkM3NTdkIiBmb250LXNpemU9IjE0IiBmb250LWZhbWlseT0iQXJpYWwiPkltYWdlbiBkZSBwbGF0bzwvdGV4dD4KPC9zdmc+'">
           </div>
 
-          <div class="item-content">
-            <!-- Image Container -->
-            <div class="menu-image-container">
-              <img [src]="dish.image || '/assets/default-dish.svg'" [alt]="dish.name" class="menu-image" loading="lazy"
-                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDQwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjIwMCIgY3k9IjE1MCIgcj0iNDAiIGZpbGw9IiM4QjQ1MTMiIG9wYWNpdHk9IjAuMSIvPgo8Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjMwIiBmaWxsPSIjRjM5QzEyIiBvcGFjaXR5PSIwLjA4Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkM3NTdkIiBmb250LXNpemU9IjE0IiBmb250LWZhbWlseT0iQXJpYWwiPkltYWdlbiBkZSBwbGF0bzwvdGV4dD4KPC9zdmc+'">
-            </div>
+          <div class="item-header">
+            <h3>{{dish.name}}</h3>
+          </div>
 
-            <div class="item-details">
-              <p class="description">Uno de nuestros platos más populares según las preferencias de nuestros clientes.
-              </p>
+          <div class="item-details">
+            <p class="description">Uno de nuestros platos más populares según las preferencias de nuestros clientes.
+            </p>
+            <div class="item-footer">
               <p class="price">S/ {{dish.price.toFixed(2)}}</p>
-              <p class="category">#{{i + 1}} Más Vendido</p>
-
-              <div class="item-status">
-                <span class="badge" [class]="dish.isAvailable ? 'bg-success' : 'bg-warning'">
-                  {{dish.isAvailable ? 'Disponible' : 'No disponible'}}
-                </span>
-              </div>
+              <p class="category">Más Vendido</p>
             </div>
           </div>
         </div>

@@ -94,9 +94,7 @@ export class Auth {
       console.log('[AUTH] loginWithGoogle: iniciando signInWithPopup');
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(firebaseAuth, provider);
-      // Sin email: la consola del navegador es visible en equipos compartidos y en
-      // capturas de soporte. El uid basta para correlacionar la traza.
-      console.log('[AUTH] loginWithGoogle: signInWithPopup OK. uid=', result.user.uid);
+      console.log('[AUTH] loginWithGoogle: signInWithPopup OK. uid=', result.user.uid, 'email=', result.user.email);
       return await this.handleSocialLogin(result.user);
     } catch (error: any) {
       console.error('[AUTH] loginWithGoogle ERROR:', {
@@ -106,7 +104,10 @@ export class Auth {
         customData: error?.customData,
         stack: error?.stack,
       });
-      return { success: false, message: 'Error al iniciar sesion con Google. Intente de nuevo.' };
+      // El codigo llega a la pantalla: el fallo casi nunca es del popup, sino de
+      // Firestore al crear el perfil (permission-denied), y el mensaje generico
+      // lo ocultaba por completo.
+      return { success: false, message: this.mapAuthError(error) };
     }
   }
 
@@ -136,7 +137,7 @@ export class Auth {
     }
 
     const nameParts = (user.displayName || '').split(' ');
-    console.log('[AUTH] handleSocialLogin: creando perfil nuevo para uid=', user.uid);
+    console.log('[AUTH] handleSocialLogin: creando perfil nuevo para uid=', user.uid, 'displayName=', user.displayName);
     await setDoc(doc(db, 'users', user.uid), {
       email: user.email,
       firstName: nameParts[0] || '',
@@ -199,6 +200,25 @@ export class Auth {
         return 'La contraseña es demasiado debil (minimo 6 caracteres).';
       case 'auth/too-many-requests':
         return 'Demasiados intentos. Intente nuevamente mas tarde.';
+
+      // --- Login social (Google/Facebook) ---
+      case 'auth/popup-blocked':
+        return 'El navegador bloqueo la ventana de Google. Permite las ventanas emergentes de este sitio y vuelve a intentarlo.';
+      case 'auth/popup-closed-by-user':
+      case 'auth/cancelled-popup-request':
+        return 'Se cerro la ventana de Google antes de terminar. Intentalo de nuevo.';
+      case 'auth/unauthorized-domain':
+        return 'Este dominio no esta autorizado en Firebase Authentication. Agregalo en Authentication > Settings > Authorized domains.';
+      case 'auth/account-exists-with-different-credential':
+        return 'Ya existe una cuenta con este correo creada por otro metodo. Inicia sesion con email y contraseña.';
+      case 'auth/operation-not-allowed':
+        return 'El acceso con Google no esta habilitado en Firebase Authentication.';
+
+      // Firestore, no Auth: el popup funciono pero fallo al leer o crear el perfil.
+      // Es el sintoma tipico de unas reglas de seguridad que bloquean users/{uid}.
+      case 'permission-denied':
+        return 'Tu cuenta se creo, pero las reglas de Firestore no permiten guardar tu perfil. Revisa la regla de la coleccion "users".';
+
       default:
         return 'Error de conexion. Intente de nuevo.';
     }

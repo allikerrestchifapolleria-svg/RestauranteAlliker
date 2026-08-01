@@ -1,7 +1,16 @@
 import { Injectable, OnDestroy, NgZone } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AppUser } from '../models/user';
-import { collection, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  Unsubscribe,
+  DocumentData,
+  DocumentSnapshot
+} from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth as firebaseAuth } from '../firebase.config';
 
 @Injectable({
@@ -11,28 +20,51 @@ export class UserService implements OnDestroy {
   private usersSubject = new BehaviorSubject<AppUser[]>([]);
   public users$ = this.usersSubject.asObservable();
   private unsubscribeSnapshot: Unsubscribe | null = null;
+  private unsubscribeAuth: Unsubscribe | null = null;
+  // Token anti-carrera: si cambia la sesion mientras se lee el rol en Firestore,
+  // el resultado stale no debe enganchar un listener para el usuario anterior.
+  private listenerToken = 0;
 
   constructor(private ngZone: NgZone) {
-    this.listenUsersFromFirestore();
+    // La escucha de TODA la coleccion 'users' solo es valida para admins (reglas:
+    // un usuario solo lee su propio documento, solo un admin lee todos). Antes se
+    // arrancaba incondicionalmente en el constructor y cualquier sesion no-admin
+    // (o sin sesion) reventaba con "Missing or insufficient permissions".
+    // Ahora la escucha se re-arma segun el estado de auth y el rol:
+    //   - sin sesion  -> sin escucha, lista vacia
+    //   - admin       -> coleccion completa (panel de user-management)
+    //   - user/staff  -> solo su propio documento users/{uid}
+    this.unsubscribeAuth = onAuthStateChanged(firebaseAuth, (user) => {
+      const token = ++this.listenerToken;
+      this.teardownSnapshot();
+      this.usersSubject.next([]);
+
+      if (!user) return;
+
+      getDoc(doc(db, 'users', user.uid))
+        .then((snap) => {
+          if (token !== this.listenerToken) return;
+          const role = snap.exists() ? snap.data()['role'] : null;
+          this.ngZone.run(() => {
+            if (role === 'admin') {
+              this.listenAllUsers();
+            } else {
+              this.listenOwnProfile(user.uid);
+            }
+          });
+        })
+        .catch(() => {
+          // Sin perfil o sin permiso: se deja la lista vacia sin spam en consola.
+        });
+    });
   }
 
-  private listenUsersFromFirestore() {
+  private listenAllUsers() {
     const usersCollection = collection(db, 'users');
     this.unsubscribeSnapshot = onSnapshot(usersCollection, (snapshot) => {
       this.ngZone.run(() => {
         const users: AppUser[] = [];
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          users.push({
-            id: doc.id,
-            branchId: data['branchId'] || null,
-            firstName: data['firstName'] || (data['name'] ? data['name'].split(' ')[0] : ''),
-            lastName: data['lastName'] || (data['name'] ? data['name'].split(' ').slice(1).join(' ') : ''),
-            email: data['email'] || '',
-            role: data['role'] || '',
-            createdAt: data['createdAt']?.toDate() || new Date()
-          } as AppUser);
-        });
+        snapshot.forEach(doc => users.push(this.mapUser(doc)));
         this.usersSubject.next(users);
       });
     }, (error) => {
@@ -40,8 +72,37 @@ export class UserService implements OnDestroy {
     });
   }
 
-  ngOnDestroy() {
+  private listenOwnProfile(uid: string) {
+    this.unsubscribeSnapshot = onSnapshot(doc(db, 'users', uid), (snap) => {
+      this.ngZone.run(() => {
+        this.usersSubject.next(snap.exists() ? [this.mapUser(snap)] : []);
+      });
+    }, (error) => {
+      console.error('Error listening to own user profile:', error);
+    });
+  }
+
+  private mapUser(snap: DocumentSnapshot<DocumentData>): AppUser {
+    const data = snap.data() ?? {};
+    return {
+      id: snap.id,
+      branchId: data['branchId'] || null,
+      firstName: data['firstName'] || (data['name'] ? data['name'].split(' ')[0] : ''),
+      lastName: data['lastName'] || (data['name'] ? data['name'].split(' ').slice(1).join(' ') : ''),
+      email: data['email'] || '',
+      role: data['role'] || '',
+      createdAt: data['createdAt']?.toDate() || new Date()
+    } as AppUser;
+  }
+
+  private teardownSnapshot() {
     this.unsubscribeSnapshot?.();
+    this.unsubscribeSnapshot = null;
+  }
+
+  ngOnDestroy() {
+    this.teardownSnapshot();
+    this.unsubscribeAuth?.();
   }
 
   getUsers(): Observable<AppUser[]> {

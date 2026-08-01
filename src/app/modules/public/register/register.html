@@ -74,7 +74,8 @@
 
               <!-- Social Register Options -->
               <div class="social-register mb-4">
-                <button class="btn btn-google btn-lg w-100 mb-2 rounded-pill" type="button">
+                <button class="btn btn-google btn-lg w-100 mb-2 rounded-pill" type="button"
+                        (click)="registerWithGoogle()" [disabled]="isLoading">
                   <i class="fab fa-google me-2"></i>
                   Registrarse con Google
                 </button>

@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angula
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription, from, of } from 'rxjs';
-import { finalize, take, timeout, catchError } from 'rxjs/operators';
+import { take, timeout, catchError } from 'rxjs/operators';
 import { SalesService } from '../../../services/sales';
 import { OrdersService } from '../../../services/orders';
 import { PaymentService, Payment } from '../../../services/payment';
@@ -100,16 +100,6 @@ export class CashRegister implements OnInit, OnDestroy {
 
     this.salesSubscription = this.salesService
       .getSalesByDateRange(start, end)
-      .pipe(
-        take(1),
-        timeout(10000),
-        finalize(() => {
-          this.ngZone.run(() => {
-            this.loading = false;
-            this.cdr.detectChanges();
-          });
-        })
-      )
       .subscribe({
         next: (data) => {
           this.ngZone.run(() => {
@@ -117,6 +107,7 @@ export class CashRegister implements OnInit, OnDestroy {
             this.sales = Array.isArray(data) ? data : [];
             this.grandTotal = this.sales.reduce((t, s) => t + this.toNumber(s.total), 0);
             this.buildWaiterSummaryFromSales();
+            this.loading = false;
             this.cdr.detectChanges();
           });
         },
@@ -132,7 +123,6 @@ export class CashRegister implements OnInit, OnDestroy {
     this.ordersSubscription?.unsubscribe();
     this.ordersSubscription = this.ordersService
       .getOrders()
-      .pipe(take(1), timeout(10000))
       .subscribe({
         next: (all) => {
           this.ngZone.run(() => {

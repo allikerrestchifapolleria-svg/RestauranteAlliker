@@ -116,6 +116,39 @@ export class Register implements OnInit {
     }
   }
 
+  /**
+   * Alta con Google. El boton existia en la plantilla desde el principio pero sin
+   * (click): no llamaba a nada, por eso al pulsarlo no pasaba nada ni aparecia
+   * ninguna traza en consola.
+   *
+   * Reutiliza loginWithGoogle porque handleSocialLogin ya crea el perfil en
+   * Firestore la primera vez (devuelve isNewUser) y lo reutiliza las siguientes.
+   */
+  registerWithGoogle() {
+    console.log('[REGISTER] registerWithGoogle: pulsado');
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.authService.loginWithGoogle().then((result) => {
+      console.log('[REGISTER] registerWithGoogle resultado:', result);
+      this.isLoading = false;
+
+      if (result.success) {
+        this.successMessage = result.isNewUser
+          ? 'Cuenta creada con Google. Redirigiendo...'
+          : 'Ya tenias cuenta con este correo. Entrando...';
+        setTimeout(() => this.router.navigate([this.returnUrl || '/']), 1500);
+      } else {
+        this.errorMessage = result.message || 'Error al registrarse con Google.';
+      }
+    }).catch((error) => {
+      console.error('[REGISTER] registerWithGoogle EXCEPCION:', error);
+      this.isLoading = false;
+      this.errorMessage = 'Error de conexión. Inténtalo de nuevo.';
+    });
+  }
+
   goToLogin() {
     // Arrastra el returnUrl para no perder el destino al alternar entre
     // registro e inicio de sesion.

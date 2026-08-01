@@ -50,8 +50,7 @@ export class Login implements OnInit {
     this.successMessage = '';
 
     this.auth.login(email, password).then(result => {
-      // Se registra solo el desenlace: `result` lleva rol y sucursal del usuario.
-      console.log('[LOGIN] resultado:', result.success ? 'ok' : 'rechazado');
+      console.log('[LOGIN] resultado:', result);
       this.isLoading = false;
 
       if (result.success && result.role) {
