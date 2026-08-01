@@ -313,7 +313,8 @@
           <!-- Image Container -->
           <div class="dish-image-wrapper">
             <img [src]="item.image" [alt]="item.name" class="dish-image"
-                 *ngIf="item.image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                 *ngIf="item.image" (load)="onDishImageLoad(item)" (error)="onDishImageError(item)"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="d-flex justify-content-center align-items-center bg-light" style="height: 160px;" *ngIf="!item.image">
               <i class="fas fa-utensils fa-3x text-muted"></i>
             </div>

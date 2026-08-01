@@ -321,6 +321,8 @@
                  class="card-img-top menu-image"
                  [class.opacity-50]="!isItemCurrentlyAvailable(item)"
                  loading="lazy"
+                 (load)="onItemImageLoad(item)"
+                 (error)="onItemImageError(item)"
                  onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22%3E%3Crect fill=%22%23F3F4F6%22 width=%2280%22 height=%2280%22/%3E%3Ctext x=%2240%22 y=%2245%22 text-anchor=%22middle%22 fill=%22%239CA3AF%22 font-size=%2214%22%3EPlato%3C/text%3E%3C/svg%3E'">
             <div class="image-overlay" *ngIf="!isItemCurrentlyAvailable(item)">
               <div class="overlay-content">

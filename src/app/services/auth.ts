@@ -91,11 +91,19 @@ export class Auth {
 
   async loginWithGoogle(): Promise<AuthResult> {
     try {
+      console.log('[AUTH] loginWithGoogle: iniciando signInWithPopup');
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(firebaseAuth, provider);
+      console.log('[AUTH] loginWithGoogle: signInWithPopup OK. uid=', result.user.uid, 'email=', result.user.email, 'isNewUser=', !!result.user.metadata?.creationTime);
       return await this.handleSocialLogin(result.user);
     } catch (error: any) {
-      console.error('[AUTH] Google login error:', error);
+      console.error('[AUTH] loginWithGoogle ERROR:', {
+        code: error?.code,
+        message: error?.message,
+        name: error?.name,
+        customData: error?.customData,
+        stack: error?.stack,
+      });
       return { success: false, message: 'Error al iniciar sesion con Google. Intente de nuevo.' };
     }
   }
@@ -112,6 +120,7 @@ export class Auth {
   }
 
   private async handleSocialLogin(user: FirebaseUser): Promise<AuthResult> {
+    console.log('[AUTH] handleSocialLogin: verificando perfil existente para uid=', user.uid);
     const existing = await getDoc(doc(db, 'users', user.uid));
 
     if (existing.exists()) {
@@ -120,10 +129,12 @@ export class Auth {
       const branchId = data['branchId'] || null;
       this.currentUser = { uid: user.uid, email: user.email || data['email'] || '', role, branchId };
       localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+      console.log('[AUTH] handleSocialLogin: usuario ya existia. role=', role, 'branchId=', branchId);
       return { success: true, role, branchId, isNewUser: false };
     }
 
     const nameParts = (user.displayName || '').split(' ');
+    console.log('[AUTH] handleSocialLogin: creando perfil nuevo para uid=', user.uid, 'displayName=', user.displayName);
     await setDoc(doc(db, 'users', user.uid), {
       email: user.email,
       firstName: nameParts[0] || '',
@@ -135,6 +146,7 @@ export class Auth {
 
     this.currentUser = { uid: user.uid, email: user.email || '', role: 'user', branchId: null };
     localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+    console.log('[AUTH] handleSocialLogin: perfil creado OK (role=user)');
     return { success: true, role: 'user', branchId: null, isNewUser: true };
   }
 

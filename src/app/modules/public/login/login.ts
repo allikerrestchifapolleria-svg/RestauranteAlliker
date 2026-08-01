@@ -129,6 +129,7 @@ export class Login implements OnInit {
     this.successMessage = '';
 
     this.auth.loginWithGoogle().then(result => {
+      console.log('[LOGIN] loginWithGoogle result:', result);
       this.isLoading = false;
 
       if (result.success && result.role) {
@@ -142,9 +143,11 @@ export class Login implements OnInit {
           : 'Inicio de sesion con Google exitoso. Redirigiendo...';
         this.redirectBasedOnRole(result.role as UserRole);
       } else {
+        console.error('[LOGIN] loginWithGoogle fallo:', result.message);
         this.errorMessage = result.message || 'Error al iniciar sesion con Google.';
       }
-    }).catch(() => {
+    }).catch((error) => {
+      console.error('[LOGIN] loginWithGoogle excepcion inesperada:', error);
       this.isLoading = false;
       this.errorMessage = 'Error de conexion. Intentalo de nuevo.';
     });

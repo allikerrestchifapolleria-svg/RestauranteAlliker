@@ -202,6 +202,14 @@ export class Menu implements OnInit {
     console.log('Viewing details for:', item.name);
   }
 
+  onItemImageLoad(item: MenuItem) {
+    console.log('[MENU-IMG] Cargada OK:', item.name, '->', item.image);
+  }
+
+  onItemImageError(item: MenuItem) {
+    console.error('[MENU-IMG] Fallo al cargar imagen:', item.name, '->', item.image);
+  }
+
   getCategoryName(categoryId: string): string {
     const category = this.allCategories.find(cat => cat.id === categoryId);
     return category ? category.name : categoryId;

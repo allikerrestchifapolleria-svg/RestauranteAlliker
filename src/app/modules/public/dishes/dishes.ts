@@ -129,6 +129,14 @@ export class Dishes implements OnInit {
     console.log('Toggling favorite for:', item.name);
   }
 
+  onDishImageLoad(item: MenuItem) {
+    console.log('[DISHES-IMG] Cargada OK:', item.name, '->', item.image);
+  }
+
+  onDishImageError(item: MenuItem) {
+    console.error('[DISHES-IMG] Fallo al cargar imagen:', item.name, '->', item.image);
+  }
+
   // MODO VITRINA: modal de configuracion y carrito deshabilitados. Descomentar para reactivar.
   // openConfigModal(item: MenuItem) {
   //   this.configItem = item;
