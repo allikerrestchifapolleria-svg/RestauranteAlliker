@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -10,7 +10,7 @@ import { Auth } from '../../../services/auth';
   templateUrl: './register.html',
   styleUrl: './register.css',
 })
-export class Register implements OnInit {
+export class Register implements OnInit, AfterViewInit {
   form: FormGroup;
   isLoading: boolean = false;
   errorMessage: string = '';
@@ -18,6 +18,7 @@ export class Register implements OnInit {
   showPassword: boolean = false;
   showConfirmPassword: boolean = false;
   private returnUrl: string | null = null;
+  @ViewChild('googleSignInButton') googleSignInButton!: ElementRef<HTMLDivElement>;
 
   constructor(
     private fb: FormBuilder,
@@ -37,6 +38,27 @@ export class Register implements OnInit {
 
   ngOnInit() {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || null;
+  }
+
+  ngAfterViewInit() {
+    this.setupGoogleSignIn();
+  }
+
+  private setupGoogleSignIn() {
+    // Google Identity Services renderiza su boton dentro de #googleSignInButton;
+    // el ID token vuelve a esta pagina (sin redirect ni popups de Firebase) y
+    // aqui se crea/reutiliza el perfil y se navega al destino.
+    this.authService.renderGoogleSignInButton(this.googleSignInButton.nativeElement, (result) => {
+      if (result.success) {
+        this.successMessage = result.isNewUser
+          ? 'Cuenta creada con Google. Redirigiendo...'
+          : 'Ya tenias cuenta con este correo. Entrando...';
+        setTimeout(() => this.router.navigate([this.returnUrl || '/']), 1500);
+      } else {
+        console.error('[REGISTER] Google sign-in fallo:', result.message);
+        this.errorMessage = result.message || 'Error al registrarse con Google.';
+      }
+    });
   }
 
   passwordMatchValidator(form: FormGroup) {
@@ -117,37 +139,10 @@ export class Register implements OnInit {
   }
 
   /**
-   * Alta con Google. El boton existia en la plantilla desde el principio pero sin
-   * (click): no llamaba a nada, por eso al pulsarlo no pasaba nada ni aparecia
-   * ninguna traza en consola.
-   *
-   * Reutiliza loginWithGoogle porque handleSocialLogin ya crea el perfil en
-   * Firestore la primera vez (devuelve isNewUser) y lo reutiliza las siguientes.
+   * Alta con Google: el boton GSI renderiza el flujo dentro de
+   * #googleSignInButton (setupGoogleSignIn). Este metodo quedaba del flujo
+   * signInWithRedirect y ya no se usa.
    */
-  registerWithGoogle() {
-    console.log('[REGISTER] registerWithGoogle: pulsado');
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    this.authService.loginWithGoogle().then((result) => {
-      console.log('[REGISTER] registerWithGoogle resultado:', result);
-      this.isLoading = false;
-
-      if (result.success) {
-        this.successMessage = result.isNewUser
-          ? 'Cuenta creada con Google. Redirigiendo...'
-          : 'Ya tenias cuenta con este correo. Entrando...';
-        setTimeout(() => this.router.navigate([this.returnUrl || '/']), 1500);
-      } else {
-        this.errorMessage = result.message || 'Error al registrarse con Google.';
-      }
-    }).catch((error) => {
-      console.error('[REGISTER] registerWithGoogle EXCEPCION:', error);
-      this.isLoading = false;
-      this.errorMessage = 'Error de conexión. Inténtalo de nuevo.';
-    });
-  }
 
   goToLogin() {
     // Arrastra el returnUrl para no perder el destino al alternar entre

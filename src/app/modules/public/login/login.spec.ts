@@ -16,11 +16,12 @@ describe('Login Component', () => {
   let router: Router;
 
   beforeEach(async () => {
-    authSpy = jasmine.createSpyObj('Auth', ['login', 'getUserBranchId']);
+    authSpy = jasmine.createSpyObj('Auth', ['login', 'getUserBranchId', 'renderGoogleSignInButton']);
     branchSelectionSpy = jasmine.createSpyObj('BranchSelectionService', ['setBranches', 'initializeFromUserBranch', 'getSelectedBranchId']);
     branchServiceSpy = jasmine.createSpyObj('BranchService', ['getBranches']);
 
     authSpy.getUserBranchId.and.returnValue(null as any);
+    authSpy.renderGoogleSignInButton.and.returnValue(undefined);
     branchSelectionSpy.getSelectedBranchId.and.returnValue('');
 
     await TestBed.configureTestingModule({

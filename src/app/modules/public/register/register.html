@@ -74,11 +74,7 @@
 
               <!-- Social Register Options -->
               <div class="social-register mb-4">
-                <button class="btn btn-google btn-lg w-100 mb-2 rounded-pill" type="button"
-                        (click)="registerWithGoogle()" [disabled]="isLoading">
-                  <i class="fab fa-google me-2"></i>
-                  Registrarse con Google
-                </button>
+                <div #googleSignInButton class="w-100"></div>
                 <!-- Registro con Facebook deshabilitado por ahora, queda pendiente para una versión futura.
                 <button class="btn btn-facebook btn-lg w-100 rounded-pill" type="button">
                   <i class="fab fa-facebook-f me-2"></i>

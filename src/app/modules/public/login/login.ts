@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -12,7 +12,7 @@ import { BranchService } from '../../../services/branch';
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class Login implements OnInit {
+export class Login implements OnInit, AfterViewInit {
   loginForm: FormGroup = new FormGroup({
     email: new FormControl('', [Validators.required, Validators.email]),
     password: new FormControl('', [Validators.required, Validators.minLength(6)]),
@@ -23,6 +23,7 @@ export class Login implements OnInit {
   errorMessage: string = '';
   successMessage: string = '';
   private returnUrl: string | null = null;
+  @ViewChild('googleSignInButton') googleSignInButton!: ElementRef<HTMLDivElement>;
 
   constructor(
     private auth: Auth,
@@ -34,6 +35,32 @@ export class Login implements OnInit {
 
   ngOnInit() {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || null;
+  }
+
+  ngAfterViewInit() {
+    this.setupGoogleSignIn();
+  }
+
+  private setupGoogleSignIn() {
+    // Google Identity Services renderiza su boton dentro de #googleSignInButton;
+    // el ID token vuelve a esta pagina (sin redirect ni popups de Firebase) y
+    // aqui se completa la sesion y se redirige por rol.
+    this.auth.renderGoogleSignInButton(this.googleSignInButton.nativeElement, (result) => {
+      if (result.success && result.role) {
+        this.branchService.getBranches().subscribe(branches => {
+          this.branchSelection.setBranches(branches);
+          this.branchSelection.initializeFromUserBranch(this.auth.getUserBranchId());
+        });
+
+        this.successMessage = result.isNewUser
+          ? 'Cuenta creada con Google. Redirigiendo...'
+          : 'Inicio de sesion con Google exitoso. Redirigiendo...';
+        this.redirectBasedOnRole(result.role as UserRole);
+      } else {
+        console.error('[LOGIN] Google sign-in fallo:', result.message);
+        this.errorMessage = result.message || 'Error al iniciar sesion con Google.';
+      }
+    });
   }
 
   onSubmit() {
@@ -122,59 +149,21 @@ export class Login implements OnInit {
     });
   }
 
-  loginWithGoogle() {
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    this.auth.loginWithGoogle().then(result => {
-      console.log('[LOGIN] loginWithGoogle result:', result);
-      this.isLoading = false;
-
-      if (result.success && result.role) {
-        this.branchService.getBranches().subscribe(branches => {
-          this.branchSelection.setBranches(branches);
-          this.branchSelection.initializeFromUserBranch(this.auth.getUserBranchId());
-        });
-
-        this.successMessage = result.isNewUser
-          ? 'Cuenta creada con Google. Redirigiendo...'
-          : 'Inicio de sesion con Google exitoso. Redirigiendo...';
-        this.redirectBasedOnRole(result.role as UserRole);
-      } else {
-        console.error('[LOGIN] loginWithGoogle fallo:', result.message);
-        this.errorMessage = result.message || 'Error al iniciar sesion con Google.';
-      }
-    }).catch((error) => {
-      console.error('[LOGIN] loginWithGoogle excepcion inesperada:', error);
-      this.isLoading = false;
-      this.errorMessage = 'Error de conexion. Intentalo de nuevo.';
-    });
-  }
-
   // Botón oculto en el template por ahora (ver login.html); se deja el método
   // listo para reactivar el login con Facebook en una versión futura.
   loginWithFacebook() {
     this.isLoading = true;
     this.errorMessage = '';
-    this.successMessage = '';
+    this.successMessage = 'Redirigiendo a Facebook...';
 
     this.auth.loginWithFacebook().then(result => {
-      this.isLoading = false;
-
-      if (result.success && result.role) {
-        this.branchService.getBranches().subscribe(branches => {
-          this.branchSelection.setBranches(branches);
-          this.branchSelection.initializeFromUserBranch(this.auth.getUserBranchId());
-        });
-
-        this.successMessage = result.isNewUser
-          ? 'Cuenta creada con Facebook. Redirigiendo...'
-          : 'Inicio de sesion con Facebook exitoso. Redirigiendo...';
-        this.redirectBasedOnRole(result.role as UserRole);
-      } else {
-        this.errorMessage = result.message || 'Error al iniciar sesion con Facebook.';
+      // Con signInWithRedirect la pagina navega a Facebook y al volver se
+      // completa la sesion con completeRedirectSignIn().
+      if (result.success) {
+        return;
       }
+      this.isLoading = false;
+      this.errorMessage = result.message || 'Error al iniciar sesion con Facebook.';
     }).catch(() => {
       this.isLoading = false;
       this.errorMessage = 'Error de conexion. Intentalo de nuevo.';

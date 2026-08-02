@@ -70,11 +70,7 @@
 
               <!-- Social Login Options -->
               <div class="social-login mb-4">
-                <button class="btn btn-google btn-lg w-100 mb-2 rounded-pill" type="button"
-                        (click)="loginWithGoogle()" [disabled]="isLoading">
-                  <i class="fab fa-google me-2"></i>
-                  Continuar con Google
-                </button>
+                <div #googleSignInButton class="w-100"></div>
                 <!-- Login con Facebook deshabilitado por ahora, queda pendiente para una versión futura.
                 <button class="btn btn-facebook btn-lg w-100 rounded-pill" type="button"
                         (click)="loginWithFacebook()" [disabled]="isLoading">

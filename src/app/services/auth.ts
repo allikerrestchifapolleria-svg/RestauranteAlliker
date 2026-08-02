@@ -4,7 +4,9 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import {
   GoogleAuthProvider,
   FacebookAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  signInWithCredential,
+  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -13,6 +15,37 @@ import {
   User as FirebaseUser,
 } from 'firebase/auth';
 import { db, auth as firebaseAuth } from '../firebase.config';
+import { environment } from '../../environments/environment';
+
+// Tipos minimos de Google Identity Services (window.google.accounts.id).
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize(config: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+            cancel_on_tap_outside?: boolean;
+          }): void;
+          renderButton(
+            parent: HTMLElement,
+            options: {
+              type?: 'standard' | 'icon';
+              theme?: 'outline' | 'filled_blue' | 'filled_black';
+              size?: 'large' | 'medium' | 'small';
+              shape?: 'rectangular' | 'pill' | 'circle' | 'square';
+              text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
+              width?: number | string;
+            }
+          ): void;
+          prompt(momentListener?: (notification: { getNotDisplayedReason?: () => string }) => void): void;
+          cancel(): void;
+        };
+      };
+    };
+  }
+}
 
 export type UserRole = 'admin' | 'cook' | 'waiter' | 'user';
 
@@ -99,33 +132,181 @@ export class Auth {
     }
   }
 
-  async loginWithGoogle(): Promise<AuthResult> {
+  /**
+   * Renderiza el boton "Continuar con Google" usando Google Identity Services
+   * (GSI). GSI devuelve el ID token directamente a esta pagina (popup propio de
+   * Google, inmune al bloqueo de almacenamiento de terceros de los navegadores) y
+   * luego Firebase lo valida con signInWithCredential: sin redirect, sin
+   * authDomain cruzado, sin recarga de pagina.
+   *
+   * Carga https://accounts.google.com/gsi/client on demand (la CSP de public/_headers
+   * ya lo permite en script-src). El resultado se entrega via onResult(result).
+   */
+  renderGoogleSignInButton(container: HTMLElement, onResult: (result: AuthResult) => void): void {
+    const clientId = environment.firebase.googleClientId;
+    if (!clientId) {
+      onResult({ success: false, message: 'Falta googleClientId en environment.ts.' });
+      return;
+    }
+
+    this.loadGsiScript()
+      .then(() => {
+        const google = window.google;
+        if (!google?.accounts?.id) {
+          onResult({ success: false, message: 'Google Identity Services no esta disponible.' });
+          return;
+        }
+
+        google.accounts.id.initialize({
+          client_id: clientId,
+          cancel_on_tap_outside: false,
+          callback: async (response) => {
+            try {
+              const credential = GoogleAuthProvider.credential(response.credential);
+              const userCredential = await signInWithCredential(firebaseAuth, credential);
+              console.log('[AUTH] GSI sign-in OK. uid=', userCredential.user.uid, 'email=', userCredential.user.email);
+              onResult(await this.handleSocialLogin(userCredential.user));
+            } catch (error: any) {
+              console.error('[AUTH] GSI sign-in ERROR:', {
+                code: error?.code,
+                message: error?.message,
+              });
+              onResult({ success: false, message: this.mapAuthError(error) });
+            }
+          },
+        });
+
+        const options: Parameters<typeof google.accounts.id.renderButton>[1] = {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+          shape: 'pill',
+          text: 'continue_with',
+        };
+        if (container.clientWidth > 0) {
+          options.width = container.clientWidth;
+        }
+        google.accounts.id.renderButton(container, options);
+      })
+      .catch((error: any) => {
+        console.error('[AUTH] Error cargando el script GSI:', error);
+        onResult({ success: false, message: 'No se pudo cargar el boton de Google. Revisa tu conexion.' });
+      });
+  }
+
+  private gsiScriptPromise: Promise<void> | null = null;
+
+  private loadGsiScript(): Promise<void> {
+    if (window.google?.accounts?.id) {
+      return Promise.resolve();
+    }
+    if (!this.gsiScriptPromise) {
+      this.gsiScriptPromise = new Promise<void>((resolve, reject) => {
+        const existing = document.querySelector<HTMLScriptElement>(
+          'script[src="https://accounts.google.com/gsi/client"]'
+        );
+        if (existing) {
+          if (existing.dataset['loaded'] === 'true') {
+            resolve();
+            return;
+          }
+          existing.addEventListener('load', () => resolve());
+          existing.addEventListener('error', () => reject(new Error('GSI script load error')));
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+          script.dataset['loaded'] = 'true';
+          resolve();
+        };
+        script.onerror = () => reject(new Error('GSI script load error'));
+        document.head.appendChild(script);
+      });
+    }
+    return this.gsiScriptPromise;
+  }
+
+  /**
+   * Completa un sign-in social iniciado con signInWithRedirect (Google/Facebook).
+   *
+   * Tras volver de Google la app recarga y este metodo lee el resultado pendiente
+   * con getRedirectResult(); si Firebase trae usuario, crea/reutiliza el perfil
+   * en users/{uid} y devuelve el AuthResult para que la pagina navegue.
+   *
+   * Devuelve null si no habia redirect pendiente o si el usuario cancelo en
+   * Google (caso normal al entrar directo al login). Ante un error de Firebase
+   * (p.ej. ya existe cuenta con ese correo creada por otro metodo) devuelve un
+   * AuthResult con success:false y el mensaje traducido.
+   */
+  async completeRedirectSignIn(): Promise<AuthResult | null> {
+    let result: AuthResult | null = null;
+    console.log(
+      '[AUTH] completeRedirectSignIn: path=',
+      window.location.pathname,
+      '| con query/hash:',
+      window.location.search.length > 0 || window.location.hash.length > 0
+    );
     try {
-      console.log('[AUTH] loginWithGoogle: iniciando signInWithPopup');
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(firebaseAuth, provider);
-      console.log('[AUTH] loginWithGoogle: signInWithPopup OK. uid=', result.user.uid, 'email=', result.user.email);
-      return await this.handleSocialLogin(result.user);
+      const credential = await getRedirectResult(firebaseAuth);
+      if (!credential?.user) {
+        // No habia resultado pendiente en la URL. Pero la sesion pudo crearse
+        // igualmente (el handler de Google completo el sign-in y el retorno perdio
+        // la respuesta). Si Firebase tiene usuario, completamos el perfil.
+        const user = firebaseAuth.currentUser;
+        if (user) {
+          console.log(
+            '[AUTH] completeRedirectSignIn: sin resultado en URL pero hay sesion activa. uid=',
+            user.uid
+          );
+          return await this.handleSocialLogin(user);
+        }
+        return null;
+      }
+      console.log(
+        '[AUTH] completeRedirectSignIn: resultado de Google. uid=',
+        credential.user.uid,
+        'email=',
+        credential.user.email
+      );
+      result = await this.handleSocialLogin(credential.user);
     } catch (error: any) {
-      console.error('[AUTH] loginWithGoogle ERROR:', {
+      console.error('[AUTH] completeRedirectSignIn ERROR:', {
         code: error?.code,
         message: error?.message,
-        name: error?.name,
-        customData: error?.customData,
-        stack: error?.stack,
       });
-      // El codigo llega a la pantalla: el fallo casi nunca es del popup, sino de
-      // Firestore al crear el perfil (permission-denied), y el mensaje generico
-      // lo ocultaba por completo.
-      return { success: false, message: this.mapAuthError(error) };
+      // Fallback de resiliencia: aunque getRedirectResult falle (p.ej.
+      // auth/internal-error por bloqueo de almacenamiento de terceros de Edge o
+      // una extension), Firebase puede haber creado la sesion igualmente. Si hay
+      // usuario autenticado, completamos el perfil y el login en vez de fallar.
+      const user = firebaseAuth.currentUser;
+      if (user) {
+        console.log(
+          '[AUTH] completeRedirectSignIn: getRedirectResult fallo pero hay sesion activa. uid=',
+          user.uid
+        );
+        try {
+          result = await this.handleSocialLogin(user);
+        } catch (innerError: any) {
+          console.error('[AUTH] completeRedirectSignIn: handleSocialLogin fallo tras el fallback:', innerError);
+          result = { success: false, message: this.mapAuthError(innerError) };
+        }
+      } else {
+        result = { success: false, message: this.mapAuthError(error) };
+      }
     }
+    return result;
   }
 
   async loginWithFacebook(): Promise<AuthResult> {
     try {
+      console.log('[AUTH] loginWithFacebook: iniciando signInWithRedirect');
       const provider = new FacebookAuthProvider();
-      const result = await signInWithPopup(firebaseAuth, provider);
-      return await this.handleSocialLogin(result.user);
+      // Mismo flujo que Google: navega y se completa con completeRedirectSignIn().
+      await signInWithRedirect(firebaseAuth, provider);
+      return { success: true };
     } catch (error: any) {
       console.error('[AUTH] Facebook login error:', error);
       return { success: false, message: 'Error al iniciar sesion con Facebook. Intente de nuevo.' };
@@ -225,6 +406,14 @@ export class Auth {
         return 'Ya existe una cuenta con este correo creada por otro metodo. Inicia sesion con email y contraseña.';
       case 'auth/operation-not-allowed':
         return 'El acceso con Google no esta habilitado en Firebase Authentication.';
+      case 'auth/network-request-failed':
+        return 'No se pudo conectar con Google. Revisa tu conexion, desactiva bloqueadores/extensiones y prueba en una ventana de incognito.';
+      case 'auth/internal-error':
+        return 'Google no pudo completar el acceso. Prueba en Chrome o en una ventana de incognito (Edge/bloqueadores pueden romper el retorno de Google).';
+      case 'auth/invalid-oauth-client-id':
+        return 'El cliente OAuth de Google no coincide con la configuracion de Firebase.';
+      case 'auth/redirect-cancelled-by-user':
+        return 'Se cancelo el acceso con Google. Intentalo de nuevo.';
 
       // Firestore, no Auth: el popup funciono pero fallo al leer o crear el perfil.
       // Es el sintoma tipico de unas reglas de seguridad que bloquean users/{uid}.

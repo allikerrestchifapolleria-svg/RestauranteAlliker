@@ -6,7 +6,10 @@ export const environment = {
     projectId: "restaurante-37332",
     storageBucket: "restaurante-37332.appspot.com",
     messagingSenderId: "680135217480",
-    appId: "1:680135217480:web:d8f4b39a704d9902ec637d"
+    appId: "1:680135217480:web:d8f4b39a704d9902ec637d",
+    // Cliente OAuth "Web client (auto created by Google Service)" de Firebase.
+    // Lo usa Google Identity Services (GSI) para el boton de login con Google.
+    googleClientId: "680135217480-foo5m021b4vrsv6kim3k1taki6vr50s7.apps.googleusercontent.com"
   },
   culqi: {
     publicKey: 'pk_test_xxxxxxxxxxxx'

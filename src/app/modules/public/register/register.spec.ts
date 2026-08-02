@@ -14,7 +14,8 @@ describe('Register Component', () => {
 
   beforeEach(async () => {
     userServiceSpy = jasmine.createSpyObj('UserService', ['createUser']);
-    authSpy = jasmine.createSpyObj('Auth', ['login', 'register']);
+    authSpy = jasmine.createSpyObj('Auth', ['login', 'register', 'renderGoogleSignInButton']);
+    authSpy.renderGoogleSignInButton.and.returnValue(undefined);
 
     await TestBed.configureTestingModule({
       imports: [Register],
