@@ -1,0 +1,246 @@
+/* ============================================
+   ALLIKER - App Root Styles
+   Dark Theme Base for Admin/Internal
+   ============================================ */
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #0f172a;
+  color: #f1f5f9;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #f1f5f9;
+  font-weight: 700;
+}
+
+/* -- Section Header -- */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #334155;
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.section-header h2 i {
+  color: #22d3ee;
+  font-size: 1.25rem;
+}
+
+.section-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* -- Data Table Modern -- */
+.table-modern {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-modern thead th {
+  background: #0f172a;
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.875rem 1rem;
+  border-bottom: 2px solid #334155;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.table-modern tbody tr {
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.table-modern tbody tr:hover {
+  background: rgba(34, 211, 238, 0.05);
+}
+
+.table-modern tbody td {
+  padding: 0.875rem 1rem;
+  color: #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.875rem;
+}
+
+/* -- Form Card -- */
+.form-card {
+  background: #1e293b;
+  border-radius: 1rem;
+  border: 1px solid #334155;
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+.form-card h3 {
+  color: #f1f5f9;
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-card h3 i {
+  color: #22d3ee;
+}
+
+/* -- Action Button Group -- */
+.action-btns {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.action-btns .btn {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  border-radius: 0.5rem;
+}
+
+/* -- Empty State -- */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+}
+
+.empty-state i {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+  color: #334155;
+}
+
+.empty-state h3 {
+  color: #94a3b8;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+/* -- Stat Card (reused across admin modules) -- */
+.stat-card {
+  background: #1e293b;
+  border-radius: 1rem;
+  border: 1px solid #334155;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(135deg, #06b6d4, #22d3ee);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  border-color: #475569;
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.stat-info h4 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 0.125rem;
+  line-height: 1.2;
+}
+
+.stat-info p {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+/* -- Pagination Modern -- */
+.pagination-modern {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.pagination-modern .page-item .page-link {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  margin: 0 0.125rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.pagination-modern .page-item.active .page-link {
+  background: linear-gradient(135deg, #06b6d4, #22d3ee);
+  border-color: #22d3ee;
+  color: white;
+}
+
+.pagination-modern .page-item .page-link:hover {
+  background: #334155;
+  color: #f1f5f9;
+  transform: translateY(-1px);
+}

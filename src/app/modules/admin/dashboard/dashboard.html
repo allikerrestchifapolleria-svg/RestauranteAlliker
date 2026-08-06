@@ -1,0 +1,202 @@
+<div class="dashboard-wrapper">
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="dashboard-header">
+    <div class="header-left">
+      <h1>Dashboard</h1>
+      <p>Resumen general de operaciones</p>
+    </div>
+    <div class="header-right">
+      <div class="date-filter">
+        <button
+          class="filter-btn"
+          [class.active]="dateRange === 'today'"
+          (click)="setDateRange('today')"
+        >Hoy</button>
+        <button
+          class="filter-btn"
+          [class.active]="dateRange === 'week'"
+          (click)="setDateRange('week')"
+        >Semana</button>
+        <button
+          class="filter-btn"
+          [class.active]="dateRange === 'month'"
+          (click)="setDateRange('month')"
+        >Mes</button>
+      </div>
+      <span class="badge bg-success fs-6 px-3 py-2 shadow-sm d-flex align-items-center gap-2" style="border-radius: 50px;">
+        <i class="fas fa-sync-alt fa-spin"></i>
+        Tiempo real
+      </span>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stats-grid">
+    <div class="stat-card gradient-blue">
+      <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+      <div class="stat-info">
+        <span class="stat-label">Ventas Hoy</span>
+        <span class="stat-value">S/ {{ todaySales | number:'1.2-2' }}</span>
+        <span class="stat-trend" [class.up]="salesTrend >= 0" [class.down]="salesTrend < 0">
+          <i class="fas" [class.fa-arrow-up]="salesTrend >= 0" [class.fa-arrow-down]="salesTrend < 0"></i>
+          {{ salesTrend | number:'1.1-1' }}% vs ayer
+        </span>
+      </div>
+      <div class="stat-bg-icon"><i class="fas fa-chart-line"></i></div>
+    </div>
+    <div class="stat-card gradient-green">
+      <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+      <div class="stat-info">
+        <span class="stat-label">Pedidos Activos</span>
+        <span class="stat-value">{{ activeOrdersCount }}</span>
+        <span class="stat-trend up">
+          <i class="fas fa-clock"></i>
+          En curso
+        </span>
+      </div>
+      <div class="stat-bg-icon"><i class="fas fa-receipt"></i></div>
+    </div>
+    <div class="stat-card gradient-purple">
+      <div class="stat-icon"><i class="fas fa-chair"></i></div>
+      <div class="stat-info">
+        <span class="stat-label">Ocupación</span>
+        <span class="stat-value">{{ occupancyPercent }}%</span>
+        <span class="stat-trend" [class.up]="occupiedTablesCount > 0" [class.down]="occupiedTablesCount === 0">
+          <i class="fas" [class.fa-arrow-up]="occupiedTablesCount > 0" [class.fa-arrow-down]="occupiedTablesCount === 0"></i>
+          {{ occupiedTablesCount }}/{{ totalTables }} mesas
+        </span>
+      </div>
+      <div class="stat-bg-icon"><i class="fas fa-store"></i></div>
+    </div>
+    <div class="stat-card gradient-orange">
+      <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+      <div class="stat-info">
+        <span class="stat-label">Reservas Hoy</span>
+        <span class="stat-value">{{ todayReservations }}</span>
+        <span class="stat-trend" [class.up]="reservationsTrend >= 0" [class.down]="reservationsTrend < 0">
+          <i class="fas" [class.fa-arrow-up]="reservationsTrend >= 0" [class.fa-arrow-down]="reservationsTrend < 0"></i>
+          {{ reservationsTrend | number:'1.1-1' }}% vs ayer
+        </span>
+      </div>
+      <div class="stat-bg-icon"><i class="fas fa-calendar-alt"></i></div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="charts-grid">
+    <div class="chart-card chart-wide">
+      <div class="chart-header">
+        <div class="chart-header-left">
+          <h3><i class="fas fa-chart-area"></i> Ventas</h3>
+          <span class="chart-period-badge">
+            {{ dateRange === 'today' ? 'Hoy' : dateRange === 'week' ? 'Esta Semana' : 'Este Mes' }}
+          </span>
+        </div>
+      </div>
+      <div class="chart-body">
+        <canvas id="salesChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3><i class="fas fa-chart-pie"></i> Métodos de Pago</h3>
+      </div>
+      <div class="chart-body chart-body-doughnut">
+        <canvas id="paymentChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2 -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3><i class="fas fa-chart-bar"></i> Estado de Pedidos</h3>
+      </div>
+      <div class="chart-body">
+        <canvas id="statusChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3><i class="fas fa-chair"></i> Ocupación de Mesas</h3>
+      </div>
+      <div class="chart-body chart-body-doughnut">
+        <canvas id="occupancyChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM ROW -->
+  <div class="bottom-grid">
+    <!-- Recent Orders -->
+    <div class="section-card">
+      <div class="section-card-header">
+        <h3><i class="fas fa-history"></i> Pedidos Recientes</h3>
+        <span class="section-badge">{{ recentOrders.length }} últimos</span>
+      </div>
+      <div class="section-card-body">
+        <div class="order-item" *ngFor="let order of recentOrders">
+          <div class="order-icon">
+            <i class="fas" [class.fa-utensils]="order.type === 'dine-in'" [class.fa-truck]="order.type === 'delivery'" [class.fa-shopping-bag]="order.type === 'takeaway'"></i>
+          </div>
+          <div class="order-info">
+            <div class="order-title">
+              <span *ngIf="order.tableId">{{ order.tableName || tableService.getTableDisplayName(order.tableId) || 'Mesa #' + order.tableId }}</span>
+              <span *ngIf="!order.tableId">Pedido {{ order.id | slice:0:8 }}</span>
+              <span class="order-status" [class]="'status-' + order.status">{{ getStatusLabel(order.status) }}</span>
+            </div>
+            <div class="order-meta">
+              <span>{{ order.items.length }} items</span>
+              <span class="order-dot">•</span>
+              <span>{{ order.createdAt | date:'HH:mm' }}</span>
+            </div>
+          </div>
+          <div class="order-total">
+            <span>S/ {{ order.total | number:'1.2-2' }}</span>
+          </div>
+        </div>
+        <div class="empty-state" *ngIf="recentOrders.length === 0 && !loading">
+          <i class="fas fa-inbox"></i>
+          <p>No hay pedidos recientes</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Status -->
+    <div class="section-card">
+      <div class="section-card-header">
+        <h3><i class="fas fa-th"></i> Estado de Mesas</h3>
+        <span class="section-badge">{{ tables.length }} mesas</span>
+      </div>
+      <div class="section-card-body">
+        <div class="table-grid">
+          <div
+            class="table-item"
+            *ngFor="let table of tables"
+            [class.status-occupied]="table.status === 'occupied'"
+            [class.status-free]="table.status === 'free' || table.status === 'available'"
+            [class.status-reserved]="table.status === 'reserved'"
+            [class.status-maintenance]="table.status !== 'occupied' && table.status !== 'free' && table.status !== 'available' && table.status !== 'reserved'"
+          >
+            <div class="table-icon">
+              <i class="fas fa-chair"></i>
+            </div>
+            <div class="table-name">{{ table.name || 'Mesa #' + table.number }}</div>
+            <div class="table-capacity">{{ table.capacity }} pers.</div>
+            <div class="table-status-badge">{{ getTableStatusLabel(table.status) }}</div>
+          </div>
+        </div>
+        <div class="empty-state" *ngIf="tables.length === 0 && !loading">
+          <i class="fas fa-chair"></i>
+          <p>No hay mesas configuradas</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

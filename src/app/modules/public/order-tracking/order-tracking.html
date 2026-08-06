@@ -1,0 +1,125 @@
+<div class="order-tracking-page">
+  <div class="container py-5">
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center py-5">
+      <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="text-muted">Cargando información de tu pedido...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error && !loading" class="text-center py-5">
+      <div class="card shadow-sm rounded-4 p-5 mx-auto" style="max-width: 500px;">
+        <i class="fas fa-exclamation-circle fa-4x text-danger mb-3"></i>
+        <h4 class="text-danger mb-2">Oops!</h4>
+        <p class="text-muted mb-4">{{ error }}</p>
+        <button class="btn btn-primary rounded-pill px-4" (click)="goHome()">
+          <i class="fas fa-home me-2"></i>Volver al inicio
+        </button>
+      </div>
+    </div>
+
+    <!-- Tracking Content -->
+    <div *ngIf="order && !loading">
+      <!-- Cancelled Banner -->
+      <div *ngIf="isCancelled" class="alert alert-danger text-center py-4 rounded-4 shadow-sm mb-4"> 
+        <i class="fas fa-times-circle fa-3x mb-2"></i>
+        <h4 class="mb-1">Pedido Cancelado</h4>
+        <p class="mb-0">Este pedido ha sido cancelado y no será preparado.</p>
+      </div>
+
+      <!-- Order Header Card -->
+      <div class="card shadow-sm rounded-4 border-0 mb-4 overflow-hidden">
+        <div class="card-header-section p-4 text-white text-center"
+             [class.bg-success]="order.status === 'delivered'"
+             [class.bg-warning]="order.status === 'ready'"
+             [class.bg-info]="order.status === 'preparing'"
+             [class.bg-primary]="order.status === 'confirmed'"
+             [class.bg-danger]="isCancelled">
+          <i class="fas fa-receipt fa-2x mb-2"></i>
+          <h4 class="mb-1">Pedido #{{ order.orderNumber || order.id.slice(-6) }}</h4>
+          <p class="mb-0 opacity-75">{{ formatDate(order.createdAt) }}</p>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="card shadow-sm rounded-4 border-0 mb-4" *ngIf="!isCancelled">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-4">Estado del pedido</h5>
+          <div class="timeline">
+            <div *ngFor="let step of statusSteps; let i = index" class="timeline-step" [class]="getStatusClass(step.key)">
+              <div class="timeline-marker">
+                <div class="timeline-icon">
+                  <i class="fas" [class]="step.icon"></i>
+                </div>
+                <div *ngIf="i < statusSteps.length - 1" class="timeline-line"></div>
+              </div>
+              <div class="timeline-content">
+                <h6 class="mb-0">{{ step.label }}</h6>
+                <small class="text-muted" *ngIf="getStatusClass(step.key) === 'active' && step.key === 'preparing'">
+                  Hace {{ elapsedMinutes }} minutos
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Items -->
+      <div class="card shadow-sm rounded-4 border-0 mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-3">Productos</h5>
+          <div *ngFor="let item of order.items; let i = index" class="order-item d-flex justify-content-between align-items-center py-2"
+               [class.border-bottom]="i < order.items.length - 1">
+            <div>
+              <span class="badge bg-secondary me-2">{{ item.qty }}x</span>
+              <span class="fw-medium">{{ item.name }}</span>
+              <small *ngIf="item.notes" class="d-block text-muted mt-1">
+                <i class="fas fa-sticky-note me-1"></i>{{ item.notes }}
+              </small>
+            </div>
+            <span class="fw-semibold">S/ {{ (item.price * item.qty).toFixed(2) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total -->
+      <div class="card shadow-sm rounded-4 border-0 mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between mb-1 text-secondary">
+            <span>Subtotal</span>
+            <span>S/ {{ order.subtotal.toFixed(2) }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-1 text-secondary">
+            <span>IGV (18%)</span>
+            <span>S/ {{ order.tax.toFixed(2) }}</span>
+          </div>
+          <div class="d-flex justify-content-between fw-bold fs-5 pt-2 border-top">
+            <span>Total</span>
+            <span class="text-success">S/ {{ order.total.toFixed(2) }}</span>
+          </div>
+          <div class="mt-2 text-muted small">
+            <i class="fas fa-credit-card me-1"></i>
+            Pagado con {{ order.paymentMethod }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <button *ngIf="canCancel" class="btn btn-outline-danger rounded-pill px-4"
+                (click)="cancelOrder()" [disabled]="cancelling">
+          <i class="fas fa-times me-2"></i>
+          {{ cancelling ? 'Cancelando...' : 'Cancelar pedido' }}
+        </button>
+        <button *ngIf="isCancelled" class="btn btn-primary rounded-pill px-4" (click)="goHome()">
+          <i class="fas fa-home me-2"></i>Volver al inicio
+        </button>
+        <button class="btn btn-outline-primary rounded-pill px-4" routerLink="/menu" *ngIf="!isCancelled">
+          <i class="fas fa-utensils me-2"></i>Seguir ordenando
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,89 @@
+<div class="menu-category-management">
+  <div class="header">
+    <h2>Gestión de Categorías del Menú</h2>
+    <button class="btn-primary" (click)="addNewCategory()">Agregar Categoría</button>
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <input type="text" placeholder="Buscar categorías..." [(ngModel)]="searchTerm" (input)="onSearch()">
+    </div>
+  </div>
+
+  <div class="category-grid">
+    <div *ngFor="let category of filteredCategories$ | async" class="category-card">
+      <div class="category-header">
+        <h3>{{category.name}}</h3>
+        <div class="category-actions">
+          <button class="btn-edit" (click)="editCategory(category)">Editar</button>
+          <button class="btn-delete" (click)="deleteCategory(category)">Eliminar</button>
+        </div>
+      </div>
+
+      <div class="category-details">
+        <p class="status" [class.active]="category.active" [class.inactive]="!category.active">
+          {{category.active ? 'Activa' : 'Inactiva'}}
+        </p>
+        <div class="tags" *ngIf="category.defaultServicePeriodIds && category.defaultServicePeriodIds.length > 0">
+          <span *ngFor="let periodId of category.defaultServicePeriodIds" class="tag tag-period">
+            <i class="fas fa-clock"></i> {{ getPeriodName(periodId) }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Form Modal -->
+  <div *ngIf="showAddForm" class="modal-overlay" (click)="cancelEdit()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{editingCategory ? 'Editar Categoría' : 'Agregar Nueva Categoría'}}</h3>
+        <button class="close-btn" (click)="cancelEdit()">&times;</button>
+      </div>
+
+      <form (ngSubmit)="saveCategory()" class="category-form">
+        <div class="form-group">
+          <label for="name">Nombre *</label>
+          <input type="text" id="name" [(ngModel)]="newCategory.name" name="name" required [class.invalid]="formErrors['name']">
+          <small class="field-error" *ngIf="formErrors['name']">{{ formErrors['name'] }}</small>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label for="active" class="checkbox-label">
+            <input type="checkbox" id="active" [checked]="newCategory.active" (change)="newCategory.active = $event.target.checked" name="active" class="checkbox-input">
+            <span class="checkbox-text">Activa</span>
+          </label>
+        </div>
+
+        <div class="form-section">
+          <h4 class="section-title">Franjas horarias por defecto</h4>
+          <p class="periods-hint">Los platos de esta categoría sin franjas propias heredan estas franjas. Vacío = todo el día.</p>
+          <div class="periods-selector" *ngIf="servicePeriods.length > 0">
+            <label
+              *ngFor="let period of servicePeriods"
+              class="period-option"
+              [class.selected]="isServicePeriodSelected(period.id)">
+              <input type="checkbox"
+                     [checked]="isServicePeriodSelected(period.id)"
+                     (change)="toggleServicePeriod(period.id)"
+                     [name]="'period_' + period.id">
+              <i [class]="period.icon || 'fas fa-clock'"></i>
+              <span class="period-option-text">
+                <strong>{{ period.name }}</strong>
+                <small>{{ period.startTime }} - {{ period.endTime }}</small>
+              </span>
+            </label>
+          </div>
+          <p class="periods-hint" *ngIf="servicePeriods.length === 0">
+            No hay franjas configuradas. Crea una desde <a routerLink="/admin/schedule-management">Horarios</a>.
+          </p>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="cancelEdit()">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

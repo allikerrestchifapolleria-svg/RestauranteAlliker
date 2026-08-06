@@ -1,0 +1,273 @@
+	rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ============================================================
+    // Funciones auxiliares
+    // ============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    /**
+     * IMPRESCINDIBLE comprobar exists() antes de get(): en Firestore, get() sobre
+     * un documento inexistente devuelve null, y leer .data sobre null es un ERROR
+     * que deniega la peticion entera.
+     *
+     * Eso rompia el registro: al crear la cuenta (Google o email) el documento
+     * users/{uid} todavia no existe, asi que isAdmin() reventaba y --como '||'
+     * evalua de izquierda a derecha-- ni siquiera se llegaba a probar isOwner().
+     * Nadie podia darse de alta.
+     */
+    function hasProfile() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return hasProfile() && userDoc().data.get('role', '') == 'admin';
+    }
+
+    // Roles reales usados en la app (ver services/auth.ts -> UserRole):
+    // 'admin' | 'cook' | 'waiter' | 'user'  (user = cliente final, no es staff)
+    function isStaff() {
+      return hasProfile() && userDoc().data.get('role', '') in ['admin', 'cook', 'waiter'];
+    }
+
+    function belongsToBranch(branchId) {
+      return hasProfile() && userDoc().data.get('branchId', '') == branchId;
+    }
+
+    // El usuario autenticado es el dueño del pedido referenciado por orderId
+    function ownsOrder(orderId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/orders/$(orderId)) &&
+        get(/databases/$(database)/documents/orders/$(orderId)).data.get('customerId', '') == request.auth.uid;
+    }
+
+    // ============================================================
+    // Catálogo  público 
+    // ============================================================
+
+    match /restaurants/{restaurantId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /branches/{branchId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // OJO: el código usa la colección 'menu_categories', no 'categories'.
+    match /menu_categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /menu_items/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /promotions/{promoId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Franjas de servicio y horario del local (service_periods/_schedule).
+    // Lectura pública para que la carta muestre/oculte platos según la hora.
+    match /service_periods/{periodId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Recipientes que se cobran en pedidos para llevar.
+    // Lectura pública: el mozo y la carta necesitan sus precios para cotizar.
+    match /takeout_containers/{containerId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ============================================================
+    // Usuarios
+    // ============================================================
+
+    match /users/{userId} {
+      // El documento de usuario vive en users/{uid de Firebase Auth}. Nunca debe
+      // contener un campo 'password': las credenciales las maneja Firebase Auth,
+      // no Firestore (ver services/auth.ts y netlify/functions/admin-*-user.ts).
+      allow read: if isOwner(userId) || isAdmin();
+      // Un cliente final puede crear su propio perfil al registrarse (email/password
+      // o Google/Facebook), pero solo con role 'user' - nunca puede auto-asignarse
+      // admin/cook/waiter. El staff se crea desde el backend (Admin SDK), que no
+      // pasa por estas reglas, pero se deja tambien la puerta para un admin autenticado.
+      // isOwner va PRIMERO: es el caso normal (alta propia) y se resuelve sin
+      // leer ningun documento, mientras que isAdmin() gasta un exists()+get().
+      allow create: if !('password' in request.resource.data) &&
+        ((isOwner(userId) && request.resource.data.role == 'user') || isAdmin());
+      // Un usuario solo puede editar sus propios datos de contacto, nunca su propio role.
+      // Antes esto se podia saltar porque existia un 'allow write' mas permisivo en paralelo;
+      // aqui NO hay ningun 'allow write' amplio, asi que esta es la unica puerta de update.
+      allow update: if !('password' in request.resource.data) &&
+        (isAdmin() ||
+         (isOwner(userId) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'firstName', 'lastName', 'email', 'phone'])));
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // Operacion: mesas, pedidos, reservas
+    // ============================================================
+
+    match /tables/{tableId} {
+      // Admin ve y gestiona mesas de TODAS las sucursales; el staff solo las suyas.
+      allow read: if isAdmin() || (isStaff() && belongsToBranch(resource.data.get('branchId', '')));
+      allow create: if isAdmin() || (isStaff() && belongsToBranch(request.resource.data.branchId));
+      allow update: if isAdmin() || (isStaff() && belongsToBranch(resource.data.get('branchId', '')));
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      // Admin ve y gestiona pedidos de TODAS las sucursales; el staff solo los suyos.
+      allow read: if isAdmin() || isOwner(resource.data.get('customerId', '')) || (isStaff() && belongsToBranch(resource.data.get('branchId', '')));
+      // Solo el staff crea pedidos desde el POS. El checkout publico (deshabilitado
+      // en modo vitrina) debe crear el pedido desde una funcion backend (Admin SDK)
+      // que valide precios y cobre el pago antes de escribirlo.
+      allow create: if isStaff();
+      // Staff de la sucursal puede actualizar el pedido completo (estado, cocina, pago, etc).
+      // El cliente dueno del pedido SOLO puede cancelarlo (status) y nunca tocar total/paymentStatus.
+      allow update: if isAdmin() || (isStaff() && belongsToBranch(resource.data.get('branchId', ''))) ||
+        (isOwner(resource.data.get('customerId', '')) &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']));
+      allow delete: if isAdmin();
+    }
+
+    match /reservations/{reservationId} {
+      // Admin ve y gestiona reservas de TODAS las sucursales; el staff solo las suyas.
+      allow read: if isAdmin() || isOwner(resource.data.get('customerId', '')) || (isStaff() && belongsToBranch(resource.data.get('branchId', '')));
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || isOwner(resource.data.get('customerId', '')) || (isStaff() && belongsToBranch(resource.data.get('branchId', '')));
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // Dinero: ventas y pagos (antes SIN reglas -> denegado por defecto,
+    // por eso el proyecto dependia del modo prueba abierto)
+    // ============================================================
+
+    match /sales/{saleId} {
+      allow read: if isStaff();
+      // Solo el staff registra ventas desde el POS (efectivo/yape/tarjeta en tienda).
+      // El cliente final NO puede auto-reportar una venta como pagada: el checkout
+      // publico (modo vitrina) debe escribirlas desde una funcion backend que cobre
+      // el cargo real (ej: Culqi con secret key) antes de marcarlas 'completed'.
+      allow create: if isStaff();
+      allow update, delete: if isAdmin();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if isAdmin();
+    }
+
+    // NOTA IMPORTANTE: un cliente ya no puede crear payments/sales por su cuenta
+    // (se elimino el 'ownsOrder' del create). Si en el futuro se reactiva el checkout
+    // publico, hacerlo SIEMPRE via funcion backend que valide montos contra el
+    // catalogo y confirme el cargo (Culqi) antes de escribir nada.
+
+    // ============================================================
+    // Nota: 'inventory_items' y 'stock_movements' existen en Firestore pero
+    // el proyecto no maneja inventario (decision del usuario) - sin servicio
+    // ni UI que las use, no llevan regla propia (quedan denegadas por defecto
+    // una vez que se desactive el modo prueba).
+    // ============================================================
+
+    // kitchen_tickets y activity_logs existen en Firestore pero ningun servicio
+    // de este repo las escribe/lee todavia (puede ser una funcion Cloud Function
+    // externa, o una coleccion en desuso). Se dejan accesibles solo a staff/admin
+    // como precaucion; revisar si realmente se usan antes de depender de esta regla.
+    match /kitchen_tickets/{ticketId} {
+      allow read: if isStaff();
+      allow write: if isStaff();
+    }
+
+    match /activity_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isStaff();
+    }
+
+    // ============================================================
+    // Facturacion (SUNAT) y contadores correlativos
+    // ============================================================
+
+    match /invoices/{invoiceId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /counters/{counterId} {
+      allow read: if isStaff();
+      allow write: if isStaff();
+    }
+
+    // Lectura publica: el layout publico pinta nombre comercial, direccion,
+    // telefono y email del negocio en la cabecera y el pie de CADA pagina, tambien
+    // para visitantes sin cuenta (ver company.service.ts y public-layout).
+    // Con 'read: if isStaff()' el sitio entero fallaba con
+    // "[PUBLIC-LAYOUT] Error cargando datos del negocio: Missing or insufficient permissions".
+    // Son datos que el negocio ya publica; lo que se protege es la escritura.
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ============================================================
+    // Clientes, notificaciones, reportes
+    // ============================================================
+
+    match /customers/{customerId} {
+      allow read, write: if isStaff();
+    }
+
+    // Catalogo de tipos de notificacion (CRUD del panel de admin, ver
+    // notification-type.ts). Sin esta regla quedaba denegada por defecto al
+    // cerrar el modo prueba y el panel dejaba de cargar.
+    match /notification_types/{typeId} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    // La app consulta con where('userId','==',uid) para clientes y sin filtro para
+    // staff/admin (ver notification.ts: listenToNotifications y cleanupExpired).
+    //
+    // OJO con la forma de comparar: isOwner('userId') compara el uid contra la
+    // CADENA literal "userId", asi que nunca se cumple y el cliente se queda sin
+    // ver sus propias notificaciones. Hay que leer el campo del documento.
+    // Se usa .get('userId', '') porque las notificaciones de difusion (targetRole)
+    // no traen ese campo, y acceder a una clave inexistente deniega la peticion.
+    match /notifications/{notificationId} {
+      allow read: if isStaff() || isOwner(resource.data.get('userId', ''));
+      // Las emite el sistema o el personal (orders.ts y el panel de admin);
+      // un cliente final nunca crea notificaciones.
+      allow create: if isStaff();
+      // El destinatario necesita marcar la suya como leida (read / readBy) y
+      // limpiar las suyas ya expiradas.
+      allow update: if isStaff() || isOwner(resource.data.get('userId', ''));
+      allow delete: if isStaff() || isOwner(resource.data.get('userId', ''));
+    }
+
+    match /reports/{reportId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

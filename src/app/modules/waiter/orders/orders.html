@@ -1,0 +1,584 @@
+<div class="min-vh-100 p-4 p-md-5 orders-page-bg">
+  <div class="container-fluid">
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+      <div *ngFor="let toast of toasts" class="toast show align-items-center text-bg-success border-0 mb-2" role="alert">
+        <div class="d-flex">
+          <div class="toast-body">
+            <strong class="me-auto">{{ toast.title }}</strong>
+            <div>{{ toast.message }}</div>
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="toasts = toasts.filter(t => t.id !== toast.id)"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-4 mb-5">
+      <div>
+        <h1 class="display-5 fw-bold d-flex align-items-center gap-3 mb-0 orders-title">
+          <span class="p-3 orders-title-icon rounded-circle shadow-lg">
+            <i class="fas fa-clipboard-list fa-lg"></i>
+          </span>
+          Gestión de Pedidos
+        </h1>
+        <p class="orders-subtitle mt-2 fs-5">Administra y monitorea todos los pedidos de Alliker</p>
+      </div>
+
+      <div class="d-flex align-items-center gap-3 flex-wrap orders-header-actions">
+        <span class="badge bg-success fs-6 px-3 py-2 shadow-sm d-flex align-items-center gap-2" style="border-radius: 50px;">
+          <i class="fas fa-sync-alt fa-spin"></i>
+          Tiempo real
+        </span>
+        <button class="btn btn-primary btn-lg d-flex align-items-center gap-2 shadow-lg" (click)="toggleOrderForm()">
+          <i class="fas fa-plus"></i>
+          <span>Nueva Orden</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Stats Section / Filter Cards (desktop only — mobile uses the floating kanban tabs instead) -->
+    <div class="row g-4 mb-5 orders-stats-row">
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="orders-stat-card stat-filter-card p-4 rounded-4 position-relative overflow-hidden"
+             [class.active-filter]="selectedStatus === 'pending'"
+             [style.background-color]="selectedStatus === 'pending' ? getStatusBgColor('pending') : ''"
+             [attr.data-status]="'pending'"
+             (click)="setFilterStatus('pending')">
+          <div class="position-absolute top-0 end-0 opacity-10 rounded-circle" style="width: 80px; height: 80px; background: #fbbf24; transform: translate(20px, -20px);"></div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="p-3 orders-stat-icon-warning rounded-circle"
+                 [class.active-icon]="selectedStatus === 'pending'">
+              <i class="fas fa-clock fa-2x"></i>
+            </div>
+            <div>
+              <h3 class="h1 fw-bold orders-stat-number-warning mb-0">{{getOrdersCount('pending')}}</h3>
+              <p class="orders-stat-label mb-0 fw-semibold">Pendientes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="orders-stat-card stat-filter-card p-4 rounded-4 position-relative overflow-hidden"
+             [class.active-filter]="selectedStatus === 'confirmed'"
+             [style.background-color]="selectedStatus === 'confirmed' ? getStatusBgColor('confirmed') : ''"
+             [attr.data-status]="'confirmed'"
+             (click)="setFilterStatus('confirmed')">
+          <div class="position-absolute top-0 end-0 opacity-10 rounded-circle" style="width: 80px; height: 80px; background: #17a2b8; transform: translate(20px, -20px);"></div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="p-3 rounded-circle"
+                 [class.active-icon]="selectedStatus === 'confirmed'"
+                 style="background: rgba(23, 162, 184, 0.12); color: #17a2b8;">
+              <i class="fas fa-check-circle fa-2x"></i>
+            </div>
+            <div>
+              <h3 class="h1 fw-bold mb-0" style="color: #17a2b8;">{{getOrdersCount('confirmed')}}</h3>
+              <p class="orders-stat-label mb-0 fw-semibold">Confirmadas</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="orders-stat-card stat-filter-card p-4 rounded-4 position-relative overflow-hidden"
+             [class.active-filter]="selectedStatus === 'preparing'"
+             [style.background-color]="selectedStatus === 'preparing' ? getStatusBgColor('preparing') : ''"
+             [attr.data-status]="'preparing'"
+             (click)="setFilterStatus('preparing')">
+          <div class="position-absolute top-0 end-0 opacity-10 rounded-circle" style="width: 80px; height: 80px; background: #22d3ee; transform: translate(20px, -20px);"></div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="p-3 orders-stat-icon-primary rounded-circle"
+                 [class.active-icon]="selectedStatus === 'preparing'">
+              <i class="fas fa-utensils fa-2x"></i>
+            </div>
+            <div>
+              <h3 class="h1 fw-bold orders-stat-number-primary mb-0">{{getOrdersCount('preparing')}}</h3>
+              <p class="orders-stat-label mb-0 fw-semibold">Preparando</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="orders-stat-card stat-filter-card p-4 rounded-4 position-relative overflow-hidden"
+             [class.active-filter]="selectedStatus === 'ready'"
+             [style.background-color]="selectedStatus === 'ready' ? getStatusBgColor('ready') : ''"
+             [attr.data-status]="'ready'"
+             (click)="setFilterStatus('ready')">
+          <div class="position-absolute top-0 end-0 opacity-10 rounded-circle" style="width: 80px; height: 80px; background: #34d399; transform: translate(20px, -20px);"></div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="p-3 orders-stat-icon-success rounded-circle"
+                 [class.active-icon]="selectedStatus === 'ready'">
+              <i class="fas fa-check-circle fa-2x"></i>
+            </div>
+            <div>
+              <h3 class="h1 fw-bold orders-stat-number-success mb-0">{{getOrdersCount('ready')}}</h3>
+              <p class="orders-stat-label mb-0 fw-semibold">Listos</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="orders-stat-card stat-filter-card p-4 rounded-4 position-relative overflow-hidden"
+             [class.active-filter]="selectedStatus === 'delivered'"
+             [style.background-color]="selectedStatus === 'delivered' ? getStatusBgColor('delivered') : ''"
+             [attr.data-status]="'delivered'"
+             (click)="setFilterStatus('delivered')">
+          <div class="position-absolute top-0 end-0 opacity-10 rounded-circle" style="width: 80px; height: 80px; background: #6f42c1; transform: translate(20px, -20px);"></div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="p-3 rounded-circle"
+                 [class.active-icon]="selectedStatus === 'delivered'"
+                 style="background: rgba(111, 66, 193, 0.12); color: #6f42c1;">
+              <i class="fas fa-check-double fa-2x"></i>
+            </div>
+            <div>
+              <h3 class="h1 fw-bold mb-0" style="color: #6f42c1;">{{getOrdersCount('delivered')}}</h3>
+              <p class="orders-stat-label mb-0 fw-semibold">Entregadas</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="orders-stat-card stat-filter-card p-4 rounded-4 position-relative overflow-hidden"
+             [class.active-filter]="selectedPaymentFilter === 'paid'"
+             [style.background-color]="selectedPaymentFilter === 'paid' ? getStatusBgColor('paid') : ''"
+             [attr.data-status]="'paid'"
+             (click)="setFilterPayment('paid')">
+          <div class="position-absolute top-0 end-0 opacity-10 rounded-circle" style="width: 80px; height: 80px; background: #059669; transform: translate(20px, -20px);"></div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="p-3 rounded-circle"
+                 [class.active-icon]="selectedPaymentFilter === 'paid'"
+                 style="background: rgba(5, 150, 105, 0.12); color: #34d399;">
+              <i class="fas fa-credit-card fa-2x"></i>
+            </div>
+            <div>
+              <h3 class="h1 fw-bold mb-0" style="color: #34d399;">{{getOrdersCount('paid')}}</h3>
+              <p class="orders-stat-label mb-0 fw-semibold">Pagadas</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Order Form (floating overlay: modal on desktop, bottom sheet on mobile) -->
+    <div *ngIf="showCreateOrderForm" class="order-form-overlay" [class.closing]="closingOrderForm" (click)="closeOrderForm()">
+      <div class="order-create-form card border-0 rounded-4 overflow-hidden" (click)="$event.stopPropagation()">
+        <div class="sheet-handle"></div>
+        <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #0891b2 100%);">
+          <h3 class="card-title mb-0 d-flex align-items-center gap-2 text-white">
+            <div class="p-2 rounded-circle" style="background: rgba(255,255,255,0.18);">
+              <i class="fas fa-plus"></i>
+            </div>
+            Crear Nueva Orden
+          </h3>
+          <button type="button" class="btn-close btn-close-white" (click)="closeOrderForm()"></button>
+        </div>
+        <div class="card-body p-4">
+          <form #orderForm="ngForm" (ngSubmit)="createOrder()" novalidate>
+          <div class="row g-4">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Tipo de Servicio</label>
+              <select class="form-select form-select-lg" [class.select-placeholder]="!newOrder.type" [(ngModel)]="newOrder.type" name="type" (ngModelChange)="onOrderTypeChange()" required>
+                <option value="" disabled>Seleccionar tipo...</option>
+                <option value="dine_in">🍽️ Comer aquí</option>
+                <option value="takeout">🥡 Para llevar</option>
+              </select>
+              <div class="takeout-hint mt-2" *ngIf="isTakeout && containers.length > 0">
+                <i class="fas fa-box-open me-1"></i>
+                Elige el recipiente de cada plato: se cobra aparte al cliente.
+              </div>
+              <div class="takeout-hint warning mt-2" *ngIf="isTakeout && containers.length === 0">
+                <i class="fas fa-exclamation-circle me-1"></i>
+                No hay recipientes configurados. Regístralos en Admin → Recipientes.
+              </div>
+            </div>
+            <div class="col-md-6" *ngIf="newOrder.type === 'dine_in'">
+              <label class="form-label fw-semibold">Mesa</label>
+
+              <div class="table-dropdown" *ngIf="hasAvailableTables">
+                <div class="table-dropdown-trigger"
+                     [class.open]="tableDropdownOpen"
+                     (click)="toggleTableDropdown($event)"
+                     tabindex="0"
+                     (blur)="onTableDropdownBlur()">
+                  <div class="trigger-content">
+                    <i class="fas fa-chair trigger-icon"></i>
+                    <span class="trigger-text" *ngIf="!selectedTableLabel && !tableDropdownOpen">Seleccionar mesa...</span>
+                    <span class="trigger-text selected" *ngIf="selectedTableLabel && !tableDropdownOpen">{{ selectedTableLabel }}</span>
+                    <span class="trigger-text" *ngIf="tableDropdownOpen">Buscar mesa...</span>
+                  </div>
+                  <i class="fas fa-chevron-down trigger-chevron" [class.rotated]="tableDropdownOpen"></i>
+                </div>
+
+                <div class="table-dropdown-panel" *ngIf="tableDropdownOpen" (click)="$event.stopPropagation()">
+                  <div class="table-search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text"
+                           class="table-search-input"
+                           [(ngModel)]="tableSearchTerm"
+                           name="tableSearch"
+                           placeholder="Filtrar mesas..."
+                           (click)="$event.stopPropagation()"
+                           autocomplete="off">
+                    <button type="button" class="table-search-clear" *ngIf="tableSearchTerm" (click)="tableSearchTerm = ''; $event.stopPropagation()">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+
+                  <div class="table-dropdown-body">
+
+                    <!-- Mesas Individuales -->
+                    <div class="table-section" *ngIf="filteredBranchTables.length > 0">
+                      <div class="table-section-header">
+                        <i class="fas fa-chair"></i>
+                        <span>Mesas Disponibles</span>
+                        <span class="table-section-count">{{ filteredBranchTables.length }}</span>
+                      </div>
+                      <div class="table-card-grid">
+                        <div class="table-card"
+                             *ngFor="let t of filteredBranchTables"
+                             [class.selected]="isTableSelected(t.number)"
+                             (click)="selectTable(t.number.toString()); $event.stopPropagation()">
+                          <div class="table-card-icon">
+                            <i class="fas fa-chair"></i>
+                          </div>
+                          <div class="table-card-info">
+                            <div class="table-card-name">{{ t.name }}</div>
+                            <div class="table-card-capacity">
+                              <span *ngFor="let _ of [].constructor(t.capacity)" class="person-dot"></span>
+                              <span class="capacity-text">{{ t.capacity }} pers.</span>
+                            </div>
+                          </div>
+                          <div class="table-card-check" *ngIf="isTableSelected(t.number)">
+                            <i class="fas fa-check-circle"></i>
+                          </div>
+                          <div class="table-card-badge free">Libre</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Mesas Familiares -->
+                    <div class="table-section" *ngIf="filteredFamilyTables.length > 0">
+                      <div class="table-section-header family">
+                        <i class="fas fa-people-arrows"></i>
+                        <span>Mesas Familiares</span>
+                        <span class="table-section-count">{{ filteredFamilyTables.length }}</span>
+                      </div>
+                      <div class="table-card-grid">
+                        <div class="table-card family"
+                             *ngFor="let ft of filteredFamilyTables"
+                             [class.selected]="newOrder.tableId === ft.id"
+                             (click)="selectTable(ft.id); $event.stopPropagation()">
+                          <div class="table-card-icon family">
+                            <i class="fas" [class.fa-lock]="ft.permanentFamily" [class.fa-people-arrows]="!ft.permanentFamily"></i>
+                          </div>
+                          <div class="table-card-info">
+                            <div class="table-card-name">{{ ft._displayName }}</div>
+                            <div class="table-card-capacity">
+                              <span *ngFor="let _ of [].constructor(ft.capacity)" class="person-dot"></span>
+                              <span class="capacity-text">{{ ft.capacity }} pers.</span>
+                            </div>
+                          </div>
+                          <div class="table-card-check" *ngIf="newOrder.tableId === ft.id">
+                            <i class="fas fa-check-circle"></i>
+                          </div>
+                          <div class="table-card-badge" [class.permanent]="ft.permanentFamily" [class.free]="!ft.permanentFamily">
+                            {{ ft.permanentFamily ? 'Fija' : 'Libre' }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <div class="table-dropdown-footer" *ngIf="newOrder.tableId">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Seleccionado: <strong>{{ selectedTableLabel }}</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="no-tables-message" *ngIf="!hasAvailableTables">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>No hay mesas libres en esta sucursal.</span>
+              </div>
+
+              <div class="family-badge mt-2" *ngIf="newOrder.tableId && isFamilyTableId(newOrder.tableId)">
+                <i class="fas fa-people-arrows"></i> Mesa Familiar — las mesas unidas recibirán una sola orden
+              </div>
+
+              <div *ngIf="newOrder.type === 'dine_in' && !newOrder.tableId" class="text-warning small mt-2">
+                <i class="fas fa-exclamation-circle me-1"></i>Seleccione una mesa para pedidos "Comer aquí"
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5">
+            <label class="order-form-section-title d-flex align-items-center gap-2 mb-4">
+              <span class="order-form-section-icon"><i class="fas fa-utensils"></i></span>
+              Items del Pedido
+            </label>
+            <div class="row g-3 mb-4" *ngIf="menuCategories.length > 0">
+              <div class="col-md-6 col-lg-4">
+                <select class="form-select" [class.select-placeholder]="!selectedCategoryId" [(ngModel)]="selectedCategoryId" (change)="onCategoryChange()" name="categoryFilter">
+                  <option value="">🍽️ Todas las categorías</option>
+                  <option *ngFor="let cat of menuCategories" [value]="cat.id">{{ cat.name }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-4" *ngIf="orderItems.length > 0">
+              <div class="order-item-card mb-3 rounded-3" *ngFor="let item of orderItems; let i = index">
+                <div class="card-body">
+                  <div class="order-item-main">
+                    <div class="order-item-fields">
+                      <div class="order-item-icon">
+                        <i class="fas fa-utensils fa-lg"></i>
+                      </div>
+                      <div class="order-item-inputs">
+                        <div class="menu-search-wrapper mb-3">
+                          <input type="text" class="form-control form-control-lg order-search-input"
+                                 [value]="item.name"
+                                 (input)="onItemSearch(i, $event)"
+                                 (focus)="showItemDropdown(i, $event)"
+                                 (blur)="onBlur(i)"
+                                 [name]="'itemName' + i" placeholder="Buscar plato... Ej: Lomo Saltado"
+                                 required minlength="2" maxlength="100" autocomplete="off">
+                          <ul class="menu-dropdown" *ngIf="showDropdown[i] && filteredItemLists[i]?.length">
+                            <li *ngFor="let mi of filteredItemLists[i]"
+                                (mousedown)="selectItem(i, mi)"
+                                [class.dropdown-item-disabled]="!isItemCurrentlyAvailable(mi)"
+                                [class.disabled]="!isItemCurrentlyAvailable(mi)">
+                              <div class="dropdown-item-name">
+                                {{ mi.name }}
+                                <span class="dropdown-item-period" *ngIf="getItemPeriodLabel(mi)">
+                                  <i class="fas fa-clock me-1"></i>{{ getItemPeriodLabel(mi) }}
+                                </span>
+                                <span class="dropdown-item-unavailable" *ngIf="!isItemCurrentlyAvailable(mi)">
+                                  <i class="fas fa-ban me-1"></i>Fuera de horario
+                                </span>
+                              </div>
+                              <div class="dropdown-item-meta">
+                                <span class="dropdown-item-price">S/ {{ mi.price }}</span>
+                                <span class="dropdown-item-cat">{{ getCategoryName(mi.categoryId) }}</span>
+                              </div>
+                            </li>
+                          </ul>
+                        </div>
+                        <div class="row g-3">
+                          <div class="col-md-6">
+                            <label class="form-label small fw-semibold order-item-label">Cantidad</label>
+                            <div class="qty-stepper">
+                              <button type="button" class="qty-btn" (click)="decreaseQty(i)"
+                                      [disabled]="item.qty <= 1" aria-label="Quitar uno">
+                                <i class="fas fa-minus"></i>
+                              </button>
+                              <input type="number" class="form-control qty-input" [(ngModel)]="item.qty"
+                                     [name]="'itemQty' + i" #itemQty="ngModel" min="1" max="99" required
+                                     inputmode="numeric" (blur)="normalizeQty(i)">
+                              <button type="button" class="qty-btn" (click)="increaseQty(i)"
+                                      [disabled]="item.qty >= 99" aria-label="Agregar uno">
+                                <i class="fas fa-plus"></i>
+                              </button>
+                            </div>
+                            <div *ngIf="itemQty.invalid && (itemQty.dirty || itemQty.touched)" class="field-error-text mt-1">
+                              <div *ngIf="itemQty.errors?.['required']">La cantidad es obligatoria.</div>
+                              <div *ngIf="itemQty.errors?.['min']">La cantidad mínima es 1.</div>
+                              <div *ngIf="itemQty.errors?.['max']">La cantidad máxima es 99.</div>
+                            </div>
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label small fw-semibold order-item-label">Precio unitario</label>
+                            <div class="price-display">S/ {{ item.price | number:'1.2-2' }}</div>
+                          </div>
+                        </div>
+                        <div class="container-picker mt-3" *ngIf="isTakeout && containers.length > 0"
+                             [class.has-selection]="item.containerId">
+                          <label class="form-label small fw-semibold order-item-label">
+                            <i class="fas fa-box-open me-1"></i>Recipiente para llevar
+                          </label>
+                          <select class="form-select container-select"
+                                  [(ngModel)]="item.containerId"
+                                  [name]="'itemContainer' + i"
+                                  [class.select-placeholder]="!item.containerId">
+                            <option value="">Sin recipiente — S/ 0.00</option>
+                            <option *ngFor="let c of containers" [value]="c.id">
+                              {{ c.name }} — S/ {{ c.price | number:'1.2-2' }}
+                            </option>
+                          </select>
+                          <small class="container-picker-note" *ngIf="item.containerId">
+                            {{ item.qty }} x S/ {{ getContainerPrice(item.containerId) | number:'1.2-2' }}
+                            = <strong>S/ {{ getItemContainerTotal(item) | number:'1.2-2' }}</strong> por recipientes
+                          </small>
+                        </div>
+                        <input type="text" class="form-control mt-3" [(ngModel)]="item.notes" [name]="'itemNotes' + i" #itemNotes="ngModel" maxlength="200" pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.,!?()-]*$" placeholder="Ej: Sin cebolla, extra picante">
+                        <div *ngIf="itemNotes.invalid && (itemNotes.dirty || itemNotes.touched)" class="text-danger small mt-1">
+                          <div *ngIf="itemNotes.errors?.['maxlength']">Las notas no pueden exceder 200 caracteres.</div>
+                          <div *ngIf="itemNotes.errors?.['pattern']">Las notas contienen caracteres no permitidos.</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="order-item-aside">
+                      <div class="order-item-amounts">
+                        <div class="order-item-total">S/ {{ getItemTotal(item).toFixed(2) }}</div>
+                        <small class="order-item-subtotal">{{ item.qty }} x S/ {{ item.price | number:'1.2-2' }}</small>
+                        <small class="order-item-container-line" *ngIf="getItemContainerTotal(item) > 0">
+                          + S/ {{ getItemContainerTotal(item).toFixed(2) }} recipiente
+                        </small>
+                      </div>
+                      <button type="button" class="order-item-remove" (click)="removeItem(i)"
+                              title="Eliminar item" aria-label="Eliminar item">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-outline-cyan btn-lg d-flex align-items-center gap-2 rounded-pill" (click)="addItem()">
+              <i class="fas fa-plus"></i>
+              <span>Agregar Item</span>
+            </button>
+          </div>
+
+          <div class="mt-5 order-form-total-bar" [class.with-breakdown]="calculateContainersTotal() > 0">
+            <div class="order-form-total-breakdown" *ngIf="calculateContainersTotal() > 0">
+              <div class="breakdown-row">
+                <span>Platos</span>
+                <span>S/ {{ calculateDishesTotal().toFixed(2) }}</span>
+              </div>
+              <div class="breakdown-row">
+                <span><i class="fas fa-box-open me-1"></i>Recipientes</span>
+                <span>S/ {{ calculateContainersTotal().toFixed(2) }}</span>
+              </div>
+            </div>
+            <div class="order-form-total-main">
+              <span class="order-form-total-label">Total del pedido</span>
+              <span class="order-form-total-value">S/ {{calculateTotal().toFixed(2)}}</span>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex gap-3">
+            <button type="submit" class="btn btn-cyan btn-lg d-flex align-items-center gap-2 rounded-pill" [disabled]="orderForm.invalid || orderItems.length === 0 || isSubmitting || (newOrder.type === 'dine_in' && !newOrder.tableId)">
+              <i *ngIf="isSubmitting" class="fas fa-spinner fa-spin"></i>
+              <i *ngIf="!isSubmitting" class="fas fa-save"></i>
+              <span>{{ isSubmitting ? 'Creando...' : 'Crear Orden' }}</span>
+            </button>
+            <button type="button" class="btn btn-outline-light btn-lg rounded-pill" (click)="closeOrderForm()">
+              <i class="fas fa-times me-1"></i>Cancelar
+            </button>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile-only: floating status tabs replace the stacked column headers -->
+    <div class="kanban-mobile-tabs">
+      <button type="button" class="kanban-tab" *ngFor="let col of kanbanColumns"
+              [class.active]="activeKanbanColumn === col.id"
+              [style.--tab-color]="col.color"
+              (click)="setActiveKanbanColumn(col.id)">
+        <i class="fas" [class]="col.icon"></i>
+        <span>{{ col.label }}</span>
+        <span class="kanban-tab-count">{{ col.orders.length }}</span>
+      </button>
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="kanban-board">
+      <div class="kanban-column" *ngFor="let col of kanbanColumns" [class.mobile-active]="activeKanbanColumn === col.id">
+        <div class="column-header" [style.--col-color]="col.color">
+          <div class="column-header-left">
+            <i class="fas" [class]="col.icon"></i>
+            <span class="column-title">{{ col.label }}</span>
+          </div>
+          <span class="column-count">{{ col.orders.length }}</span>
+        </div>
+        <div class="column-body" id="column-{{col.id}}">
+          <div class="order-card" *ngFor="let order of col.orders; trackBy: trackByOrderId"
+               [class.expanded]="expandedCards.has(order.id)"
+               [class.urgent]="isUrgentOrder(order)"
+               (click)="toggleCard(order.id)">
+            <!-- Card Compact (always visible) -->
+            <div class="card-compact">
+              <div class="card-compact-row">
+                <span class="order-number">#{{ order.orderNumber || order.id.slice(-6) }}</span>
+                <span class="order-table" *ngIf="order.tableId">
+                  <i class="fas fa-chair"></i> {{ order.tableName || getTableDisplayName(order.tableId) || order.tableId }}
+                </span>
+                <span class="order-total">S/ {{ order.total.toFixed(2) }}</span>
+              </div>
+              <div class="card-compact-meta">
+                <span class="order-type" [ngClass]="getTypeClass(order.type)">
+                  <i class="fas" [class.fa-store]="order.type === 'dine_in'" [class.fa-bag-shopping]="order.type === 'takeout'"></i>
+                  {{ getTypeLabel(order.type) }}
+                </span>
+                <span class="order-time" *ngIf="order.status === 'preparing'">
+                  <i class="fas fa-clock"></i> {{ getElapsedTime(order) || '0m' }}
+                </span>
+                <span class="payment-badge" *ngIf="col.id === 'delivered'"
+                      [class.paid]="order.paymentStatus === 'paid'"
+                      [class.pending]="order.paymentStatus !== 'paid'">
+                  {{ order.paymentStatus === 'paid' ? 'Pagado' : 'Pendiente' }}
+                </span>
+              </div>
+              <div class="card-compact-actions" *ngIf="canDeliver(order)">
+                <button class="btn-kanban btn-deliver btn-pay-compact"
+                        (click)="$event.stopPropagation(); updateOrderStatus(order.id, 'delivered')">
+                  <i class="fas fa-check-double"></i> Entregar
+                </button>
+              </div>
+              <div class="card-compact-actions" *ngIf="order.status === 'delivered' && canPayOrder(order)">
+                <button class="btn-kanban btn-pay btn-pay-compact"
+                        (click)="$event.stopPropagation(); goToPayment(order)">
+                  <i class="fas fa-credit-card"></i> Pagar
+                </button>
+              </div>
+            </div>
+            <!-- Card Expanded (shown on click) -->
+            <div class="card-expanded" *ngIf="expandedCards.has(order.id)">
+              <div class="expanded-items">
+                <div class="expanded-item" *ngFor="let item of order.items" [class.is-container]="item.isContainer">
+                  <span class="item-qty">{{ item.qty }}x</span>
+                  <span class="item-name">
+                    <i class="fas fa-box-open me-1" *ngIf="item.isContainer"></i>{{ item.name }}
+                  </span>
+                  <span class="item-price">S/ {{ (item.price * item.qty).toFixed(2) }}</span>
+                </div>
+              </div>
+              <div class="expanded-summary">
+                <div class="summary-row">
+                  <span>Subtotal</span>
+                  <span>S/ {{ order.subtotal.toFixed(2) }}</span>
+                </div>
+                <div class="summary-row" *ngIf="order.tax > 0">
+                  <span>IGV (18%)</span>
+                  <span>S/ {{ order.tax.toFixed(2) }}</span>
+                </div>
+                <div class="summary-row total">
+                  <span>Total</span>
+                  <span>S/ {{ order.total.toFixed(2) }}</span>
+                </div>
+              </div>
+              <div class="expanded-actions">
+                <button *ngIf="canConfirmOrder(order)" class="btn-kanban btn-confirm" (click)="$event.stopPropagation(); updateOrderStatus(order.id, 'confirmed')">
+                  <i class="fas fa-check"></i> Confirmar
+                </button>
+                <button *ngIf="canDeliver(order)" class="btn-kanban btn-deliver" (click)="$event.stopPropagation(); updateOrderStatus(order.id, 'delivered')">
+                  <i class="fas fa-check-double"></i> Entregar
+                </button>
+                <button *ngIf="canPayOrder(order) && order.status === 'delivered'" class="btn-kanban btn-pay" (click)="$event.stopPropagation(); goToPayment(order)">
+                  <i class="fas fa-credit-card"></i> Pagar
+                </button>
+                <button *ngIf="['pending', 'confirmed'].includes(order.status)" class="btn-kanban btn-cancel" (click)="$event.stopPropagation(); updateOrderStatus(order.id, 'cancelled')">
+                  <i class="fas fa-times"></i> Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="column-empty" *ngIf="col.orders.length === 0">
+            <i class="fas fa-inbox"></i>
+            <span>Sin pedidos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

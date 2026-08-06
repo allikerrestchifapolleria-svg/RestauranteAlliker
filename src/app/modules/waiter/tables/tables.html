@@ -1,0 +1,376 @@
+<div class="waiter-tables">
+  <!-- HEADER -->
+  <header class="section-header">
+    <div class="header-left">
+      <h1>
+        <i class="fas fa-th-large"></i>
+        Mesas
+      </h1>
+      <p class="header-subtitle">Gestión de mesas y mesas familiares</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline-secondary btn-merge" (click)="toggleMergeMode()" [class.active]="mergeMode()">
+        <i class="fas fa-link"></i>
+        <span>Unir Mesas</span>
+      </button>
+      <button class="btn btn-primary" (click)="onNewOrder()">
+        <i class="fas fa-plus"></i>
+        <span>Nuevo Pedido</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- STATS (filtros cliqueables) -->
+  <div class="stats-row">
+    <div class="stat-box" *ngFor="let stat of stats()"
+         [class.active]="selectedStatus() === stat.value"
+         (click)="selectedStatus.set(stat.value)">
+      <span class="stat-icon">{{ stat.icon }}</span>
+      <div class="stat-info">
+        <span class="stat-value">{{ stat.count }}</span>
+        <span class="stat-label">{{ stat.label }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MERGE MODE BANNER -->
+  <div class="merge-banner" *ngIf="mergeMode()">
+    <div class="merge-banner-content">
+      <i class="fas fa-object-group"></i>
+      <span>
+        <strong>Modo unión de mesas</strong>
+        — Selecciona 2 o más mesas disponibles para crear una Mesa Familiar
+      </span>
+    </div>
+    <div class="merge-banner-actions">
+      <span class="selected-count">{{ selectedForMerge().size }} seleccionadas</span>
+      <button class="btn btn-sm btn-merge-confirm" [disabled]="selectedForMerge().size < 2" (click)="confirmMerge()">
+        <i class="fas fa-check"></i> Confirmar Unión
+      </button>
+      <button class="btn btn-sm btn-merge-cancel" (click)="cancelMerge()">
+        <i class="fas fa-times"></i> Cancelar
+      </button>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar mesa..." class="form-control">
+    </div>
+  </div>
+
+  <!-- TABLES GRID -->
+  <div class="tables-grid">
+    <ng-container *ngFor="let table of filteredTables()">
+      <!-- Regular Table Card -->
+      <div class="table-card" *ngIf="!table.familyGroupId"
+           [class.status-available]="table.status === 'available'"
+           [class.status-occupied]="table.status === 'occupied'"
+           [class.status-reserved]="table.status === 'reserved'"
+           [class.status-maintenance]="table.status === 'maintenance'"
+           [class.merge-selected]="mergeMode() && isTableSelected(table.id)"
+           [class.merge-selectable]="mergeMode() && table.status === 'available'"
+           [class.merge-disabled]="mergeMode() && table.status !== 'available'"
+            (click)="mergeMode() && table.status === 'available' ? toggleTableSelection(table.id) : table.status === 'available' ? onNewOrder(table) : null">
+
+        <div class="card-body">
+          <div class="card-header-row">
+            <div class="icon-box" [class]="'icon-' + table.status">
+              <i [class]="getStatusIcon(table.status)"></i>
+            </div>
+            <div class="table-title">
+              <span class="table-name">{{ table.name }}</span>
+              <span class="table-capacity">{{ table.capacity }} pers.</span>
+            </div>
+            <div class="card-checkbox" *ngIf="mergeMode() && table.status === 'available'">
+              <i class="fas" [class.fa-check-circle]="isTableSelected(table.id)" [class.fa-circle]="!isTableSelected(table.id)"></i>
+            </div>
+          </div>
+
+          <div class="card-order-info" *ngIf="getCurrentOrderForTable(table); let order">
+            <div class="order-brief">
+              <div class="order-brief-header">
+                <span class="order-label">PEDIDO ACTIVO</span>
+                <span class="order-time"><i class="far fa-clock"></i> {{ formatTimeDiff(table.occupiedTime) }}</span>
+              </div>
+              <div class="order-brief-total">
+                <span class="order-value">S/ {{ order.total | number:'1.2-2' }}</span>
+                <span class="order-items">{{ order.items.length }} items</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-status-badge" *ngIf="!getCurrentOrderForTable(table)">
+            <span class="badge" [class]="getStatusBadgeClass(table.status)">
+              <i class="fas fa-circle"></i> {{ getStatusLabel(table.status) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="card-actions" *ngIf="!mergeMode() && table.status !== 'available'">
+          <ng-container [ngSwitch]="table.status">
+            <button *ngSwitchCase="'available'" class="btn btn-action btn-open" (click)="onNewOrder(table)">
+              <i class="fas fa-play"></i> ABRIR MESA
+            </button>
+            <ng-container *ngSwitchCase="'occupied'">
+              <button *ngIf="getServedOrderForTable(table)" class="btn btn-action btn-view" (click)="goToPayment(table)">
+                <i class="fas fa-eye"></i> VER CUENTA
+              </button>
+              <button *ngIf="!getServedOrderForTable(table)" class="btn btn-action btn-blocked" disabled>
+                <i class="fas fa-utensils"></i> {{ getOrderStatusLabel(table) | uppercase }}
+              </button>
+            </ng-container>
+            <button *ngSwitchDefault class="btn btn-action btn-blocked" disabled>
+              <i class="fas fa-lock"></i> {{ getStatusLabel(table.status) | uppercase }}
+            </button>
+          </ng-container>
+          <button class="btn btn-icon-more" (click)="showActions(table)">
+            <i class="fas fa-ellipsis-h"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Family Table Card -->
+      <div class="table-card card-family" *ngIf="table.familyGroupId"
+           [class.status-family_merged]="table.status === 'family_merged'">
+
+        <div class="card-status-bar bar-family_merged"></div>
+
+        <div class="card-body">
+          <div class="card-header-row">
+            <div class="icon-box icon-family_merged">
+              <i class="fas fa-people-arrows"></i>
+            </div>
+            <div class="table-title">
+              <span class="table-name family-name">{{ getFamilyDisplayName(table) }}</span>
+              <span *ngIf="table.permanentFamily" class="badge-permanent">🔒 Permanente</span>
+              <span class="table-capacity">{{ table.capacity }} pers. combinadas</span>
+            </div>
+          </div>
+
+          <!-- Family children list -->
+          <div class="family-children">
+            <div class="family-child" *ngFor="let child of getFamilyChildren(table)">
+              <i class="fas fa-chair"></i>
+              <span>{{ child.name }}</span>
+              <span class="child-capacity">{{ child.capacity }} pers.</span>
+            </div>
+          </div>
+
+          <div class="card-order-info" *ngIf="getCurrentOrderForTable(table); let order">
+            <div class="order-brief">
+              <div class="order-brief-header">
+                <span class="order-label">PEDIDO FAMILIAR</span>
+                <span class="order-time"><i class="far fa-clock"></i> {{ formatTimeDiff(table.occupiedTime) }}</span>
+              </div>
+              <div class="order-brief-total">
+                <span class="order-value">S/ {{ order.total | number:'1.2-2' }}</span>
+                <span class="order-items">{{ order.items.length }} items</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-status-badge" *ngIf="!getCurrentOrderForTable(table)">
+            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+              <i class="fas fa-people-arrows"></i> {{ getStatusLabel(table.status) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="card-actions" *ngIf="!mergeMode()">
+          <button class="btn btn-action btn-view" (click)="onNewOrder(table)" *ngIf="!getCurrentOrderForTable(table)">
+            <i class="fas fa-play"></i> NUEVA ORDEN
+          </button>
+          <button class="btn btn-action btn-view" (click)="goToPayment(table)" *ngIf="getServedOrderForTable(table)">
+            <i class="fas fa-eye"></i> VER CUENTA
+          </button>
+          <button class="btn btn-action btn-blocked" disabled *ngIf="getCurrentOrderForTable(table) && !getServedOrderForTable(table)">
+            <i class="fas fa-utensils"></i> {{ getOrderStatusLabel(table) | uppercase }}
+          </button>
+          <button *ngIf="!table.permanentFamily" class="btn btn-action btn-separate" (click)="separateTables(table)">
+            <i class="fas fa-unlink"></i> SEPARAR
+          </button>
+          <button *ngIf="table.permanentFamily" class="btn btn-action btn-separate" disabled title="Mesa familiar permanente">
+            <i class="fas fa-lock"></i> PERMANENTE
+          </button>
+          <button class="btn btn-icon-more" (click)="showActions(table)">
+            <i class="fas fa-ellipsis-h"></i>
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="empty-state" *ngIf="filteredTables().length === 0">
+      <i class="fas fa-chair"></i>
+      <p>No se encontraron mesas con los filtros seleccionados</p>
+    </div>
+  </div>
+
+  <!-- ACTIVE ORDERS SECTION -->
+  <section class="active-orders-section" *ngIf="deliveredOrders().length > 0">
+    <div class="section-header-mini">
+      <h3><i class="fas fa-receipt"></i> Cuentas Activas</h3>
+      <span class="badge-active">{{ activeOrders().length }} en curso</span>
+    </div>
+    <div class="active-orders-table">
+      <table class="table-modern">
+        <thead>
+          <tr>
+            <th>Mesa</th>
+            <th>Productos</th>
+            <th class="text-end">Total</th>
+            <th>Apertura</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of deliveredOrders()">
+            <td data-label="Mesa">
+              <div class="order-table-info">
+                <span class="table-badge">{{ getTableNameByOrderId(order.id) }}</span>
+                <span class="order-id">#{{ order.orderNumber || order.id.slice(-6) }}</span>
+              </div>
+            </td>
+            <td data-label="Productos">
+              <span class="items-badge">{{ order.items.length }} items</span>
+            </td>
+            <td class="text-end" data-label="Total">
+              <span class="order-total-value">S/ {{ order.total | number:'1.2-2' }}</span>
+            </td>
+            <td data-label="Apertura">
+              <div class="order-time-info">
+                <span>{{ order.createdAt | date:'HH:mm' }}</span>
+                <span class="time-elapsed">{{ formatTimeDiff(order.createdAt) }}</span>
+              </div>
+            </td>
+            <td class="text-center" data-label="Acciones">
+              <div class="action-cell">
+                <button class="btn btn-sm btn-view" (click)="viewOrder(order)" title="Ver detalle">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-success" (click)="completeOrder(order)" title="Cobrar">
+                  <i class="fas fa-dollar-sign"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- TABLE ACTIONS MODAL -->
+  <div class="modal-overlay" *ngIf="selectedTable(); let table" (click)="closeTableModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h5>
+          <i class="fas" [class.fa-chair]="!table.familyGroupId" [class.fa-people-arrows]="!!table.familyGroupId"></i>
+          {{ getFamilyDisplayName(table) }}
+        </h5>
+        <button class="modal-close" (click)="closeTableModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="actions-grid">
+          <button class="action-btn" *ngIf="table.familyGroupId" (click)="separateTables(table); closeTableModal()">
+            <i class="fas fa-unlink"></i>
+            <span>Separar Mesas</span>
+          </button>
+          <button class="action-btn" *ngIf="table.status !== 'available' && !table.familyGroupId" (click)="updateTableStatus('available'); closeTableModal()">
+            <i class="fas fa-check"></i>
+            <span>Liberar Mesa</span>
+          </button>
+          <button class="action-btn" *ngIf="table.status !== 'maintenance' && !table.familyGroupId" (click)="updateTableStatus('maintenance'); closeTableModal()">
+            <i class="fas fa-tools"></i>
+            <span>Mantenimiento</span>
+          </button>
+          <!-- RESERVACIONES DESHABILITADO (posible implementación futura).
+          <button class="action-btn" *ngIf="table.status !== 'reserved' && !table.familyGroupId" (click)="updateTableStatus('reserved'); closeTableModal()">
+            <i class="fas fa-calendar"></i>
+            <span>Reservar Mesa</span>
+          </button>
+          -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeTableModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div class="modal-overlay" *ngIf="selectedOrder(); let order" (click)="closeOrderModal()">
+  <div class="modal-card modal-order-detail" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h5>
+        <i class="fas fa-receipt"></i>
+        Pedido #{{ order.orderNumber || order.id.slice(-6) }}
+        <span class="badge-order-status" [style.background]="getStatusColor(order.status)">
+          {{ getStatusLabel(order.status) }}
+        </span>
+      </h5>
+      <button class="modal-close" (click)="closeOrderModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="order-summary">
+        <div class="summary-row">
+          <span class="summary-label">Mesa:</span>
+          <span class="summary-value">{{ getTableNameByOrderId(order.id) }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Tipo:</span>
+          <span class="summary-value">{{ getTypeLabel(order.type) }}</span>
+        </div>
+        <div class="summary-row" *ngIf="order.waiterName">
+          <span class="summary-label">Mesero:</span>
+          <span class="summary-value">{{ order.waiterName }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Apertura:</span>
+          <span class="summary-value">{{ order.createdAt | date:'HH:mm' }} · {{ formatTimeDiff(order.createdAt) }}</span>
+        </div>
+      </div>
+
+      <div class="order-items-section">
+        <h6 class="section-title"><i class="fas fa-list"></i> Productos ({{ order.items.length }})</h6>
+        <div class="item-list">
+          <div class="item-row" *ngFor="let item of order.items">
+            <div class="item-info">
+              <span class="item-name">{{ item.name }}</span>
+              <span class="item-notes" *ngIf="item.notes">{{ item.notes }}</span>
+            </div>
+            <div class="item-qty">x{{ item.qty }}</div>
+            <div class="item-price">S/ {{ (item.price * item.qty) | number:'1.2-2' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="order-totals">
+        <div class="total-row">
+          <span>Subtotal</span>
+          <span>S/ {{ order.subtotal | number:'1.2-2' }}</span>
+        </div>
+        <div class="total-row">
+          <span>IGV (18%)</span>
+          <span>S/ {{ order.tax | number:'1.2-2' }}</span>
+        </div>
+        <div class="total-row total-final">
+          <span>Total</span>
+          <span>S/ {{ order.total | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <div class="modal-actions" *ngIf="order.paymentStatus !== 'paid'">
+        <button class="btn btn-success btn-block" (click)="completeOrder(order); closeOrderModal()">
+          <i class="fas fa-dollar-sign"></i> Ir a Cobrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

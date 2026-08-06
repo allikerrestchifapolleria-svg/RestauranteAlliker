@@ -1,0 +1,837 @@
+<!-- Enhanced Hero Section with Advanced Interactions -->
+<section class="hero-section position-relative overflow-hidden">
+  <!-- Dynamic Background -->
+  <div class="hero-background">
+    <div class="hero-gradient"></div>
+    <div class="hero-pattern"></div>
+    <div class="animated-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+      <div class="shape shape-4"></div>
+    </div>
+  </div>
+
+
+  <!-- Main Hero Content -->
+  <div class="container position-relative">
+    <div class="row align-items-center min-vh-100 py-5">
+      <div class="col-lg-7">
+        <div class="hero-content animate__animated animate__fadeInLeft">
+          <!-- Award Badge -->
+          <div class="award-badge mb-4">
+            <div class="badge-icon">
+              <i class="fas fa-trophy text-warning"></i>
+            </div>
+            <div class="badge-content">
+              <div class="badge-title">Premio Mejor Pollería 2024</div>
+              <div class="badge-subtitle">Reconocido por la Asociación Gastronómica</div>
+            </div>
+          </div>
+
+          <!-- Main Title -->
+          <h1 class="hero-title mb-4">
+            <span class="title-line">
+              <span class="title-word">Alliker</span>
+              <span class="title-accent">Pollería</span>
+            </span>
+            <span class="subtitle-line">La Mejor Pollería Peruana</span>
+          </h1>
+
+          <!-- Description -->
+          <p class="hero-description mb-5">
+            Disfruta del mejor pollo a la brasa en un ambiente moderno y acogedor.
+            Cada pieza es preparada con tradición, pasión y sabores inolvidables que
+            te harán volver por más.
+          </p>
+
+          <!-- Action Buttons -->
+          <div class="hero-actions mb-5">
+            <button class="btn btn-primary btn-lg me-3 mb-3 animate__animated animate__pulse animate__infinite"
+              (click)="onViewMenu()">
+              <span class="btn-content">
+                <i class="fas fa-utensils me-2"></i>
+                Explorar Menú
+                <i class="fas fa-arrow-right ms-2"></i>
+              </span>
+            </button>
+            <!-- RESERVACIONES DESHABILITADO (posible implementación futura).
+            <button class="btn btn-outline-light btn-lg mb-3" (click)="onReserveTable()">
+              <i class="fas fa-calendar-check me-2"></i>
+              Reservar Mesa
+            </button>
+            -->
+          </div>
+
+          <!-- Statistics -->
+          <div class="hero-stats">
+            <div class="stat-item" data-bs-toggle="tooltip" title="Clientes satisfechos">
+              <div class="stat-icon">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-number">500+</div>
+                <div class="stat-label">Clientes</div>
+              </div>
+            </div>
+            <div class="stat-item" data-bs-toggle="tooltip" title="Platos tradicionales">
+              <div class="stat-icon">
+                <i class="fas fa-utensils"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-number">50+</div>
+                <div class="stat-label">Platos</div>
+              </div>
+            </div>
+            <div class="stat-item" data-bs-toggle="tooltip" title="Años de experiencia">
+              <div class="stat-icon">
+                <i class="fas fa-award"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-number">10+</div>
+                <div class="stat-label">Años</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+          <!-- Main Dish Image -->
+          <div class="hero-image-container">
+            <div class="image-wrapper">
+              <img [src]="heroImage" [alt]="heroAlt" class="hero-image" (error)="onHeroImageError($event)">
+              <div class="image-overlay"></div>
+              <div class="image-glow"></div>
+            </div>
+
+            <!-- Floating Cards -->
+            <div class="floating-card card-1">
+              <div class="card-icon">
+                <i class="fas fa-star text-warning"></i>
+              </div>
+              <div class="card-content">
+                <div class="card-title">5.0</div>
+                <div class="card-subtitle">Calificación</div>
+              </div>
+            </div>
+
+            <div class="floating-card card-2">
+              <div class="card-icon">
+                <i class="fas fa-clock text-maroon"></i>
+              </div>
+              <div class="card-content">
+                <div class="card-title">15-20min</div>
+                <div class="card-subtitle">Tiempo de espera</div>
+              </div>
+            </div>
+
+            <div class="floating-card card-3">
+              <div class="card-icon">
+                <i class="fas fa-map-marker-alt text-danger"></i>
+              </div>
+              <div class="card-content">
+                <div class="card-title">Centro</div>
+                <div class="card-subtitle">Ubicación</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature Pills -->
+          <div class="feature-pills mt-4">
+            <span class="pill pill-primary">
+              <i class="fas fa-leaf me-1"></i> 100% Fresco
+            </span>
+            <span class="pill pill-success">
+              <i class="fas fa-heart me-1"></i> Hecho con Amor
+            </span>
+            <span class="pill pill-warning">
+              <i class="fas fa-star me-1"></i> Calidad Premium
+            </span>
+          </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll Indicator -->
+  <div class="scroll-indicator">
+    <div class="scroll-mouse">
+      <div class="scroll-wheel"></div>
+    </div>
+    <div class="scroll-arrows">
+      <i class="fas fa-chevron-down"></i>
+      <i class="fas fa-chevron-down"></i>
+    </div>
+    <div class="scroll-text">Desplázate para explorar</div>
+  </div>
+</section>
+
+<!-- Enhanced Features Section with Interactive Elements -->
+<section class="features-section py-5 position-relative overflow-hidden">
+  <div class="features-bg-pattern"></div>
+  <div class="container position-relative">
+    <!-- Section Header -->
+    <div class="row justify-content-center mb-5">
+      <div class="col-lg-8 text-center">
+        <div class="section-badge mb-3">
+          <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill">
+            <i class="fas fa-star me-1"></i> Nuestra Excelencia
+          </span>
+        </div>
+        <h2 class="display-4 fw-bold text-primary mb-3 animate__animated animate__fadeInUp">
+          ¿Por qué elegir <span class="text-warning">Alliker</span>?
+        </h2>
+          <p class="lead text-muted animate__animated animate__fadeInUp animate__delay-1s">
+            Experiencia culinaria excepcional con atención personalizada y pasión por el pollo a la brasa
+          </p>
+      </div>
+    </div>
+
+    <!-- Interactive Feature Cards -->
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card-modern h-100 animate__animated animate__fadeInUp" data-bs-toggle="modal"
+          data-bs-target="#featureModal1">
+          <div class="card-front">
+            <div class="feature-icon-wrapper">
+              <div class="feature-icon-bg bg-success-subtle"></div>
+              <i class="fas fa-leaf feature-icon text-success"></i>
+            </div>
+            <h5 class="card-title fw-bold text-dark">Ingredientes Frescos</h5>
+            <p class="card-text text-muted">Utilizamos solo los mejores ingredientes frescos y locales</p>
+            <div class="card-indicator">
+              <i class="fas fa-plus-circle"></i>
+            </div>
+          </div>
+          <div class="card-hover-effect"></div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card-modern h-100 animate__animated animate__fadeInUp animate__delay-1s"
+          data-bs-toggle="modal" data-bs-target="#featureModal2">
+          <div class="card-front">
+            <div class="feature-icon-wrapper">
+              <div class="feature-icon-bg bg-warning-subtle"></div>
+              <i class="fas fa-users feature-icon text-warning"></i>
+            </div>
+            <h5 class="card-title fw-bold text-dark">Chefs Expertos</h5>
+            <p class="card-text text-muted">Equipo de chefs con años de experiencia y pasión</p>
+            <div class="card-indicator">
+              <i class="fas fa-plus-circle"></i>
+            </div>
+          </div>
+          <div class="card-hover-effect"></div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card-modern h-100 animate__animated animate__fadeInUp animate__delay-2s"
+          data-bs-toggle="modal" data-bs-target="#featureModal3">
+          <div class="card-front">
+            <div class="feature-icon-wrapper">
+              <div class="feature-icon-bg bg-maroon-light"></div>
+              <i class="fas fa-clock feature-icon text-maroon"></i>
+            </div>
+            <h5 class="card-title fw-bold text-dark">Servicio Rápido</h5>
+            <p class="card-text text-muted">Atención eficiente sin comprometer la calidad</p>
+            <div class="card-indicator">
+              <i class="fas fa-plus-circle"></i>
+            </div>
+          </div>
+          <div class="card-hover-effect"></div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card-modern h-100 animate__animated animate__fadeInUp animate__delay-3s"
+          data-bs-toggle="modal" data-bs-target="#featureModal4">
+          <div class="card-front">
+            <div class="feature-icon-wrapper">
+              <div class="feature-icon-bg bg-danger-subtle"></div>
+              <i class="fas fa-heart feature-icon text-danger"></i>
+            </div>
+            <h5 class="card-title fw-bold text-dark">Ambiente Acogedor</h5>
+            <p class="card-text text-muted">Espacios diseñados para momentos especiales</p>
+            <div class="card-indicator">
+              <i class="fas fa-plus-circle"></i>
+            </div>
+          </div>
+          <div class="card-hover-effect"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Counter -->
+    <div class="row justify-content-center mt-5">
+      <div class="col-lg-10">
+        <div class="stats-counter bg-white rounded-4 shadow-lg p-4">
+          <div class="row text-center g-4">
+            <div class="col-md-3">
+              <div class="counter-item">
+                <div class="counter-number text-primary fw-bold fs-1" data-target="500">0</div>
+                <div class="counter-label text-muted">Clientes Satisfechos</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="counter-item">
+                <div class="counter-number text-success fw-bold fs-1" data-target="50">0</div>
+                <div class="counter-label text-muted">Platos Tradicionales</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="counter-item">
+                <div class="counter-number text-warning fw-bold fs-1" data-target="10">0</div>
+                <div class="counter-label text-muted">Años de Experiencia</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="counter-item">
+                <div class="counter-number text-maroon fw-bold fs-1" data-target="25">0</div>
+                <div class="counter-label text-muted">Premios Ganados</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature Detail Modals -->
+  <div class="modal fade" id="featureModal1" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">
+            <i class="fas fa-leaf me-2"></i>Ingredientes Frescos
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <img src="/assets/fresh-ingredients.svg" alt="Ingredientes frescos" class="img-fluid rounded"
+                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTEwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkM3NTdkIiBmb250LXNpemU9IjE0Ij5JbmdyZWRpZW50ZXMgRnJlc2NvczwvdGV4dD4KPC9zdmc+'">
+            </div>
+            <div class="col-md-6">
+              <h6>Compromiso con la Calidad</h6>
+              <p>Seleccionamos personalmente cada ingrediente de proveedores locales certificados, asegurando la máxima
+                frescura y calidad en cada plato.</p>
+              <ul class="list-unstyled">
+                <li><i class="fas fa-check text-success me-2"></i> Pescado fresco diario</li>
+                <li><i class="fas fa-check text-success me-2"></i> Verduras de temporada</li>
+                <li><i class="fas fa-check text-success me-2"></i> Especias importadas</li>
+                <li><i class="fas fa-check text-success me-2"></i> Aceites premium</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="featureModal2" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title">
+            <i class="fas fa-utensils me-2"></i>Chefs Expertos
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <img src="/assets/chef-team.svg" alt="Equipo de chefs" class="img-fluid rounded"
+                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTEwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkM3NTdkIiBmb250LXNpemU9IjE0Ij5FcXVpcG8gZGUgQ2hlZnM8L3RleHQ+Cjwvc3ZnPg=='">
+            </div>
+            <div class="col-md-6">
+              <h6>Nuestro Equipo Maestro</h6>
+              <p>Chefs con más de 15 años de experiencia combinando técnicas tradicionales peruanas con innovación
+                culinaria moderna.</p>
+              <div class="chef-credentials">
+                <div class="credential-item mb-2">
+                  <i class="fas fa-graduation-cap text-primary me-2"></i>
+                  <span>Formación en escuelas culinarias reconocidas</span>
+                </div>
+                <div class="credential-item mb-2">
+                  <i class="fas fa-trophy text-warning me-2"></i>
+                  <span>Premios gastronómicos nacionales</span>
+                </div>
+                <div class="credential-item">
+                  <i class="fas fa-globe text-success me-2"></i>
+                  <span>Experiencia internacional</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="featureModal3" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-maroon text-white">
+          <h5 class="modal-title">
+            <i class="fas fa-clock me-2"></i>Servicio Rápido
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="service-efficiency">
+            <div class="efficiency-metrics row text-center">
+              <div class="col-md-4">
+                <div class="metric-circle bg-primary text-white mx-auto mb-3">
+                  <div class="metric-number">15</div>
+                  <div class="metric-unit">min</div>
+                </div>
+                <h6>Tiempo Promedio</h6>
+                <small class="text-muted">Para entradas</small>
+              </div>
+              <div class="col-md-4">
+                <div class="metric-circle bg-success text-white mx-auto mb-3">
+                  <div class="metric-number">25</div>
+                  <div class="metric-unit">min</div>
+                </div>
+                <h6>Platos Principales</h6>
+                <small class="text-muted">Tiempo óptimo</small>
+              </div>
+              <div class="col-md-4">
+                <div class="metric-circle bg-warning text-white mx-auto mb-3">
+                  <div class="metric-number">10</div>
+                  <div class="metric-unit">min</div>
+                </div>
+                <h6>Postres</h6>
+                <small class="text-muted">Preparación rápida</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="featureModal4" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">
+            <i class="fas fa-heart me-2"></i>Ambiente Acogedor
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <img src="/assets/restaurant-ambiance.svg" alt="Ambiente del restaurante" class="img-fluid rounded"
+                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTEwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkM3NTdkIiBmb250LXNpemU9IjE0Ij5BbWJpZW50ZSBBY29nZWRvcjwvdGV4dD4KPC9zdmc+'">
+            </div>
+            <div class="col-md-6">
+              <h6>Diseño Pensado para Ti</h6>
+              <p>Espacios cuidadosamente diseñados para crear experiencias memorables, desde cenas románticas hasta
+                celebraciones familiares.</p>
+              <div class="ambiance-features">
+                <div class="feature-item mb-3">
+                  <i class="fas fa-music text-primary me-2"></i>
+                  <span>Música ambiental curada</span>
+                </div>
+                <div class="feature-item mb-3">
+                  <i class="fas fa-lightbulb text-warning me-2"></i>
+                  <span>Iluminación cálida y acogedora</span>
+                </div>
+                <div class="feature-item mb-3">
+                  <i class="fas fa-couch text-success me-2"></i>
+                  <span>Asientos confortables</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-wifi text-info me-2"></i>
+                  <span>WiFi gratuito</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Dishes Section -->
+<section class="py-5">
+  <div class="container">
+    <div class="menu-management">
+      <div class="header">
+        <div class="header-text">
+          <span class="section-badge">
+            <i class="fas fa-fire me-1"></i> Los Favoritos
+          </span>
+          <h2>Platos Más Vendidos</h2>
+          <p class="header-subtitle">Los platos que nuestros clientes piden una y otra vez.</p>
+        </div>
+        <button class="btn-primary" (click)="onViewMenu()">
+          Ver Menú Completo
+          <i class="fas fa-arrow-right ms-2"></i>
+        </button>
+      </div>
+
+      <div class="filters">
+        <div class="search-box">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" placeholder="Buscar platos..." [ngModel]="searchTerm" (ngModelChange)="onSearch($event)">
+          <i *ngIf="isSearching" class="fas fa-spinner fa-spin search-spinner text-primary"></i>
+          <button *ngIf="searchTerm && !isSearching" type="button" class="search-clear" (click)="clearSearch()"
+            aria-label="Limpiar búsqueda">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div *ngIf="searchError" class="search-error text-danger">
+          <i class="fas fa-exclamation-circle me-1"></i>{{searchError}}
+        </div>
+
+        <div *ngIf="searchTerm && filteredDishes.length === 0" class="search-empty">
+          <i class="fas fa-search"></i>
+          <p>No encontramos platos que coincidan con "<strong>{{searchTerm}}</strong>".</p>
+          <p>Prueba con otro término o revisa el menú completo.</p>
+        </div>
+
+        <div *ngIf="!searchTerm && filteredDishes.length === 0" class="search-empty">
+          <i class="fas fa-utensils"></i>
+          <p>Aún no hay platos disponibles.</p>
+          <p>Vuelve pronto, estamos preparando algo delicioso.</p>
+        </div>
+      </div>
+
+      <div class="menu-grid">
+        <div *ngFor="let dish of filteredDishes; let i = index; trackBy: trackByDish" class="menu-item-card">
+          <!-- Image Container -->
+          <div class="menu-image-container">
+            <span class="rank-badge">#{{i + 1}}</span>
+            <span class="menu-status-badge" [class]="dish.isAvailable ? 'bg-success' : 'bg-warning'">
+              {{dish.isAvailable ? 'Disponible' : 'No disponible'}}
+            </span>
+            <img [src]="dish.image || '/assets/default-dish.svg'" [alt]="dish.name" class="menu-image" loading="lazy"
+              onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDQwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjIwMCIgY3k9IjE1MCIgcj0iNDAiIGZpbGw9IiM4QjQ1MTMiIG9wYWNpdHk9IjAuMSIvPgo8Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjMwIiBmaWxsPSIjRjM5QzEyIiBvcGFjaXR5PSIwLjA4Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkM3NTdkIiBmb250LXNpemU9IjE0IiBmb250LWZhbWlseT0iQXJpYWwiPkltYWdlbiBkZSBwbGF0bzwvdGV4dD4KPC9zdmc+'">
+          </div>
+
+          <div class="item-header">
+            <h3>{{dish.name}}</h3>
+          </div>
+
+          <div class="item-details">
+            <p class="description">Uno de nuestros platos más populares según las preferencias de nuestros clientes.
+            </p>
+            <div class="item-footer">
+              <p class="price">S/ {{dish.price.toFixed(2)}}</p>
+              <p class="category">Más Vendido</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Promotions Carousel -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="row justify-content-center mb-5">
+      <div class="col-lg-8 text-center">
+        <h2 class="display-5 fw-bold text-primary mb-3">Promociones Especiales</h2>
+        <p class="lead text-muted">Aprovecha nuestras ofertas exclusivas y descuentos</p>
+      </div>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div id="promotionsCarousel" class="carousel slide shadow-lg rounded-4 overflow-hidden" data-bs-ride="carousel">
+          <div class="carousel-indicators">
+            <button type="button" data-bs-target="#promotionsCarousel" data-bs-slide-to="0" class="active"></button>
+            <button type="button" data-bs-target="#promotionsCarousel" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#promotionsCarousel" data-bs-slide-to="2"></button>
+          </div>
+
+          <div class="carousel-inner">
+            <div class="carousel-item active">
+              <div class="promo-slide bg-gradient-primary text-white p-5 text-center">
+                <i class="fas fa-glass-cheers fa-4x mb-4 text-warning"></i>
+                <h3 class="fw-bold mb-3">Happy Hour</h3>
+                <p class="lead mb-4">50% de descuento en cocteles y bebidas de 5pm a 8pm</p>
+                <div class="promo-price">
+                  <span class="h2 fw-bold text-warning">S/ 15.00</span>
+                  <small class="d-block text-white-50">en lugar de S/ 30.00</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="carousel-item">
+              <div class="promo-slide bg-gradient-primary text-white p-5 text-center">
+                <i class="fas fa-users fa-4x mb-4 text-success"></i>
+                <h3 class="fw-bold mb-3">Cena para Dos</h3>
+                <p class="lead mb-4">Menú especial para parejas con velas y música romántica</p>
+                <div class="promo-price">
+                  <span class="h2 fw-bold text-success">S/ 89.00</span>
+                  <small class="d-block text-white-50">por pareja</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="carousel-item">
+              <div class="promo-slide bg-gradient-primary text-white p-5 text-center">
+                <i class="fas fa-birthday-cake fa-4x mb-4 text-danger"></i>
+                <h3 class="fw-bold mb-3">Cumpleaños</h3>
+                <p class="lead mb-4">Celebra tu cumpleaños con nosotros y recibe postre gratis</p>
+                <div class="promo-price">
+                  <span class="h2 fw-bold text-danger">GRATIS</span>
+                  <small class="d-block text-white-50">postre sorpresa</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="carousel-control-prev" type="button" data-bs-target="#promotionsCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#promotionsCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-5">
+  <div class="container">
+    <div class="row justify-content-center mb-5">
+      <div class="col-lg-8 text-center">
+        <h2 class="display-5 fw-bold text-primary mb-3">Lo que dicen nuestros clientes</h2>
+        <p class="lead text-muted">La mejor manera de conocernos es a través de quienes nos visitan</p>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4">
+        <div class="card testimonial-card h-100 border-0 shadow-sm card-hover">
+          <div class="card-body p-4 text-center">
+            <div class="testimonial-avatar mb-3">
+              <img src="/assets/avatar-1.svg" alt="Cliente" class="rounded-circle" width="80" height="80"
+                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNFQ0YwRjEiLz4KPHBhdGggZD0iTTQwIDQwQzQ0Ljc0NjMgNDAgNDggMzUuMjUzNyA0OCA0MEM0OCAzNS4yNTM3IDQ0Ljc0NjMgMzAgNDAgMzBDMzUuMjUzNyAzMCAzMSAzNS4yNTM3IDMxIDQwQzMxIDQ0Ljc0NjMgMzUuMjUzNyA0OSA0MCA0OVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHBhdGggZD0iTTQ1IDQ1QzQ1IDQ3LjIwOTEgNDMuMjA5MSA0OSA0MSA0OUM0MS40NTQ1IDQ5IDQyIDQ3LjU0NTUgNDIgNDVINDVDNDIgNDMuMjA5MSA0My4yMDkxIDQyIDQ1IDQyQzQ2Ljc5MDkgNDIgNDggNDMuMjA5MSA0OCA0NVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+'">
+              <div class="rating-stars mt-3">
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+              </div>
+            </div>
+            <blockquote class="blockquote mb-3">
+              <p class="mb-0">"La mejor experiencia culinaria que he tenido. El ceviche estaba perfecto y el servicio
+                excepcional."</p>
+            </blockquote>
+            <footer class="blockquote-footer mb-0">María González</footer>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="card testimonial-card h-100 border-0 shadow-sm card-hover">
+          <div class="card-body p-4 text-center">
+            <div class="testimonial-avatar mb-3">
+              <img src="/assets/avatar-2.svg" alt="Cliente" class="rounded-circle" width="80" height="80"
+                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNFQ0YwRjEiLz4KPHBhdGggZD0iTTQwIDQwQzQ0Ljc0NjMgNDAgNDggMzUuMjUzNyA0OCA0MEM0OCAzNS4yNTM3IDQ0Ljc0NjMgMzAgNDAgMzBDMzUuMjUzNyAzMCAzMSAzNS4yNTM3IDMxIDQwQzMxIDQ0Ljc0NjMgMzUuMjUzNyA0OSA0MCA0OVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHBhdGggZD0iTTQ1IDQ1QzQ1IDQ3LjIwOTEgNDMuMjA5MSA0OSA0MSA0OUM0MS40NTQ1IDQ5IDQyIDQ3LjU0NTUgNDIgNDVINDVDNDIgNDMuMjA5MSA0My4yMDkxIDQyIDQ1IDQyQzQ2Ljc5MDkgNDIgNDggNDMuMjA5MSA0OCA0NVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+'">
+              <div class="rating-stars mt-3">
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+              </div>
+            </div>
+            <blockquote class="blockquote mb-3">
+              <p class="mb-0">"Increíble atención al detalle. Cada plato cuenta una historia. Definitivamente volveré."
+              </p>
+            </blockquote>
+            <footer class="blockquote-footer mb-0">Carlos Rodríguez</footer>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="card testimonial-card h-100 border-0 shadow-sm card-hover">
+          <div class="card-body p-4 text-center">
+            <div class="testimonial-avatar mb-3">
+              <img src="/assets/avatar-3.svg" alt="Cliente" class="rounded-circle" width="80" height="80"
+                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNFQ0YwRjEiLz4KPHBhdGggZD0iTTQwIDQwQzQ0Ljc0NjMgNDAgNDggMzUuMjUzNyA0OCA0MEM0OCAzNS4yNTM3IDQ0Ljc0NjMgMzAgNDAgMzBDMzUuMjUzNyAzMCAzMSAzNS4yNTM3IDMxIDQwQzMxIDQ0Ljc0NjMgMzUuMjUzNyA0OSA0MCA0OVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHBhdGggZD0iTTQ1IDQ1QzQ1IDQ3LjIwOTEgNDMuMjA5MSA0OSA0MSA0OUM0MS40NTQ1IDQ5IDQyIDQ3LjU0NTUgNDIgNDVINDVDNDIgNDMuMjA5MSA0My4yMDkxIDQyIDQ1IDQyQzQ2Ljc5MDkgNDIgNDggNDMuMjA5MSA0OCA0NVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+'">
+              <div class="rating-stars mt-3">
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+              </div>
+            </div>
+            <blockquote class="blockquote mb-3">
+              <p class="mb-0">"Perfecto para ocasiones especiales. El ambiente y la comida superaron todas las
+                expectativas."</p>
+            </blockquote>
+            <footer class="blockquote-footer mb-0">Ana López</footer>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 cta-section text-white">
+  <div class="container">
+    <div class="row justify-content-center text-center">
+      <div class="col-lg-8">
+        <h2 class="display-5 fw-bold mb-4">¿Listo para una experiencia inolvidable?</h2>
+        <p class="lead mb-4 opacity-90">
+          Reserva tu mesa ahora y déjanos crear momentos especiales para ti y tus seres queridos.
+        </p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+          <!-- RESERVACIONES DESHABILITADO (posible implementación futura).
+          <button class="btn btn-light btn-lg rounded-pill px-4 btn-modern" (click)="onReserveTable()">
+            <i class="fas fa-calendar-check me-2"></i> Reservar Ahora
+          </button>
+          -->
+          <button class="btn btn-outline-light btn-lg rounded-pill px-4 btn-modern">
+            <i class="fas fa-phone me-2"></i> Llamar: (01) 123-4567
+          </button>
+        </div>
+
+        <!-- Newsletter Signup -->
+        <div class="newsletter-signup mt-4 text-center">
+          <h5 class="text-white mb-3">Suscríbete a nuestro newsletter</h5>
+          <form [formGroup]="newsletterForm" (ngSubmit)="onSubscribe()"
+            class="d-flex gap-2 justify-content-center flex-wrap">
+            <input type="email" formControlName="email" class="form-control rounded-pill" placeholder="Tu email"
+              style="max-width: 300px;" [class.is-invalid]="submitted && f['email'].invalid">
+            <button type="submit" class="btn btn-warning rounded-pill px-4" [disabled]="newsletterForm.invalid">
+              <i class="fas fa-envelope me-2"></i> Suscribirse
+            </button>
+          </form>
+          <div *ngIf="submitted && f['email'].errors?.['required']" class="text-danger mt-2">El email es requerido.
+          </div>
+          <div *ngIf="submitted && f['email'].errors?.['email']" class="text-danger mt-2">Ingresa un email válido.</div>
+          <div *ngIf="submitted && f['email'].errors?.['pattern']" class="text-danger mt-2">Formato de email inválido.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+  <!-- Toasts will be inserted here by TypeScript -->
+</div>
+
+<!-- MODO VITRINA: boton flotante de carrito deshabilitado. Descomentar para reactivar.
+<button class="cart-fab" *ngIf="getCartItemCount() > 0" (click)="openCartSidebar()">
+  <span class="cart-fab-count">{{ getCartItemCount() }}</span>
+  <i class="fas fa-shopping-cart"></i>
+</button>
+-->
+
+<!-- Custom Styles -->
+<style>
+  .min-vh-75 {
+    min-height: 75vh;
+  }
+
+  .hero-image-container {
+    position: relative;
+  }
+
+  .floating-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #2C3E50;
+  }
+
+  .feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(139, 69, 19, 0.1);
+  }
+
+  .card-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+
+  .promo-slide {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .promo-price small {
+    font-size: 0.875rem;
+  }
+
+  .testimonial-avatar img {
+    border: 4px solid #ECF0F1;
+  }
+
+  .dish-image-container {
+    height: 200px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .dish-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .dish-image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+    border-radius: 8px 8px 0 0;
+  }
+
+  .rating-stars .fa-star {
+    margin: 0 2px;
+  }
+
+  .carousel-indicators button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+
+  .carousel-indicators .active {
+    background-color: white;
+  }
+</style>

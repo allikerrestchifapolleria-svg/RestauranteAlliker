@@ -1,0 +1,31 @@
+[build]
+   
+  command = "npm install && npm run build"
+  publish = "dist/restaurante/browser"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Libera mesas cuya ventana de reserva confirmada ya vencio (ver
+# release-expired-reservations.ts)
+[functions."release-expired-reservations"]
+  schedule = "*/5 * * * *"
+
+[dev]
+  framework = "#custom"
+  command = "npm start"
+  targetPort = 4200
+  autoLaunch = false
+
+# API redirect — MUST come before the SPA catch-all
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Redirect all routes to index.html for Angular SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+   

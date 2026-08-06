@@ -1,0 +1,193 @@
+<div class="notification-management">
+  <div class="header">
+    <h2>Gestión de Notificaciones</h2>
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="openTypeManager()">Gestionar Tipos</button>
+      <button class="btn-primary" (click)="addNewNotification()">Agregar Notificación</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <input type="text" placeholder="Buscar notificaciones..." [(ngModel)]="searchTerm" (input)="onSearch()">
+    </div>
+    <div class="filter-group">
+      <select class="filter-select" (change)="setFilterTargetRole($any($event.target).value)">
+        <option *ngFor="let opt of roleFilterOptions" [value]="opt.value" [selected]="opt.value === 'all'">{{opt.label}}</option>
+      </select>
+      <select class="filter-select" (change)="setFilterType($any($event.target).value)">
+        <option *ngFor="let opt of typeFilterOptions" [value]="opt.value">{{opt.label}}</option>
+      </select>
+      <select class="filter-select" (change)="setFilterReadStatus($any($event.target).value)">
+        <option *ngFor="let opt of readFilterOptions" [value]="opt.value">{{opt.label}}</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="notification-grid">
+    <div *ngFor="let notification of filteredNotifications$ | async" class="notification-card">
+      <div class="notification-header">
+        <div class="notification-info">
+          <h3>{{notification.title}}</h3>
+          <span class="notification-type" [class]="'type-' + notification.type" [ngStyle]="getTypeBadgeStyle(notification.type)">{{getTypeLabel(notification.type)}}</span>
+        </div>
+        <div class="notification-actions">
+          <button class="btn-read" (click)="toggleReadStatus(notification)" title="Fuerza que desaparezca (o reaparezca) para todos los destinatarios, la hayan leído o no">
+            {{notification.read ? 'Reabrir para todos' : 'Cerrar para todos'}}
+          </button>
+          <button class="btn-edit" (click)="editNotification(notification)">Editar</button>
+          <button class="btn-delete" (click)="deleteNotification(notification)">Eliminar</button>
+        </div>
+      </div>
+
+      <div class="notification-details">
+        <p class="message">{{notification.message}}</p>
+        <div class="notification-meta">
+          <p class="target">Para: {{getTargetRoleLabels(notification.targetRole)}}</p>
+          <p class="branch" *ngIf="notification.branchId">Sucursal: {{getBranchName(notification.branchId)}}</p>
+          <p class="date">Fecha: {{notification.createdAt | date:'short'}}</p>
+          <p class="read-status" [class]="'status-' + (notification.read ? 'read' : 'unread')">
+            {{notification.read ? 'Cerrada para todos' : 'Abierta'}}
+          </p>
+          <p class="read-count" *ngIf="!notification.read">Vista/leída por {{notification.readBy?.length || 0}} persona(s)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Form Modal -->
+  <div *ngIf="showAddForm" class="modal-overlay" (click)="cancelEdit()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{editingNotification ? 'Editar Notificación' : 'Agregar Nueva Notificación'}}</h3>
+        <button class="close-btn" (click)="cancelEdit()">&times;</button>
+      </div>
+
+      <form (ngSubmit)="saveNotification()" class="notification-form">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Destinatario</label>
+            <div class="role-checkboxes">
+              <label class="checkbox-item">
+                <input type="checkbox" name="general" [checked]="isGeneral()" (change)="setGeneralNotification()">
+                General (todos)
+              </label>
+              <label class="checkbox-item" *ngFor="let role of targetRoles">
+                <input type="checkbox" [name]="'role_' + role.value" [checked]="isRoleSelected(role.value)" (change)="toggleRole(role.value)">
+                {{role.label}}
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Sucursal</label>
+            <select [(ngModel)]="newNotification.branchId" name="branchId">
+              <option value="">Todas las sucursales</option>
+              <option *ngFor="let branch of branches" [value]="branch.id">{{branch.name}}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="type">Tipo *</label>
+            <select id="type" [(ngModel)]="newNotification.type" name="type" required [class.invalid]="formErrors['type']">
+              <option value="" *ngIf="notificationTypes.length === 0">Seleccionar tipo</option>
+              <option *ngFor="let type of notificationTypes" [value]="type.value">{{type.label}}</option>
+            </select>
+            <small class="field-error" *ngIf="formErrors['type']">{{ formErrors['type'] }}</small>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="newNotification.read" name="read">
+              Crear ya cerrada (no generará alertas a nadie)
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="title">Título *</label>
+          <input type="text" id="title" [(ngModel)]="newNotification.title" name="title" required [class.invalid]="formErrors['title']">
+          <small class="field-error" *ngIf="formErrors['title']">{{ formErrors['title'] }}</small>
+        </div>
+
+        <div class="form-group">
+          <label for="message">Mensaje *</label>
+          <textarea id="message" [(ngModel)]="newNotification.message" name="message" rows="4" required [class.invalid]="formErrors['message']"></textarea>
+          <small class="field-error" *ngIf="formErrors['message']">{{ formErrors['message'] }}</small>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="cancelEdit()">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Type Manager Modal -->
+  <div *ngIf="showTypeManager" class="modal-overlay" (click)="closeTypeManager()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Gestionar Tipos de Notificación</h3>
+        <button class="close-btn" (click)="closeTypeManager()">&times;</button>
+      </div>
+
+      <div class="type-manager-body">
+        <div class="type-list">
+          <div *ngFor="let type of notificationTypes" class="type-list-item">
+            <span class="type-swatch" [style.background]="type.color"></span>
+            <span class="type-list-label">{{type.label}} <small>(id: {{type.value}})</small></span>
+            <div class="type-list-actions">
+              <button class="btn-edit" (click)="editType(type)">Editar</button>
+              <button class="btn-delete" (click)="deleteType(type)">Eliminar</button>
+            </div>
+          </div>
+          <p *ngIf="notificationTypes.length === 0" class="empty-hint">No hay tipos creados todavía.</p>
+        </div>
+
+        <form (ngSubmit)="saveType()" class="notification-form type-form">
+          <h4>{{editingType ? 'Editar tipo' : 'Nuevo tipo'}}</h4>
+
+          <div class="form-group">
+            <label for="typeLabel">Nombre visible *</label>
+            <input type="text" id="typeLabel"
+                   [ngModel]="newType.label"
+                   (ngModelChange)="newType.label = $event; onTypeLabelChange()"
+                   name="typeLabel" required placeholder="ej: Promoción">
+            <small class="field-hint">Así se mostrará este tipo en la notificación y en los filtros.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="typeValue">Identificador interno *</label>
+            <input type="text" id="typeValue"
+                   [ngModel]="newType.value"
+                   (ngModelChange)="newType.value = $event; onTypeValueChange()"
+                   name="typeValue" required placeholder="se genera solo a partir del nombre">
+            <small class="field-hint">Código único usado internamente para guardar y filtrar (sin espacios ni tildes). Se completa solo, pero puedes editarlo.</small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="typeColor">Color</label>
+              <input type="color" id="typeColor" [(ngModel)]="newType.color" name="typeColor">
+              <small class="field-hint">Color de la etiqueta y del borde en las tarjetas de notificación.</small>
+            </div>
+            <div class="form-group">
+              <label for="typeIcon">Ícono</label>
+              <input type="text" id="typeIcon" [(ngModel)]="newType.icon" name="typeIcon" placeholder="ej: fa-bell">
+              <small class="field-hint">Clase de <a href="https://fontawesome.com/search?o=r&m=free" target="_blank" rel="noopener">FontAwesome</a> a mostrar junto al tipo, ej: fa-bell, fa-gift.</small>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" (click)="cancelTypeEdit()" *ngIf="editingType">Cancelar edición</button>
+            <button type="submit" class="btn-primary">{{editingType ? 'Guardar cambios' : 'Crear tipo'}}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

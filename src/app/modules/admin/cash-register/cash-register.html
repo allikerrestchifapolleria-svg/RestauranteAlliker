@@ -1,0 +1,230 @@
+<div class="cr-wrapper">
+  <div class="cr-header">
+    <div class="header-left">
+      <h1>Diagnóstico de ventas</h1>
+      <p>Detalle operativo de ventas, pedidos y pagos del día</p>
+      <input type="date" [(ngModel)]="selectedDate" (change)="loadSales()" class="date-picker">
+    </div>
+    <div class="header-right">
+      <button class="refresh-btn" (click)="loadSales()" [disabled]="loading">
+        <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i>
+        {{ loading ? 'Actualizando...' : 'Actualizar' }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+
+  <div class="cr-stats-grid" *ngIf="!loading && sales.length > 0">
+    <div class="cr-stat-card stat-total">
+      <div class="cr-stat-row">
+        <div class="cr-stat-icon icon-total"><i class="fas fa-sack-dollar"></i></div>
+        <div class="cr-stat-info">
+          <div class="cr-stat-label">Ventas del día</div>
+          <div class="cr-stat-value mono">S/ {{ grandTotal | number:'1.2-2' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="cr-stat-card stat-count">
+      <div class="cr-stat-row">
+        <div class="cr-stat-icon icon-count"><i class="fas fa-receipt"></i></div>
+        <div class="cr-stat-info">
+          <div class="cr-stat-label">Transacciones</div>
+          <div class="cr-stat-value">{{ sales.length }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="cr-stat-card stat-avg">
+      <div class="cr-stat-row">
+        <div class="cr-stat-icon icon-avg"><i class="fas fa-chart-bar"></i></div>
+        <div class="cr-stat-info">
+          <div class="cr-stat-label">Ticket Promedio</div>
+          <div class="cr-stat-value mono">S/ {{ averageTicket | number:'1.2-2' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="cr-stat-card stat-orders">
+      <div class="cr-stat-row">
+        <div class="cr-stat-icon icon-orders"><i class="fas fa-clipboard-list"></i></div>
+        <div class="cr-stat-info">
+          <div class="cr-stat-label">Pedidos del día</div>
+          <div class="cr-stat-value">{{ orders.length }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="loading-spinner"></div>
+    <p>Cargando ventas...</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && sales.length === 0">
+    <i class="fas fa-receipt"></i>
+    <p>No se encontraron ventas para la fecha seleccionada.</p>
+  </div>
+
+  <div class="cr-card" *ngIf="!loading && sales.length > 0">
+    <div class="cr-card-header">
+      <h3><i class="fas fa-receipt"></i> Ventas del día</h3>
+      <span class="cr-badge">{{ sales.length }} ventas</span>
+    </div>
+    <div class="cr-card-body">
+      <table class="cr-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Orden</th>
+            <th>Mesa</th>
+            <th>Mozo</th>
+            <th>Sucursal</th>
+            <th class="text-end">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let sale of sales; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>{{ getOrderNumber(sale.orderId) }}</td>
+            <td>{{ getTableName(sale) }}</td>
+            <td>{{ sale.waiterName || sale.waiterId || 'Sin mozo' }}</td>
+            <td>{{ getBranchName(sale.branchId) }}</td>
+            <td class="text-end fw-bold">S/ {{ toNumber(sale.total) | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="grand-total">
+            <td colspan="5">TOTAL</td>
+            <td class="text-end fw-bold">S/ {{ grandTotal | number:'1.2-2' }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="cr-card" *ngIf="!loading && paymentSummary.length > 0">
+    <div class="cr-card-header">
+      <h3><i class="fas fa-credit-card"></i> Resumen por método de pago</h3>
+    </div>
+    <div class="cr-card-body">
+      <table class="cr-table">
+        <thead>
+          <tr>
+            <th>Método</th>
+            <th class="text-end">Transacciones</th>
+            <th class="text-end">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let pm of paymentSummary">
+            <td>
+              <span class="payment-badge"
+                    [class.pm-cash]="pm.method === 'cash'"
+                    [class.pm-card]="pm.method === 'card'"
+                    [class.pm-yape]="pm.method === 'yape'">
+                {{ pm.label }}
+              </span>
+            </td>
+            <td class="text-end">{{ pm.count }}</td>
+            <td class="text-end fw-bold">S/ {{ pm.total | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="grand-total">
+            <td>TOTAL</td>
+            <td class="text-end">{{ paymentSummary.reduce((a, p) => a + p.count, 0) }}</td>
+            <td class="text-end fw-bold">S/ {{ paymentGrandTotal | number:'1.2-2' }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="cr-card" *ngIf="!loading && orders.length > 0">
+    <div class="cr-card-header">
+      <h3><i class="fas fa-clipboard-list"></i> Pedidos del día</h3>
+      <span class="cr-badge">{{ orders.length }} pedidos</span>
+    </div>
+    <div class="cr-card-body">
+      <table class="cr-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Pedido</th>
+            <th>Mesa</th>
+            <th>Mozo</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Pago</th>
+            <th class="text-end">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of orders; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>{{ order.orderNumber || order.id.slice(-6) }}</td>
+            <td>{{ order.tableName || order.tableId || 'Sin mesa' }}</td>
+            <td>{{ order.waiterName || 'Sin mozo' }}</td>
+            <td>{{ order.type === 'takeout' ? 'Para llevar' : 'Mesa' }}</td>
+            <td>
+              <span class="payment-badge"
+                    [class.pm-cash]="order.status === 'completed' || order.status === 'paid'"
+                    [class.pm-card]="order.status === 'pending' || order.status === 'preparing'"
+                    [class.pm-yape]="order.status === 'ready'">
+                {{ order.status }}
+              </span>
+            </td>
+            <td>
+              <span class="payment-badge"
+                    [class.pm-cash]="order.paymentStatus === 'paid'"
+                    [class.pm-desconocido]="order.paymentStatus !== 'paid'">
+                {{ order.paymentStatus === 'paid' ? 'Pagado' : 'Pendiente' }}
+              </span>
+            </td>
+            <td class="text-end fw-bold">S/ {{ toNumber(order.total) | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="grand-total">
+            <td colspan="7">TOTAL</td>
+            <td class="text-end fw-bold">S/ {{ ordersGrandTotal | number:'1.2-2' }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="cr-card" *ngIf="!loading && waiterSummary.length > 0">
+    <div class="cr-card-header">
+      <h3><i class="fas fa-users"></i> Resumen por mozo</h3>
+    </div>
+    <div class="cr-card-body">
+      <table class="cr-table">
+        <thead>
+          <tr>
+            <th>Mozo</th>
+            <th class="text-end">Ventas</th>
+            <th class="text-end">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let w of waiterSummary">
+            <td>
+              <span class="waiter-badge">
+                <i class="fas fa-user"></i> {{ w.waiterName }}
+              </span>
+            </td>
+            <td class="text-end">{{ w.count }}</td>
+            <td class="text-end fw-bold">S/ {{ w.total | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="grand-total">
+            <td>TOTAL</td>
+            <td class="text-end">{{ waiterSummary.reduce((a, w) => a + w.count, 0) }}</td>
+            <td class="text-end fw-bold">S/ {{ waiterSummary.reduce((a, w) => a + w.total, 0) | number:'1.2-2' }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>

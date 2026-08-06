@@ -1,0 +1,681 @@
+/* ===== PAYMENT GATEWAY STYLES ===== */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.payment-gateway {
+  background: #0f172a;
+  min-height: 100vh;
+  color: #f1f5f9;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.payment-gateway .text-muted {
+  color: #94a3b8 !important;
+}
+
+/* ===== CARD SHELL — was rendering as a plain white Bootstrap card on
+   this dark page; brought it in line with the rest of the app's theme ===== */
+.payment-gateway .card {
+  background: #1e293b;
+  color: #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+}
+
+.card-header-accent,
+.card-header-success {
+  color: #fff;
+  border-bottom: none;
+}
+
+.card-header-accent {
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #0891b2 100%);
+}
+
+.card-header-success {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.payment-gateway .card .border-top {
+  border-color: #334155 !important;
+}
+
+.payment-gateway .card .text-primary {
+  color: #22d3ee !important;
+}
+
+.payment-gateway .alert-warning {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+.payment-gateway .btn-outline-secondary {
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+.payment-gateway .btn-outline-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #64748b;
+  color: #f1f5f9;
+}
+
+/* ===== PAYMENT METHOD CARDS ===== */
+.payment-method-card {
+  border: 2px solid #334155;
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  background: #1e293b;
+  color: #f1f5f9;
+  height: 100%;
+  min-width: 220px;
+}
+
+.payment-method-card:hover {
+  border-color: #22d3ee;
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.15);
+}
+
+.payment-method-card input.form-control {
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid #475569;
+  color: #f1f5f9;
+  font-size: 1.1rem;
+  padding: 0.6rem 0.75rem;
+  height: auto;
+}
+
+.payment-method-card input.form-control:focus {
+  border-color: #22d3ee;
+  box-shadow: 0 0 0 0.2rem rgba(34, 211, 238, 0.25);
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+}
+
+.payment-method-card label.form-label {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  margin-bottom: 0.3rem;
+}
+
+.payment-method-card h6 {
+  font-size: 1rem;
+}
+
+.payment-method-card .btn-outline-info {
+  border-color: #22d3ee;
+  color: #22d3ee;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.payment-method-card .btn-outline-info:hover {
+  background: rgba(34, 211, 238, 0.15);
+  color: #fff;
+  border-color: #22d3ee;
+}
+
+.payment-method-card .btn-outline-info.active {
+  background: #22d3ee;
+  color: #0f172a;
+  border-color: #22d3ee;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+}
+
+/* ===== ALLOCATION SUMMARY ===== */
+.allocation-summary {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+}
+
+.allocation-summary .progress {
+  background-color: #334155;
+}
+
+.allocation-summary .progress-bar {
+  transition: width 0.3s ease;
+}
+
+/* ===== CASH EXTRAS ===== */
+.cash-extras {
+  border-top: 1px solid #334155;
+  padding-top: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.change-display {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+}
+
+/* ===== PAYMENT DETAILS ===== */
+.payment-details {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-top: 1rem;
+  border: 1px solid #334155;
+}
+
+.cash-payment,
+.card-payment,
+.mobile-payment,
+.transfer-payment {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #334155;
+  color: #f1f5f9;
+}
+
+/* ===== QR PLACEHOLDER ===== */
+.qr-placeholder {
+  background: rgba(34, 211, 238, 0.05);
+  border: 2px dashed #334155;
+  border-radius: 12px;
+  color: #94a3b8;
+}
+
+/* ===== BANK DETAILS ===== */
+.bank-details {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+/* ===== PROCESSING STATUS ===== */
+.processing-status {
+  background: #1e293b;
+  border-radius: 12px;
+  border: 2px solid #22d3ee;
+  color: #f1f5f9;
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.2);
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+  border-color: rgba(34, 211, 238, 0.2);
+  border-left-color: #22d3ee;
+}
+
+/* ===== PAYMENT SUCCESS ===== */
+.payment-success {
+  background: #1e293b;
+  border-radius: 12px;
+  border: 2px solid #10b981;
+  color: #f1f5f9;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+}
+
+.success-icon {
+  animation: successPulse 2s infinite;
+  color: #10b981;
+}
+
+@keyframes successPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* ===== ORDER ITEMS ===== */
+.order-items {
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1rem;
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .payment-gateway {
+    padding: 0.75rem 0;
+  }
+
+  .container-fluid {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    /* room for the fixed confirm bar so it never covers the last field */
+    padding-bottom: 6rem;
+  }
+
+  .row.g-4 {
+    --bs-gutter-x: 0.75rem;
+    --bs-gutter-y: 0.75rem;
+  }
+
+  .card-body {
+    padding: 0.85rem;
+  }
+
+  /* Order summary: tighter so it doesn't push the payment form too far down */
+  .order-info,
+  .order-items {
+    margin-bottom: 0.6rem !important;
+  }
+
+  .order-items {
+    max-height: 130px !important;
+  }
+
+  /* Payment method cards: 2-per-row needs a leaner card */
+  .payment-method-card {
+    min-width: 0;
+    padding: 0.75rem;
+  }
+
+  .payment-method-card i.fa-2x {
+    font-size: 1.4em;
+  }
+
+  .payment-method-card h6 {
+    font-size: 0.85rem;
+  }
+
+  .payment-methods .row.g-3 {
+    --bs-gutter-x: 0.6rem;
+    --bs-gutter-y: 0.6rem;
+  }
+
+  .payment-details {
+    padding: 1rem;
+  }
+
+  .cash-payment,
+  .card-payment,
+  .mobile-payment,
+  .transfer-payment {
+    padding: 1rem;
+  }
+
+  /* Confirm bar becomes a floating footer: always reachable without
+     scrolling past the whole form to find it. */
+  .card-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 200;
+    background: #1e293b;
+    border-top: 1px solid #334155;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.4);
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  }
+
+  .card-footer .d-flex {
+    flex-direction: row;
+    align-items: stretch;
+    flex-wrap: nowrap;
+  }
+
+  .card-footer .btn {
+    min-height: 46px;
+  }
+
+  .card-footer .btn-secondary {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  .card-footer .btn-success {
+    flex: 1 1 auto;
+    width: auto;
+    font-size: 0.85rem;
+  }
+
+  .card-footer .mt-2 small {
+    text-align: center !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .payment-methods .row > div {
+    margin-bottom: 0;
+  }
+
+  .payment-method-card {
+    min-width: 0;
+    padding: 0.6rem;
+  }
+
+  .card-footer .btn-success {
+    font-size: 0.78rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* ===== ANIMATIONS ===== */
+
+.payment-method-card:nth-child(1) { animation-delay: 0.1s; }
+.payment-method-card:nth-child(2) { animation-delay: 0.2s; }
+.payment-method-card:nth-child(3) { animation-delay: 0.3s; }
+.payment-method-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* ===== ACCESSIBILITY ===== */
+.payment-method-card:focus {
+  outline: 2px solid #22d3ee;
+  outline-offset: 2px;
+}
+
+.form-label {
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #22d3ee;
+  box-shadow: 0 0 0 0.3rem rgba(34, 211, 238, 0.25);
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+.form-control,
+.form-select {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid #334155;
+  color: #f1f5f9;
+  transition: all 0.3s ease;
+}
+
+.form-control::placeholder {
+  color: #64748b;
+}
+
+/* ===== CALCULATOR MODAL ===== */
+.calc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.calc-modal {
+  background: #1e293b;
+  border: 2px solid #22d3ee;
+  border-radius: 20px;
+  padding: 1.5rem;
+  width: 320px;
+  max-width: calc(100vw - 2rem);
+  box-sizing: border-box;
+  box-shadow: 0 0 40px rgba(34, 211, 238, 0.3);
+}
+
+@media (max-width: 480px) {
+  .calc-modal { padding: 1rem; }
+  .calc-btn { padding: 0.75rem 0; min-height: 44px; }
+}
+
+.calc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.calc-close {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.calc-close:hover {
+  color: #f1f5f9;
+}
+
+.calc-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.calc-brand {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #22d3ee;
+}
+
+.calc-display-screen {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 0.5rem 1.25rem;
+  margin-bottom: 1rem;
+  min-height: 5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.calc-expression {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-height: 1rem;
+  line-height: 1.2;
+}
+
+.calc-result {
+  font-size: 2rem;
+  font-family: 'Courier New', monospace;
+  text-align: right;
+  color: #f1f5f9;
+  overflow: hidden;
+  line-height: 1.2;
+}
+
+.calc-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.calc-btn {
+  background: #334155;
+  border: none;
+  border-radius: 10px;
+  padding: 0.9rem 0;
+  font-size: 1.3rem;
+  color: #f1f5f9;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.calc-btn:hover {
+  background: #475569;
+}
+
+.calc-btn:active {
+  transform: scale(0.95);
+}
+
+.calc-btn-cmd {
+  background: #64748b;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.calc-btn-cmd:hover {
+  background: #94a3b8;
+}
+
+.calc-btn-op {
+  background: #0e7490;
+  color: #fff;
+  font-weight: 700;
+}
+
+.calc-btn-op:hover {
+  background: #0891b2;
+}
+
+.calc-btn-eq {
+  background: #22d3ee;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.calc-btn-eq:hover {
+  background: #67e8f9;
+}
+
+.calc-btn-zero {
+  grid-column: span 2;
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  .payment-gateway {
+    background: white !important;
+  }
+
+  .card {
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+  }
+
+  .btn,
+  .card-footer {
+    display: none !important;
+  }
+}
+
+/* ===== CUSTOMER DATA SECTION ===== */
+.customer-section {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+}
+
+.customer-section .form-label {
+  color: #94a3b8;
+  margin-bottom: 0.25rem;
+}
+
+.customer-section .form-control {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid #475569;
+  color: #f1f5f9;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.customer-section .form-control:focus {
+  border-color: #22d3ee;
+  box-shadow: 0 0 0 0.2rem rgba(34, 211, 238, 0.25);
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+}
+
+.customer-section .form-control:disabled {
+  background-color: rgba(255, 255, 255, 0.02);
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.customer-section .form-control::placeholder {
+  color: #475569;
+}
+
+.customer-section .form-check-input {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: #475569;
+}
+
+.customer-section .form-check-input:checked {
+  background-color: #22d3ee;
+  border-color: #22d3ee;
+}
+
+.customer-section .form-check-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.customer-section .form-check-label {
+  color: #f1f5f9;
+  font-size: 0.9rem;
+}
+
+.customer-section .btn-success {
+  background: #10b981;
+  border: none;
+  color: #fff;
+}
+
+.customer-section .btn-success:hover {
+  background: #059669;
+}
+
+.customer-section .btn-warning {
+  background: #f59e0b;
+  border: none;
+  color: #0f172a;
+}
+
+.customer-section .btn-warning:hover {
+  background: #d97706;
+}
+
+.customer-section .btn-outline-secondary {
+  background: transparent;
+  border: 1px solid #475569;
+  color: #94a3b8;
+}
+
+.customer-section .btn-outline-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+}
+
+.customer-section .alert-warning {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+  border-radius: 8px;
+}
+
+.customer-section .text-success small {
+  color: #10b981;
+}
+
+.customer-section .text-muted {
+  color: #64748b !important;
+}
+
+.customer-section .customer-fields .row.g-2 {
+  margin-top: -0.25rem;
+}
+
+.customer-section .spinner-border {
+  width: 1rem;
+  height: 1rem;
+  border-width: 2px;
+}

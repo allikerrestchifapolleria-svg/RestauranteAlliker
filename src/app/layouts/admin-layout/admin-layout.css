@@ -1,0 +1,690 @@
+/* ============================================
+   Admin Layout - Dark Theme with Glassmorphism
+   ============================================ */
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--dark-bg-primary);
+  font-family: 'Inter', sans-serif;
+  color: var(--dark-text-primary);
+}
+
+/* -- Sidebar -- */
+.sidebar {
+  width: 220px;
+  background: linear-gradient(180deg, #0a0f1a 0%, #111827 100%);
+  color: #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(148, 163, 184, 0.08);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 100;
+  overflow-x: hidden;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar-header {
+  padding: 1.25rem 1.25rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sidebar-logo i {
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #22d3ee, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sidebar-brand {
+  font-size: 1.25rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #22d3ee, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+}
+
+.sidebar-toggle {
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.75rem;
+}
+
+.sidebar-toggle:hover {
+  background: rgba(34, 211, 238, 0.15);
+  color: #22d3ee;
+  border-color: rgba(34, 211, 238, 0.3);
+}
+
+/* -- Sidebar Nav Links -- */
+.sidebar-nav {
+  flex: 1;
+  padding: 0.75rem 0.75rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 2px;
+}
+
+.nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #94a3b8;
+  text-decoration: none;
+  border-radius: 0.625rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 500;
+  gap: 0.75rem;
+}
+
+/* -- Nav Tooltip (shown when the text label isn't visible next to the icon:
+   collapsed sidebar, or the icon-only tablet breakpoint) -- */
+.nav-tooltip {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #0f172a;
+  color: #f1f5f9;
+  padding: 0.45rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.15s ease, visibility 0s linear 0.15s;
+  z-index: 200;
+}
+
+.nav-link:hover .nav-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0.2s;
+}
+
+/* When the sidebar is expanded (desktop push layout or tablet off-canvas
+   drawer) the label is already visible inline, so the floating tooltip
+   would be redundant — suppress it there only. */
+@media (min-width: 769px) {
+  .sidebar:not(.collapsed) .nav-tooltip {
+    display: none;
+  }
+}
+
+.nav-link i {
+  width: 20px;
+  text-align: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.nav-link:hover {
+  background: rgba(34, 211, 238, 0.08);
+  color: #e2e8f0;
+}
+
+.nav-link.active {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(167, 139, 250, 0.1));
+  color: #22d3ee;
+  font-weight: 600;
+  border: 1px solid rgba(34, 211, 238, 0.2);
+}
+
+.nav-link.active i {
+  color: #22d3ee;
+}
+
+.nav-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.15);
+  margin: 8px 16px;
+}
+
+/* -- Sidebar Footer -- */
+.sidebar-footer {
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.sidebar-version {
+  font-size: 0.7rem;
+  color: #475569;
+  text-align: center;
+}
+
+/* -- Main Content -- */
+.main-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  margin-left: 220px;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 100vh;
+}
+
+.sidebar.collapsed ~ .main-content,
+.sidebar.collapsed + .main-content {
+  margin-left: 70px;
+}
+
+/* -- Header -- */
+.content-header {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  padding: 0.875rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  min-height: 64px;
+}
+
+.header-left h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  background: linear-gradient(135deg, #f1f5f9, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* -- Branch Selector -- */
+.branch-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 0.625rem;
+  padding: 0.375rem 0.75rem;
+}
+
+.branch-label i {
+  color: #22d3ee;
+  font-size: 0.875rem;
+}
+
+.branch-selector .form-select {
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.25rem 2rem 0.25rem 0.5rem;
+  min-width: 180px;
+  cursor: pointer;
+}
+
+.branch-selector .form-select:focus {
+  box-shadow: none;
+}
+
+.branch-selector .form-select option {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+/* -- User Badge -- */
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(34, 211, 238, 0.1);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  border-radius: 50px;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #22d3ee;
+}
+
+.user-badge i {
+  font-size: 0.75rem;
+}
+
+/* -- Shared icon buttons (Portal / Logout) -- */
+.btn-icon {
+  min-height: 40px;
+  min-width: 40px;
+}
+
+/* -- Portal Button -- */
+.btn-portal-admin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: 40px;
+  padding: 0 1rem;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+  color: #0f172a;
+  box-shadow: 0 4px 12px rgba(34, 211, 238, 0.35);
+  transition: all 0.25s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-portal-admin i {
+  font-size: 0.875rem;
+}
+
+.btn-portal-admin:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(34, 211, 238, 0.5);
+  background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);
+}
+
+.btn-portal-admin:active {
+  transform: translateY(0);
+}
+
+/* -- Logout Button -- */
+.btn-logout {
+  height: 40px;
+  border-radius: 50px;
+  border: 1px solid rgba(251, 113, 133, 0.3);
+  background: rgba(251, 113, 133, 0.08);
+  color: #fb7185;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.btn-logout i {
+  font-size: 0.875rem;
+}
+
+.btn-logout:hover {
+  background: rgba(251, 113, 133, 0.2);
+  border-color: rgba(251, 113, 133, 0.5);
+}
+
+/* -- Content Body -- */
+.content-body {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  background: var(--dark-bg-primary);
+}
+
+/* ============================================
+   Mobile Bottom Navigation (phones, <=768px)
+   Replaces the horizontal icon strip with the
+   5 most-used actions + a "More" bottom sheet.
+   ============================================ */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.bottom-nav-link {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-height: 56px;
+  padding: 0.4rem 0.25rem;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bottom-nav-link i {
+  font-size: 1.15rem;
+}
+
+.bottom-nav-link.active {
+  color: #22d3ee;
+}
+
+/* -- "More options" bottom sheet -- */
+.mobile-more-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 210;
+}
+
+.mobile-more-panel {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 220;
+  background: #111827;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 20px 20px 0 0;
+  padding: 0.75rem 1rem calc(1.25rem + env(safe-area-inset-bottom, 0));
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.mobile-more-panel.open {
+  transform: translateY(0);
+}
+
+.mobile-more-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(148, 163, 184, 0.3);
+  margin: 0 auto 0.75rem;
+}
+
+.mobile-more-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.mobile-more-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.more-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 72px;
+  padding: 0.6rem 0.4rem;
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.more-link i {
+  font-size: 1.1rem;
+  color: #22d3ee;
+}
+
+.more-link.active {
+  background: rgba(34, 211, 238, 0.12);
+  border-color: rgba(34, 211, 238, 0.3);
+  color: #22d3ee;
+}
+
+/* -- Responsive -- */
+
+/* -- Off-canvas backdrop (tablet drawer only, see below) -- */
+.sidebar-backdrop {
+  display: none;
+}
+
+/* Tablet: icon-only sidebar by default. The hamburger toggle opens it as an
+   off-canvas drawer that overlays the content instead of pushing it, with a
+   backdrop to close on outside click. */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sidebar {
+    width: 70px;
+  }
+
+  .sidebar:not(.collapsed) {
+    width: 220px;
+    box-shadow: 8px 0 28px rgba(0, 0, 0, 0.45);
+  }
+
+  .main-content {
+    margin-left: 70px !important;
+  }
+
+  .sidebar-header {
+    justify-content: center;
+    padding: 1.25rem 0.5rem;
+  }
+
+  .sidebar:not(.collapsed) .sidebar-header {
+    justify-content: space-between;
+    padding: 1.25rem 1.25rem;
+  }
+
+  .nav-link {
+    justify-content: center;
+    padding: 0.75rem;
+  }
+
+  .sidebar:not(.collapsed) .nav-link {
+    justify-content: flex-start;
+    padding: 0.75rem 1rem;
+  }
+
+  .nav-link i {
+    margin: 0;
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 90;
+  }
+
+  .sidebar:not(.collapsed) ~ .sidebar-backdrop {
+    display: block;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Phones: the icon sidebar is replaced entirely by the bottom nav below */
+  .sidebar {
+    display: none;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
+  .mobile-more-backdrop {
+    display: block;
+  }
+
+  .mobile-more-panel {
+    display: block;
+  }
+
+  /* Reserve space so page content isn't hidden behind the fixed bottom nav */
+  .content-body {
+    padding: 1rem;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0));
+  }
+
+  /* -- Header: title on its own row, controls in two clean rows -- */
+  .content-header {
+    flex-wrap: wrap;
+    row-gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .header-left {
+    flex: 1 1 100%;
+    text-align: center;
+  }
+
+  .header-left h1 {
+    font-size: 1.125rem;
+  }
+
+  /* Each control gets its own full-width row — a 2-column grid only leaves
+     ~140px per cell at phone widths, which isn't enough room for the branch
+     name / "PORTAL" / "Salir" labels to stay legible without truncating. */
+  .header-controls {
+    flex: 1 1 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .branch-selector,
+  .user-badge,
+  .btn-portal-admin,
+  .btn-logout {
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .user-badge {
+    justify-content: center;
+  }
+
+  .branch-selector .form-select {
+    min-width: 0;
+    width: 100%;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .bottom-nav-link {
+    font-size: 0.6rem;
+  }
+
+  .bottom-nav-link i {
+    font-size: 1.05rem;
+  }
+
+  .mobile-more-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .content-header {
+    padding: 0.75rem;
+  }
+
+  .header-left h1 {
+    font-size: 0.95rem;
+  }
+
+  .header-controls {
+    gap: 0.5rem;
+  }
+
+  .branch-selector,
+  .user-badge,
+  .btn-portal-admin,
+  .btn-logout {
+    min-height: 44px;
+  }
+
+  .branch-selector .form-select,
+  .user-badge span,
+  .btn-label {
+    font-size: 0.75rem;
+  }
+
+  .content-body {
+    padding: 0.75rem;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0));
+  }
+}

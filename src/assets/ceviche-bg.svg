@@ -1,0 +1,44 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="cevicheGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00CED1;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#48D1CC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#20B2AA;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#cevicheGradient)"/>
+
+  <!-- Plate -->
+  <ellipse cx="200" cy="220" rx="150" ry="40" fill="#F5F5DC" opacity="0.8"/>
+  <ellipse cx="200" cy="210" rx="140" ry="35" fill="#FFF8DC"/>
+
+  <!-- Fish pieces -->
+  <ellipse cx="150" cy="180" rx="20" ry="12" fill="#FFA07A"/>
+  <ellipse cx="180" cy="175" rx="18" ry="10" fill="#FF7F50"/>
+  <ellipse cx="210" cy="180" rx="22" ry="14" fill="#FFA07A"/>
+  <ellipse cx="240" cy="175" rx="16" ry="8" fill="#FF7F50"/>
+  <ellipse cx="170" cy="195" rx="19" ry="11" fill="#FF6347"/>
+  <ellipse cx="220" cy="190" rx="21" ry="13" fill="#FF6347"/>
+
+  <!-- Onions -->
+  <ellipse cx="140" cy="165" rx="8" ry="4" fill="#FFD700" opacity="0.9"/>
+  <ellipse cx="160" cy="160" rx="6" ry="3" fill="#FFA500" opacity="0.9"/>
+  <ellipse cx="190" cy="165" rx="8" ry="4" fill="#FFD700" opacity="0.9"/>
+  <ellipse cx="230" cy="160" rx="6" ry="3" fill="#FFA500" opacity="0.9"/>
+  <ellipse cx="260" cy="165" rx="8" ry="4" fill="#FFD700" opacity="0.9"/>
+
+  <!-- Cilantro -->
+  <path d="M130 170 Q135 160 140 170 Q145 160 150 170" stroke="#32CD32" stroke-width="2" fill="none"/>
+  <path d="M155 170 Q160 160 165 170 Q170 160 175 170" stroke="#32CD32" stroke-width="2" fill="none"/>
+  <path d="M200 170 Q205 160 210 170 Q215 160 220 170" stroke="#32CD32" stroke-width="2" fill="none"/>
+  <path d="M245 170 Q250 160 255 170 Q260 160 265 170" stroke="#32CD32" stroke-width="2" fill="none"/>
+
+  <!-- Lemon -->
+  <ellipse cx="280" cy="150" rx="12" ry="8" fill="#FFD700"/>
+  <ellipse cx="285" cy="145" rx="3" ry="2" fill="#FFA500"/>
+
+  <!-- Title -->
+  <text x="200" y="40" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="24" font-weight="bold">Ceviche Mixto</text>
+  <text x="200" y="65" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="16" opacity="0.9">Fresco y Delicioso</text>
+</svg>

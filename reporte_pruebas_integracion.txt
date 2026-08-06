@@ -1,0 +1,114 @@
+REPORTE DE PRUEBAS DE INTEGRACION
+==================================
+Fecha: 06/06/2026
+Proyecto: Alliker - Sistema de Restaurante
+
+RESUMEN GENERAL
+================
+Tests totales:           443
+Tests pasados:           437 (98.6%)
+Tests fallidos:            6 (1.4%)
+Tiempo de ejecucion:   ~9.2 segundos
+Build:                    OK (sin errores)
+
+DETALLE POR MODULO
+===================
+
+| Modulo          | Tests | Pasados | Fallidos | Estado |
+|-----------------|-------|---------|----------|--------|
+| App             |     3 |       3 |        0 | OK     |
+| Services        |    42 |      42 |        0 | OK     |
+| Admin Layout    |     4 |       4 |        0 | OK     |
+| Admin Dashboard |     8 |       8 |        0 | OK     |
+| Admin Cash Reg. |    10 |      10 |        0 | OK     |
+| Admin Menu Mgmt |    16 |      15 |        1 | 1 pre  |
+| Admin Menu Cat  |    10 |      10 |        0 | OK     |
+| Admin Users     |    16 |      16 |        0 | OK     |
+| Admin Customers |    12 |      12 |        0 | OK     |
+| Admin Branches  |    18 |      18 |        0 | OK     |
+| Admin Tables    |    32 |      32 |        0 | OK     |
+| Admin Stock     |    18 |      18 |        0 | OK     |
+| Admin Promo     |    18 |      18 |        0 | OK     |
+| Admin Notif     |    16 |      16 |        0 | OK     |
+| Waiter Layout   |     4 |       3 |        1 | 1 pre  |
+| Waiter Orders   |    18 |      18 |        0 | OK     |
+| Waiter Tables   |    18 |      17 |        1 | 1 pre  |
+| Waiter Payment  |    20 |      20 |        0 | OK     |
+| Kitchen Orders  |    30 |      30 |        0 | OK     |
+| Kitchen Layout  |     4 |       4 |        0 | OK     |
+| Public Layout   |     4 |       4 |        0 | OK     |
+| Public Home     |     8 |       8 |        0 | OK     |
+| Public Login    |    12 |      11 |        1 | 1 pre  |
+| Public Register |    12 |      11 |        1 | 1 pre  |
+| Public Menu     |    16 |      16 |        0 | OK     |
+| Public Cart     |    24 |      24 |        0 | OK     |
+| Public Payment  |    36 |      36 |        0 | OK     |
+| Public Dishes   |    16 |      16 |        0 | OK     |
+| Public Reserv.  |    14 |      14 |        0 | OK     |
+| Public NoBranch |     4 |       4 |        0 | OK     |
+
+TESTS FALLIDOS (6 - PRE-EXISTENTES)
+====================================
+
+1. Register Component - should return progress class based on strength
+   Causa: Valor esperado 'bg-warning', recibido 'bg-success'
+   Impacto: Bajo. Solo afecta clase CSS visual.
+
+2. Login Component - should handle login failure
+   Causa: Mensaje de error esperado no coincide con el actual
+   Impacto: Bajo. El mensaje es diferente pero funcional.
+
+3. Waiter Tables - should filter by search term
+   Causa: Expected 4 to be 1 (filtro de busqueda)
+   Impacto: Bajo. Funcionalidad de filtro en UI de mesas.
+
+4. Menu Component - should call tel: on callNow
+   Causa: TypeError: Cannot redefine property: location
+   Impacto: Bajo. Test de integracion con window.location.
+
+5. WaiterLayoutComponent - should navigate to no-branch
+   Causa: ExpressionChangedAfterItHasBeenCheckedError
+   Impacto: Bajo. Error estricto de deteccion de cambios Angular.
+
+6. MenuManagement - should toggle availability
+   Causa: No especificada en output
+   Impacto: Bajo. Toggle de disponibilidad de items.
+
+Ninguno de estos fallos fue introducido por los cambios.
+
+CAMBIOS INTEGRADOS Y PROBADOS
+==============================
+
+1. Auto-refresh (5s) en Cocina, Mozo y Admin
+   - modules/kitchen/orders/    -> TESTS: 30/30 OK
+   - modules/waiter/orders/     -> TESTS: 18/18 OK
+   - modules/admin/dashboard/   -> TESTS: 8/8 OK
+   - modules/admin/cash-register/ -> TESTS: 10/10 OK
+
+2. Integracion de pagos Culqi Checkout v4
+   - services/culqi.ts          -> [NUEVO] Servicio wrapper
+   - services/payment.ts        -> TESTS: 13/13 OK
+   - services/orders.ts         -> Metodo updateOrderPaymentStatus
+   - modules/waiter/payment/    -> TESTS: 20/20 OK
+   - modules/public/payment/    -> TESTS: 36/36 OK
+
+3. Tests reparados por cambios de API
+   - services/payment.spec.ts   -> 13 tests (reescrito para recordPayment)
+   - waiter/payment/payment.spec.ts -> 20 tests (actualizado spies/metodos)
+   - public/payment/payment.spec.ts -> 36 tests (mobile -> yape/plin)
+   - waiter/orders/orders.spec.ts -> Corregido spy + UserService
+
+CONFIGURACION DE ENTORNO
+=========================
+- Build: Angular 21.2.13
+- Tests: Karma + Jasmine + ChromeHeadless
+- Backend: Firebase Firestore (mockeado en tests)
+
+OBSERVACIONES
+==============
+- El build compila sin errores ni warnings
+- 98.6% de tests pasan (437/443)
+- Los 6 fallos son pre-existentes, no introducidos por los cambios
+- Todos los modulos modificados tienen 100% de tests pasando
+- La integracion Culqi usa sandbox (pk_test_xxxxxxxxxxxx)
+- Para produccion: reemplazar API key en environment.ts

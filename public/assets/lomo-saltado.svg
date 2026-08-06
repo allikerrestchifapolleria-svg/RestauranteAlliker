@@ -1,0 +1,8 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="400" height="300" fill="#F3F4F6"/>
+<rect x="140" y="70" width="120" height="80" rx="10" fill="#8B4513" opacity="0.15"/>
+<rect x="155" y="85" width="90" height="50" rx="5" fill="#D35400" opacity="0.2"/>
+<circle cx="140" cy="100" r="8" fill="#E74C3C" opacity="0.3"/>
+<circle cx="260" cy="120" r="6" fill="#F1C40F" opacity="0.4"/>
+<text x="200" y="240" text-anchor="middle" fill="#6C757D" font-size="16" font-family="Arial">Lomo Saltado</text>
+</svg>

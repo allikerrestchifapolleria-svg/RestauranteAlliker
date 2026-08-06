@@ -1,0 +1,119 @@
+<div class="cc-wrapper">
+  <div class="cc-header">
+    <h1><i class="fas fa-building"></i> Configuración de la Empresa</h1>
+    <p>Datos fiscales y de contacto usados en tus comprobantes electrónicos</p>
+  </div>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="loading-spinner"></div>
+    <p>Cargando configuración...</p>
+  </div>
+
+  <div *ngIf="!loading && company" class="cc-grid">
+    <div class="cc-main">
+      <div class="cc-card">
+        <div class="cc-card-header">
+          <h3><i class="fas fa-circle-info"></i> Datos Generales</h3>
+        </div>
+        <div class="cc-card-body">
+          <div class="cc-form-grid">
+            <div class="cc-field">
+              <label>RUC <span class="required">*</span></label>
+              <input [(ngModel)]="company.ruc" maxlength="11" placeholder="20123456789" [class.invalid]="fieldErrors['ruc']">
+              <small class="field-error" *ngIf="fieldErrors['ruc']">{{ fieldErrors['ruc'] }}</small>
+            </div>
+            <div class="cc-field">
+              <label>Razón Social <span class="required">*</span></label>
+              <input [(ngModel)]="company.businessName" placeholder="MI EMPRESA SAC" [class.invalid]="fieldErrors['businessName']">
+              <small class="field-error" *ngIf="fieldErrors['businessName']">{{ fieldErrors['businessName'] }}</small>
+            </div>
+            <div class="cc-field">
+              <label>Nombre Comercial</label>
+              <input [(ngModel)]="company.commercialName" placeholder="Alliker">
+            </div>
+            <div class="cc-field">
+              <label>Teléfono</label>
+              <input [(ngModel)]="company.phone" placeholder="+51 123 456 789">
+            </div>
+            <div class="cc-field">
+              <label>Email</label>
+              <input [(ngModel)]="company.email" placeholder="info@alliker.pe">
+            </div>
+            <div class="cc-field">
+              <label>N° Cuenta Bancaria</label>
+              <input [(ngModel)]="company.accountNumber" placeholder="Cuenta para transferencias">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cc-card">
+        <div class="cc-card-header">
+          <h3><i class="fas fa-map-marker-alt"></i> Dirección</h3>
+        </div>
+        <div class="cc-card-body">
+          <div class="cc-form-grid">
+            <div class="cc-field cc-field-wide">
+              <label>Dirección</label>
+              <input [(ngModel)]="company.address.street" placeholder="Av. Principal 123">
+            </div>
+            <div class="cc-field">
+              <label>Distrito</label>
+              <input [(ngModel)]="company.address.district" placeholder="Miraflores">
+            </div>
+            <div class="cc-field">
+              <label>Provincia</label>
+              <input [(ngModel)]="company.address.province" placeholder="Lima">
+            </div>
+            <div class="cc-field">
+              <label>Departamento</label>
+              <input [(ngModel)]="company.address.department" placeholder="Lima">
+            </div>
+            <div class="cc-field">
+              <label>País</label>
+              <input [(ngModel)]="company.address.country" placeholder="PE" readonly>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cc-side">
+      <div class="cc-card cc-actions-card">
+        <div class="cc-card-header">
+          <h3><i class="fas fa-gear"></i> Acciones</h3>
+        </div>
+        <div class="cc-card-body">
+          <button class="cc-save-btn" (click)="save()" [disabled]="saving">
+            <i class="fas" [class.fa-spinner]="saving" [class.fa-save]="!saving" [class.fa-spin]="saving"></i>
+            {{ saving ? 'Guardando...' : 'Guardar Cambios' }}
+          </button>
+          <div *ngIf="saved" class="cc-alert cc-alert-success">
+            <i class="fas fa-check-circle"></i> Configuración guardada correctamente.
+          </div>
+          <div *ngIf="error" class="cc-alert cc-alert-danger">
+            <i class="fas fa-exclamation-triangle"></i> {{ error }}
+          </div>
+        </div>
+      </div>
+
+      <div class="cc-card cc-info-card">
+        <div class="cc-card-header">
+          <h3><i class="fas fa-circle-info"></i> Información</h3>
+        </div>
+        <div class="cc-card-body">
+          <p class="cc-info-lead">Los datos configurados aquí se usarán para:</p>
+          <ul class="cc-info-list">
+            <li><i class="fas fa-check"></i> Generar comprobantes electrónicos (boletas y facturas)</li>
+            <li><i class="fas fa-check"></i> El XML UBL 2.1 para SUNAT</li>
+            <li><i class="fas fa-check"></i> El PDF descargable del recibo</li>
+          </ul>
+          <div class="cc-warning-box">
+            <i class="fas fa-exclamation-triangle"></i>
+            Para enviar a SUNAT necesitarás integrar Nubefact o Facturador.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

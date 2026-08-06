@@ -1,0 +1,142 @@
+<div class="inv-wrapper">
+  <div class="inv-header">
+    <div class="inv-header-left">
+      <h1>Comprobantes Electrónicos</h1>
+      <p>Facturas, boletas y su estado ante SUNAT</p>
+    </div>
+    <div class="inv-header-right">
+      <select class="inv-select" [(ngModel)]="selectedDocType">
+        <option value="">Todos los tipos</option>
+        <option value="01">Facturas</option>
+        <option value="03">Boletas</option>
+      </select>
+      <div class="inv-search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar serie, cliente...">
+      </div>
+    </div>
+  </div>
+
+  <div class="inv-stats-grid" *ngIf="!loading && invoices.length > 0">
+    <div class="inv-stat-card stat-total">
+      <div class="inv-stat-row">
+        <div class="inv-stat-icon icon-total"><i class="fas fa-sack-dollar"></i></div>
+        <div class="inv-stat-info">
+          <div class="inv-stat-label">Total Facturado</div>
+          <div class="inv-stat-value mono">S/ {{ totalAmount() | number:'1.2-2' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="inv-stat-card stat-count">
+      <div class="inv-stat-row">
+        <div class="inv-stat-icon icon-count"><i class="fas fa-file-invoice"></i></div>
+        <div class="inv-stat-info">
+          <div class="inv-stat-label">Comprobantes</div>
+          <div class="inv-stat-value">{{ filteredInvoices.length }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="inv-stat-card stat-accepted">
+      <div class="inv-stat-row">
+        <div class="inv-stat-icon icon-accepted"><i class="fas fa-circle-check"></i></div>
+        <div class="inv-stat-info">
+          <div class="inv-stat-label">Aceptados SUNAT</div>
+          <div class="inv-stat-value">{{ acceptedCount }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="inv-stat-card stat-pending">
+      <div class="inv-stat-row">
+        <div class="inv-stat-icon icon-pending"><i class="fas fa-clock"></i></div>
+        <div class="inv-stat-info">
+          <div class="inv-stat-label">Pendientes</div>
+          <div class="inv-stat-value">{{ pendingCount }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="loading-spinner"></div>
+    <p>Cargando comprobantes...</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && invoices.length === 0">
+    <i class="fas fa-file-invoice"></i>
+    <h5>Sin comprobantes aún</h5>
+    <p>Realiza una venta para generar el primer comprobante electrónico.</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && invoices.length > 0 && filteredInvoices.length === 0">
+    <i class="fas fa-filter-circle-xmark"></i>
+    <h5>Sin resultados</h5>
+    <p>No hay comprobantes que coincidan con el filtro o búsqueda actual.</p>
+  </div>
+
+  <div class="inv-card" *ngIf="!loading && filteredInvoices.length > 0">
+    <div class="inv-card-header">
+      <h3><i class="fas fa-receipt"></i> Detalle de comprobantes</h3>
+      <span class="inv-badge">{{ filteredInvoices.length }} registros</span>
+    </div>
+    <div class="inv-card-body">
+      <table class="inv-table">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Serie</th>
+            <th>Cliente</th>
+            <th>Documento</th>
+            <th class="text-end">Total</th>
+            <th>Método</th>
+            <th>SUNAT</th>
+            <th>Fecha</th>
+            <th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let inv of filteredInvoices; trackBy: trackById">
+            <td>
+              <span class="doc-type-badge" [class.doc-factura]="inv.documentType === '01'" [class.doc-boleta]="inv.documentType === '03'">
+                {{ getDocTypeLabel(inv.documentType) }}
+              </span>
+            </td>
+            <td><span class="serie-code">{{ inv.serieNumber }}</span></td>
+            <td>{{ inv.customer.name || '—' }}</td>
+            <td>
+              <span class="doc-number">
+                <small class="doc-number-type">{{ getDocCodeLabel(inv.customer.docType || '') }}</small>
+                {{ inv.customer.docNumber || '—' }}
+              </span>
+            </td>
+            <td class="text-end fw-bold">S/ {{ inv.total | number:'1.2-2' }}</td>
+            <td><span class="method-text">{{ inv.paymentMethod }}</span></td>
+            <td>
+              <span class="sunat-badge" [ngClass]="getSunatStatusClass(inv.sunatStatus)">
+                <i class="fas" [ngClass]="getSunatStatusIcon(inv.sunatStatus)"></i>
+                {{ getSunatStatusLabel(inv.sunatStatus) }}
+              </span>
+            </td>
+            <td><span class="date-text">{{ inv.issueDate }}</span></td>
+            <td class="text-end">
+              <div class="action-buttons">
+                <button class="inv-action-btn" (click)="downloadPdf(inv)" title="Descargar PDF">
+                  <i class="fas fa-file-pdf"></i>
+                </button>
+                <button class="inv-action-btn" (click)="printTicket(inv)" title="Imprimir Ticket">
+                  <i class="fas fa-receipt"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="grand-total">
+            <td colspan="4" class="text-end">TOTAL</td>
+            <td class="text-end total-amount">S/ {{ totalAmount() | number:'1.2-2' }}</td>
+            <td colspan="4"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>

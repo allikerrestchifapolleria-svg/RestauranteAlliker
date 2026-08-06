@@ -1,0 +1,109 @@
+<div class="order-history-page">
+  <div class="page-header">
+    <h1>
+      <i class="fas fa-history me-2"></i>Historial de Órdenes
+    </h1>
+    <p class="text-muted">Consulte órdenes archivadas, entregadas y canceladas</p>
+  </div>
+
+  <div class="filters-card">
+    <div class="filters-row">
+      <div class="filter-group">
+        <label><i class="fas fa-calendar"></i> Desde</label>
+        <input type="date" class="form-control" [(ngModel)]="dateFrom">
+      </div>
+      <div class="filter-group">
+        <label><i class="fas fa-calendar"></i> Hasta</label>
+        <input type="date" class="form-control" [(ngModel)]="dateTo">
+      </div>
+      <div class="filter-group">
+        <label><i class="fas fa-tag"></i> Estado</label>
+        <select class="form-select" [(ngModel)]="filterStatus">
+          <option *ngFor="let opt of statusOptions" [value]="opt.value">{{ opt.label }}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label><i class="fas fa-search"></i> Buscar</label>
+        <input type="text" class="form-control" [(ngModel)]="searchTerm" placeholder="#orden o mesa">
+      </div>
+      <div class="filter-group filter-action">
+        <button class="btn btn-primary" (click)="search()" [disabled]="isLoading">
+          <i class="fas" [class.fa-spinner]="isLoading" [class.fa-spin]="isLoading" [class.fa-search]="!isLoading"></i>
+          {{ isLoading ? 'Buscando...' : 'Buscar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="error-banner" *ngIf="errorMessage">
+    <i class="fas fa-triangle-exclamation"></i>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <span>{{ filteredOrders.length }} resultado(s)</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th># Orden</th>
+            <th>Mesa</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Pago</th>
+            <th>Tipo</th>
+            <th>Mozo</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of filteredOrders; trackBy: trackByOrderId">
+            <td class="order-number">{{ getOrderNumber(order) }}</td>
+            <td>{{ getTableName(order) }}</td>
+            <td>{{ getItemsCount(order) }} plato(s)</td>
+            <td class="order-total">S/ {{ order.total | number:'1.2-2' }}</td>
+            <td>
+              <span class="status-badge" [style.background-color]="getStatusColor(order.status)">
+                {{ getStatusLabel(order.status) }}
+              </span>
+            </td>
+            <td>
+              <span class="payment-status" [class.paid]="isPaid(order)">
+                {{ getPaymentStatusLabel(order.paymentStatus) }}
+              </span>
+            </td>
+            <td>{{ getTypeLabel(order.type) }}</td>
+            <td>{{ getWaiterName(order) }}</td>
+            <td class="order-date">{{ order.createdAt | date:'dd/MM/yy HH:mm' }}</td>
+          </tr>
+          <tr *ngIf="filteredOrders.length === 0 && !isLoading && !errorMessage">
+            <td colspan="9" class="empty-state">
+              <i class="fas fa-inbox fa-3x mb-2"></i>
+              <p>No se encontraron órdenes. Ajuste los filtros e intente de nuevo.</p>
+            </td>
+          </tr>
+          <tr *ngIf="isLoading">
+            <td colspan="9" class="loading-state">
+              <i class="fas fa-spinner fa-spin fa-2x"></i>
+              <p>Cargando...</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-footer">
+      <button class="btn btn-outline-secondary" (click)="prevPage()" [disabled]="!hasPrev || isLoading">
+        <i class="fas fa-chevron-left"></i> Anterior
+      </button>
+      <span class="page-info">Página {{ currentPage }}</span>
+      <button class="btn btn-outline-secondary" (click)="nextPage()" [disabled]="!hasMore || isLoading">
+        Siguiente <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</div>

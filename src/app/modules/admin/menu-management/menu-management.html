@@ -1,0 +1,257 @@
+<div class="menu-management">
+  <div class="header">
+    <h2>Gestión del Menú</h2>
+    <button class="btn-primary" (click)="addNewItem()">Agregar Plato</button>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <input type="text" placeholder="Buscar platos..." [(ngModel)]="searchTerm" (input)="onSearch()">
+    </div>
+
+    <div class="category-filters">
+      <button
+        type="button"
+        class="category-dropdown-toggle"
+        (click)="toggleCategoryDropdown()"
+        (keydown)="onCategoryToggleKeydown($event)"
+        [class.open]="categoryDropdownOpen"
+        aria-haspopup="listbox"
+        [attr.aria-expanded]="categoryDropdownOpen"
+        aria-label="Filtrar por categoría">
+        <span>Filtrar por categoría: {{ getSelectedCategoryLabel() }}</span>
+        <i class="fas fa-chevron-down"></i>
+      </button>
+      <ul class="category-dropdown-menu" role="listbox" aria-label="Categorías" *ngIf="categoryDropdownOpen">
+        <li
+          class="category-dropdown-option"
+          role="option"
+          tabindex="0"
+          [attr.aria-selected]="selectedCategory === 'all'"
+          [class.active]="selectedCategory === 'all'"
+          (click)="selectCategoryFilter('all')"
+          (keydown)="onCategoryOptionKeydown($event, 'all')">
+          Todos
+        </li>
+        <li
+          *ngFor="let category of categories"
+          class="category-dropdown-option"
+          role="option"
+          tabindex="0"
+          [attr.aria-selected]="selectedCategory === category.id"
+          [class.active]="selectedCategory === category.id"
+          (click)="selectCategoryFilter(category.id)"
+          (keydown)="onCategoryOptionKeydown($event, category.id)">
+          {{ category.name }}
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="menu-grid">
+    <div *ngFor="let item of filteredItems$ | async" class="menu-item-card">
+      <div class="item-header">
+        <h3>{{item.name}}</h3>
+        <div class="item-actions">
+          <button class="btn-edit" (click)="editItem(item)">Editar</button>
+          <button class="btn-delete" (click)="deleteItem(item)">Eliminar</button>
+        </div>
+      </div>
+
+      <div class="item-content">
+        <div class="item-image" *ngIf="item.image">
+          <img [src]="item.image" [alt]="item.name">
+        </div>
+
+        <div class="item-details">
+          <p class="description">{{item.description}}</p>
+          <p class="price">S/ {{item.price.toFixed(2)}}</p>
+          <p class="category">{{getCategoryName(item.categoryId)}}</p>
+
+          <div class="item-status">
+            <label>
+              <input type="checkbox" [checked]="item.isAvailable" (change)="toggleAvailability(item)">
+              Disponible
+            </label>
+          </div>
+
+          <div class="tags" *ngIf="item.tags.length > 0">
+            <span *ngFor="let tag of item.tags" class="tag">{{tag}}</span>
+          </div>
+
+          <div class="tags" *ngIf="item.servicePeriodIds && item.servicePeriodIds.length > 0">
+            <span *ngFor="let periodId of item.servicePeriodIds" class="tag tag-period">
+              <i class="fas fa-clock"></i> {{ getPeriodName(periodId) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Form Modal -->
+  <div *ngIf="showAddForm" class="modal-overlay" (click)="cancelEdit()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{editingItem ? 'Editar Plato' : 'Agregar Nuevo Plato'}}</h3>
+        <button class="close-btn" (click)="cancelEdit()">&times;</button>
+      </div>
+
+      <form (ngSubmit)="saveItem()" class="item-form">
+        <div class="form-group">
+          <label for="name">Nombre *</label>
+          <input type="text" id="name" [(ngModel)]="newItem.name" name="name" required [class.invalid]="formErrors['name']">
+          <small class="field-error" *ngIf="formErrors['name']">{{ formErrors['name'] }}</small>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Descripción</label>
+          <textarea id="description" [(ngModel)]="newItem.description" name="description" rows="3"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="price">Precio *</label>
+            <div class="number-stepper" [class.invalid]="formErrors['price']">
+              <input type="number" id="price" [(ngModel)]="newItem.price" name="price" step="0.01" min="0" required>
+              <div class="stepper-controls">
+                <button type="button" class="stepper-btn stepper-up" (click)="adjustNumericField(newItem, 'price', 0.5)" aria-label="Aumentar precio"><i class="fas fa-chevron-up"></i></button>
+                <button type="button" class="stepper-btn stepper-down" (click)="adjustNumericField(newItem, 'price', -0.5)" aria-label="Disminuir precio"><i class="fas fa-chevron-down"></i></button>
+              </div>
+            </div>
+            <small class="field-error" *ngIf="formErrors['price']">{{ formErrors['price'] }}</small>
+          </div>
+
+          <div class="form-group">
+            <label for="category">Categoría *</label>
+            <select id="category" [(ngModel)]="newItem.categoryId" name="categoryId" required [class.invalid]="formErrors['categoryId']">
+              <option value="">Seleccionar categoría</option>
+              <option *ngFor="let category of categories" [value]="category.id">{{category.name}}</option>
+              <option *ngIf="categories.length === 0" disabled>No hay categorías disponibles</option>
+            </select>
+            <small class="field-error" *ngIf="formErrors['categoryId']">{{ formErrors['categoryId'] }}</small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="image">Imagen del plato</label>
+          <input type="file" id="image" accept="image/*" (change)="onImageSelected($event)" name="imageFile">
+          <img *ngIf="imagePreviewUrl || newItem.image" [src]="imagePreviewUrl || newItem.image" alt="Vista previa" class="image-preview-thumb">
+        </div>
+
+        <div class="form-group">
+          <label for="tags">Etiquetas (separadas por comas)</label>
+          <input type="text" id="tags" [(ngModel)]="tagsString" name="tags" placeholder="nuevo, popular, recomendado">
+        </div>
+
+        <div class="form-section">
+          <h4 class="section-title">Variantes (tamaños, porciones)</h4>
+          <table class="table table-sm table-bordered" *ngIf="formVariants.length > 0">
+            <thead>
+              <tr>
+                <th style="width:40px">#</th>
+                <th>Nombre</th>
+                <th style="width:120px">Precio (S/)</th>
+                <th style="width:50px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let v of formVariants; let i = index">
+                <td class="text-center">{{ i + 1 }}</td>
+                <td><input type="text" class="form-control form-control-sm" [(ngModel)]="v.name" [name]="'vname_' + i" placeholder="Ej: Grande"></td>
+                <td>
+                  <div class="number-stepper number-stepper-sm">
+                    <input type="number" class="form-control form-control-sm" [(ngModel)]="v.price" [name]="'vprice_' + i" step="0.01" min="0">
+                    <div class="stepper-controls">
+                      <button type="button" class="stepper-btn stepper-up" (click)="adjustNumericField(v, 'price', 0.5)" aria-label="Aumentar precio de variante"><i class="fas fa-chevron-up"></i></button>
+                      <button type="button" class="stepper-btn stepper-down" (click)="adjustNumericField(v, 'price', -0.5)" aria-label="Disminuir precio de variante"><i class="fas fa-chevron-down"></i></button>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" (click)="removeVariant(i)"><i class="fas fa-times"></i></button></td>
+              </tr>
+            </tbody>
+          </table>
+          <button type="button" class="btn btn-sm btn-outline-primary" (click)="addVariant()"><i class="fas fa-plus me-1"></i>Agregar variante</button>
+        </div>
+
+        <div class="form-section">
+          <h4 class="section-title">Modificadores (extras con precio adicional)</h4>
+          <table class="table table-sm table-bordered" *ngIf="formModifiers.length > 0">
+            <thead>
+              <tr>
+                <th style="width:40px">#</th>
+                <th>Nombre</th>
+                <th style="width:120px">Precio + (S/)</th>
+                <th style="width:50px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let m of formModifiers; let i = index">
+                <td class="text-center">{{ i + 1 }}</td>
+                <td><input type="text" class="form-control form-control-sm" [(ngModel)]="m.name" [name]="'mname_' + i" placeholder="Ej: Extra queso"></td>
+                <td>
+                  <div class="number-stepper number-stepper-sm">
+                    <input type="number" class="form-control form-control-sm" [(ngModel)]="m.price" [name]="'mprice_' + i" step="0.01" min="0">
+                    <div class="stepper-controls">
+                      <button type="button" class="stepper-btn stepper-up" (click)="adjustNumericField(m, 'price', 0.5)" aria-label="Aumentar precio de modificador"><i class="fas fa-chevron-up"></i></button>
+                      <button type="button" class="stepper-btn stepper-down" (click)="adjustNumericField(m, 'price', -0.5)" aria-label="Disminuir precio de modificador"><i class="fas fa-chevron-down"></i></button>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" (click)="removeModifier(i)"><i class="fas fa-times"></i></button></td>
+              </tr>
+            </tbody>
+          </table>
+          <button type="button" class="btn btn-sm btn-outline-primary" (click)="addModifier()"><i class="fas fa-plus me-1"></i>Agregar modificador</button>
+        </div>
+
+        <div class="form-section">
+          <h4 class="section-title">Franjas horarias</h4>
+          <p class="periods-hint">Deja vacío para heredar las franjas de la categoría, o para que se venda todo el día si la categoría tampoco tiene.</p>
+          <div class="periods-selector" *ngIf="servicePeriods.length > 0">
+            <label
+              *ngFor="let period of servicePeriods"
+              class="period-option"
+              [class.selected]="isServicePeriodSelected(period.id)">
+              <input type="checkbox"
+                     [checked]="isServicePeriodSelected(period.id)"
+                     (change)="toggleServicePeriod(period.id)"
+                     [name]="'period_' + period.id">
+              <i [class]="period.icon || 'fas fa-clock'"></i>
+              <span class="period-option-text">
+                <strong>{{ period.name }}</strong>
+                <small>{{ period.startTime }} - {{ period.endTime }}</small>
+              </span>
+            </label>
+          </div>
+          <p class="periods-hint" *ngIf="servicePeriods.length === 0">
+            No hay franjas configuradas. Crea una desde <a routerLink="/admin/schedule-management">Horarios</a>.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label for="isAvailable">
+            <input type="checkbox" id="isAvailable" [checked]="newItem.isAvailable" (change)="newItem.isAvailable = $event.target.checked" name="isAvailable">
+            Disponible
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="cancelEdit()">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="isLoading">
+            {{ isLoading ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

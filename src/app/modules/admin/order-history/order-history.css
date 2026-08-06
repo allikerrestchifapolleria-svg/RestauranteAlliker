@@ -1,0 +1,300 @@
+.order-history-page {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  color: var(--dark-text-primary, #f1f5f9);
+}
+
+.page-header {
+  margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--dark-text-primary, #f1f5f9);
+  margin-bottom: 0.25rem;
+}
+
+.page-header h1 i {
+  color: var(--accent-cyan, #22d3ee);
+}
+
+.page-header p.text-muted {
+  color: var(--dark-text-secondary, #94a3b8) !important;
+}
+
+/* Filters Card */
+.filters-card {
+  background: var(--dark-bg-secondary, #1e293b);
+  border: 1px solid var(--dark-border, #334155);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.filters-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 150px;
+}
+
+.filter-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--dark-text-secondary, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.filter-group label i {
+  margin-right: 0.3rem;
+  color: var(--accent-cyan, #22d3ee);
+}
+
+.filter-group .form-control,
+.filter-group .form-select {
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--dark-border, #334155);
+  border-radius: 8px;
+  background: var(--dark-bg-primary, #0f172a);
+  color: var(--dark-text-primary, #f1f5f9);
+  color-scheme: dark;
+  box-sizing: border-box;
+  max-width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filter-group .form-control::placeholder {
+  color: var(--dark-text-muted, #475569);
+}
+
+.filter-group .form-control:focus,
+.filter-group .form-select:focus {
+  border-color: var(--accent-cyan, #22d3ee);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+  outline: none;
+  background: var(--dark-bg-primary, #0f172a);
+}
+
+.filter-group .form-select option {
+  background: var(--dark-bg-secondary, #1e293b);
+  color: var(--dark-text-primary, #f1f5f9);
+}
+
+.filter-action {
+  min-width: 120px;
+}
+
+.filter-action .btn {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--accent-cyan, #22d3ee), #06b6d4);
+  border: none;
+  color: #0f172a;
+  border-radius: 8px;
+  transition: all 0.25s ease;
+}
+
+.filter-action .btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(34, 211, 238, 0.35);
+}
+
+.filter-action .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Error Banner */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  font-size: 0.9rem;
+}
+
+.error-banner i {
+  color: #ef4444;
+}
+
+/* Table Card */
+.table-card {
+  background: var(--dark-bg-secondary, #1e293b);
+  border: 1px solid var(--dark-border, #334155);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.table-header {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--dark-border, #334155);
+  font-size: 0.85rem;
+  color: var(--dark-text-secondary, #94a3b8);
+  font-weight: 500;
+}
+
+/* Table */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.history-table thead th {
+  background: var(--dark-bg-primary, #0f172a);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--dark-text-secondary, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-bottom: 2px solid var(--dark-border, #334155);
+  white-space: nowrap;
+}
+
+.history-table tbody td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+  color: var(--dark-text-primary, #f1f5f9);
+  vertical-align: middle;
+}
+
+.history-table tbody tr:hover {
+  background: var(--dark-bg-hover, #2d3a4f);
+}
+
+.order-number {
+  font-weight: 700;
+  color: var(--accent-cyan, #22d3ee);
+}
+
+.order-total {
+  font-weight: 600;
+  color: var(--accent-emerald, #34d399);
+}
+
+.order-date {
+  font-size: 0.85rem;
+  color: var(--dark-text-tertiary, #64748b);
+  white-space: nowrap;
+}
+
+/* Status Badge */
+.status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.payment-status {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--accent-amber, #fbbf24);
+}
+
+.payment-status.paid {
+  color: var(--accent-emerald, #34d399);
+  font-weight: 600;
+}
+
+/* Empty / Loading */
+.empty-state,
+.loading-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--dark-text-tertiary, #64748b);
+}
+
+.empty-state i,
+.loading-state i {
+  color: var(--dark-border, #334155);
+}
+
+.empty-state p,
+.loading-state p {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--dark-text-secondary, #94a3b8);
+}
+
+/* Table Footer / Pagination */
+.table-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--dark-border, #334155);
+}
+
+.table-footer .btn {
+  font-size: 0.85rem;
+  padding: 0.4rem 1rem;
+  background: transparent;
+  border: 1px solid var(--dark-border, #334155);
+  color: var(--dark-text-secondary, #94a3b8);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.table-footer .btn:hover:not(:disabled) {
+  border-color: var(--accent-cyan, #22d3ee);
+  color: var(--accent-cyan, #22d3ee);
+  background: rgba(34, 211, 238, 0.08);
+}
+
+.table-footer .btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--dark-text-secondary, #94a3b8);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .filters-row {
+    flex-direction: column;
+  }
+
+  .filter-group {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .order-history-page {
+    padding: 1rem;
+  }
+}

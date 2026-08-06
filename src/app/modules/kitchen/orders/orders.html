@@ -1,0 +1,197 @@
+<div class="min-vh-100 bg-light p-4 p-md-5" style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);">
+  <div class="container-fluid">
+    <!-- Header Section -->
+    <header class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-4 mb-5">
+      <div>
+        <h1 class="display-5 fw-bold text-danger d-flex align-items-center gap-3 mb-0">
+          <span class="p-3 bg-danger text-white rounded-circle shadow-lg">
+            <i class="fas fa-fire fa-lg"></i>
+          </span>
+          Pedidos de Cocina
+        </h1>
+        <p class="text-muted mt-2 fs-5">Gestiona los pedidos que deben ser preparados</p>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <span class="badge bg-success fs-6 px-3 py-2 shadow-sm">
+          <i class="fas fa-sync-alt fa-spin me-2"></i>Tiempo real
+        </span>
+      </div>
+    </header>
+
+    <!-- Stats Section (desktop only — mobile uses the floating kanban tabs instead) -->
+    <div class="row g-4 mb-5 orders-stats-row">
+      <div class="col-6 col-md-3">
+        <div class="card stat-filter-card p-4 border-0 shadow-lg rounded-4 position-relative overflow-hidden"
+             [style.background-color]="getStatusBgColor('pending')">
+          <div class="position-absolute top-0 end-0 opacity-10 rounded-circle" style="width: 80px; height: 80px; background: #ffc107; transform: translate(20px, -20px);"></div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-circle">
+              <i class="fas fa-clock fa-2x"></i>
+            </div>
+            <div>
+              <h3 class="h1 fw-bold text-warning mb-0">{{getOrdersCount('pending')}}</h3>
+              <p class="text-muted mb-0 fw-semibold">Pendientes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-filter-card p-4 border-0 shadow-lg rounded-4 position-relative overflow-hidden"
+             [style.background-color]="getStatusBgColor('confirmed')">
+          <div class="position-absolute top-0 end-0 opacity-10 rounded-circle" style="width: 80px; height: 80px; background: #17a2b8; transform: translate(20px, -20px);"></div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="p-3 bg-info bg-opacity-10 text-info rounded-circle">
+              <i class="fas fa-check-circle fa-2x"></i>
+            </div>
+            <div>
+              <h3 class="h1 fw-bold text-info mb-0">{{getOrdersCount('confirmed')}}</h3>
+              <p class="text-muted mb-0 fw-semibold">Confirmadas</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-filter-card p-4 border-0 shadow-lg rounded-4 position-relative overflow-hidden"
+             [style.background-color]="getStatusBgColor('preparing')">
+          <div class="position-absolute top-0 end-0 opacity-10 rounded-circle" style="width: 80px; height: 80px; background: #fd7e14; transform: translate(20px, -20px);"></div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="p-3" style="background-color: rgba(253, 126, 20, 0.1); border-radius: 50%;">
+              <i class="fas fa-fire fa-2x" style="color: #fd7e14;"></i>
+            </div>
+            <div>
+              <h3 class="h1 fw-bold mb-0" style="color: #fd7e14;">{{getOrdersCount('preparing')}}</h3>
+              <p class="text-muted mb-0 fw-semibold">Preparando</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-filter-card p-4 border-0 shadow-lg rounded-4 position-relative overflow-hidden"
+             [style.background-color]="getStatusBgColor('ready')">
+          <div class="position-absolute top-0 end-0 opacity-10 rounded-circle" style="width: 80px; height: 80px; background: #28a745; transform: translate(20px, -20px);"></div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="p-3 bg-success bg-opacity-10 text-success rounded-circle">
+              <i class="fas fa-concierge-bell fa-2x"></i>
+            </div>
+            <div>
+              <h3 class="h1 fw-bold text-success mb-0">{{getOrdersCount('ready')}}</h3>
+              <p class="text-muted mb-0 fw-semibold">Listos</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile-only: floating status tabs replace the stacked column headers -->
+    <div class="kanban-mobile-tabs">
+      <button type="button" class="kanban-tab" *ngFor="let col of kanbanColumns"
+              [class.active]="activeKanbanColumn === col.id"
+              [style.--tab-color]="col.color"
+              (click)="setActiveKanbanColumn(col.id)">
+        <i class="fas" [class]="col.icon"></i>
+        <span>{{ col.label }}</span>
+        <span class="kanban-tab-count">{{ col.orders.length }}</span>
+      </button>
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="kanban-board">
+      <div class="kanban-column" *ngFor="let col of kanbanColumns" [class.mobile-active]="activeKanbanColumn === col.id">
+        <div class="column-header" [style.--col-color]="col.color">
+          <div class="column-header-left">
+            <i class="fas" [class]="col.icon"></i>
+            <span class="column-title">{{ col.label }}</span>
+          </div>
+          <span class="column-count">{{ col.orders.length }}</span>
+        </div>
+        <div class="column-body">
+          <div class="order-card" *ngFor="let order of col.orders; trackBy: trackByOrderId"
+               [class.expanded]="expandedCards.has(order.id)"
+               [class.urgent]="isUrgentOrder(order)"
+               [class.priority]="isPriorityOrder(order)"
+               (click)="toggleCard(order.id)">
+            <!-- Card Compact (always visible) -->
+            <div class="card-compact">
+              <div class="card-compact-row">
+                <span class="order-number">#{{ order.orderNumber || order.id.slice(-6) }}</span>
+                <span class="order-table" *ngIf="order.tableId">
+                  <i class="fas fa-chair"></i> {{ order.tableName || tableService.getTableDisplayName(order.tableId) || order.tableId }}
+                </span>
+                <span class="order-total">S/ {{ order.total.toFixed(2) }}</span>
+              </div>
+              <div class="card-compact-meta">
+                <span class="order-type" [ngClass]="getTypeClass(order.type)">
+                  <i class="fas" [class.fa-store]="order.type === 'dine_in'" [class.fa-bag-shopping]="order.type === 'takeout'" [class.fa-truck]="order.type === 'delivery'"></i>
+                  {{ getTypeLabel(order.type) }}
+                </span>
+                <span class="order-time" *ngIf="order.status === 'preparing'">
+                  <i class="fas fa-clock"></i> {{ getElapsedTime(order) || '0m' }}
+                </span>
+                <span class="priority-badge-sm" *ngIf="isPriorityOrder(order)">
+                  <i class="fas fa-exclamation-triangle"></i> PRIORIDAD
+                </span>
+              </div>
+            </div>
+            <!-- Card Expanded (shown on click) -->
+            <div class="card-expanded" *ngIf="expandedCards.has(order.id)">
+              <div class="expanded-items">
+                <div class="expanded-item" *ngFor="let item of getCookableItems(order)">
+                  <span class="item-qty">{{ item.qty }}x</span>
+                  <span class="item-name">{{ item.name }}</span>
+                  <span class="item-notes" *ngIf="item.notes">
+                    <i class="fas fa-sticky-note"></i> {{ item.notes }}
+                  </span>
+                  <span class="item-price">S/ {{ (item.price * item.qty).toFixed(2) }}</span>
+                </div>
+                <div class="expanded-item packing-note" *ngFor="let c of getContainerItems(order)">
+                  <span class="item-qty">{{ c.qty }}x</span>
+                  <span class="item-name"><i class="fas fa-box-open me-1"></i>{{ c.name }}</span>
+                  <span class="item-notes">Empaque</span>
+                </div>
+              </div>
+              <div class="expanded-summary">
+                <div class="summary-row">
+                  <span>Subtotal</span>
+                  <span>S/ {{ order.subtotal.toFixed(2) }}</span>
+                </div>
+                <div class="summary-row" *ngIf="order.tax > 0">
+                  <span>IGV (18%)</span>
+                  <span>S/ {{ order.tax.toFixed(2) }}</span>
+                </div>
+                <div class="summary-row total">
+                  <span>Total</span>
+                  <span>S/ {{ order.total.toFixed(2) }}</span>
+                </div>
+              </div>
+              <div class="expanded-actions">
+                <button *ngIf="canStartPreparing(order)" class="btn-kanban btn-prepare" (click)="$event.stopPropagation(); updateOrderStatus(order.id, 'preparing')">
+                  <i class="fas fa-fire"></i> Preparar
+                </button>
+                <button *ngIf="canMarkReady(order)" class="btn-kanban btn-ready" (click)="$event.stopPropagation(); updateOrderStatus(order.id, 'ready')">
+                  <i class="fas fa-check-circle"></i> Listo para servir
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="column-empty" *ngIf="col.orders.length === 0">
+            <i class="fas fa-inbox"></i>
+            <span>Sin pedidos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Orders Message -->
+    <div *ngIf="kanbanColumns.every(c => c.orders.length === 0)" class="text-center py-5">
+      <div class="card border-0 shadow-lg rounded-4 p-5 bg-light">
+        <div class="card-body">
+          <div class="mb-4">
+            <i class="fas fa-clipboard-list fa-4x text-muted"></i>
+          </div>
+          <h3 class="card-title text-muted mb-3">No hay pedidos pendientes</h3>
+          <p class="card-text text-muted fs-5">Los nuevos pedidos aparecerán aquí automáticamente.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

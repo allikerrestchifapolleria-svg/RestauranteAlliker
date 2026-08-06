@@ -1,0 +1,425 @@
+<!-- Unique Dishes Showcase Header -->
+<section class="dishes-showcase bg-gradient-coral position-relative overflow-hidden">
+  <div class="showcase-bg-pattern"></div>
+  <div class="floating-ingredients">
+    <div class="ingredient herb animate-float" style="top: 10%; left: 10%; animation-delay: 0s;">
+      <i class="fas fa-seedling text-success"></i>
+    </div>
+    <div class="ingredient tomato animate-float" style="top: 20%; right: 15%; animation-delay: 1s;">
+      <i class="fas fa-circle text-danger"></i>
+    </div>
+    <div class="ingredient pepper animate-float" style="bottom: 20%; left: 15%; animation-delay: 2s;">
+      <i class="fas fa-pepper-hot text-warning"></i>
+    </div>
+    <div class="ingredient lemon animate-float" style="top: 60%; right: 10%; animation-delay: 0.5s;">
+      <i class="fas fa-lemon text-warning"></i>
+    </div>
+  </div>
+
+  <div class="container position-relative">
+    <div class="row align-items-center py-5">
+      <div class="col-lg-6">
+        <div class="showcase-content">
+          <div class="content-badge mb-3">
+            <span class="badge bg-light text-primary px-3 py-2 rounded-pill shadow-sm">
+              <i class="fas fa-fire me-1"></i> Cocina Artesanal
+            </span>
+          </div>
+
+          <h1 class="showcase-title mb-4">
+            <span class="title-highlight">Sabores</span>
+            <span class="title-main">Auténticos</span>
+            <span class="title-accent">del Perú</span>
+          </h1>
+
+          <p class="showcase-description mb-4">
+            Cada platillo es una obra maestra culinaria, preparada con ingredientes frescos
+            y técnicas tradicionales que honran la rica herencia gastronómica peruana.
+          </p>
+
+          <div class="showcase-features mb-4">
+            <div class="feature-item">
+              <i class="fas fa-check-circle text-success me-2"></i>
+              <span>Ingredientes 100% frescos</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-check-circle text-success me-2"></i>
+              <span>Cocina tradicional peruana</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-check-circle text-success me-2"></i>
+              <span>Preparación artesanal</span>
+            </div>
+          </div>
+
+          <button class="btn btn-light btn-lg rounded-pill px-4 shadow-lg animate__animated animate__pulse animate__infinite">
+            <i class="fas fa-utensils me-2"></i>
+            Explorar Platillos
+          </button>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="showcase-visual">
+          <!-- Featured Dish Carousel -->
+          <div id="featuredDishesCarousel" class="carousel slide shadow-lg rounded-4 overflow-hidden"
+               data-bs-ride="carousel" *ngIf="featuredItems.length">
+            <div class="carousel-indicators">
+              <button type="button" *ngFor="let item of featuredItems; let i = index"
+                      data-bs-target="#featuredDishesCarousel" [attr.data-bs-slide-to]="i"
+                      [class.active]="i === 0" [attr.aria-label]="item.name"></button>
+            </div>
+
+            <div class="carousel-inner">
+              <div class="carousel-item" *ngFor="let item of featuredItems; let i = index"
+                   [class.active]="i === 0">
+                <div class="featured-dish-slide">
+                  <img [src]="dishImage(item)" [alt]="item.name" class="d-block w-100"
+                       (error)="onDishImageError(item, $event)">
+                  <div class="carousel-caption d-none d-md-block">
+                    <h5>{{ item.name }}</h5>
+                    <p>{{ item.description }}</p>
+                    <span class="badge bg-primary">S/ {{ item.price | number:'1.2-2' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button class="carousel-control-prev" type="button" data-bs-target="#featuredDishesCarousel" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#featuredDishesCarousel" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Next</span>
+            </button>
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="quick-stats mt-4">
+            <div class="stat-card">
+              <div class="stat-number">50+</div>
+              <div class="stat-label">Platillos</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">4.9</div>
+              <div class="stat-label">Calificación</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">15min</div>
+              <div class="stat-label">Tiempo promedio</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Enhanced Search and Filter Section -->
+<div class="container-fluid py-4">
+  <div class="row justify-content-center mb-5">
+    <div class="col-lg-10">
+      <div class="search-filter-card">
+        <div class="card-body p-4">
+          <div class="row g-4 align-items-end">
+            <!-- Search Input -->
+            <div class="col-lg-6">
+              <div class="search-wrapper">
+                <label class="form-label fw-semibold text-dark mb-3">
+                  <i class="fas fa-search me-2 text-primary"></i>
+                  Buscar en nuestros platillos
+                </label>
+                <div class="input-group input-group-lg">
+                  <input type="text"
+                         class="form-control form-control-lg border-0 bg-light"
+                         placeholder="Buscar por nombre, descripción o ingredientes..."
+                         [(ngModel)]="searchTerm"
+                         (input)="onSearch($event)"
+                         id="dishesSearch">
+                  <button class="btn btn-primary btn-lg px-4" type="button">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+                <div class="search-suggestions mt-2" *ngIf="searchTerm">
+                  <small class="text-muted">
+                    <i class="fas fa-lightbulb me-1"></i>
+                    Prueba buscar "ceviche", "lomo" o "vegetariano"
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Advanced Filters -->
+            <div class="col-lg-6">
+              <div class="filters-wrapper">
+                <label class="form-label fw-semibold text-dark mb-3">
+                  <i class="fas fa-sliders-h me-2 text-primary"></i>
+                  Filtros avanzados
+                </label>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <select class="form-select form-select-lg bg-light border-0" [(ngModel)]="selectedCategory" (change)="filterByCategory(selectedCategory)">
+                      <option value="all">Todas las categorías</option>
+                      <option *ngFor="let category of categories" [value]="category.id">{{category.name}}</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="btn-group w-100" role="group">
+                      <input type="checkbox" class="btn-check" id="availableOnlyDishes" [(ngModel)]="showAvailableOnly" (ngModelChange)="applyFilters()">
+                      <label class="btn btn-outline-success btn-lg flex-fill" for="availableOnlyDishes">
+                        <i class="fas fa-check-circle me-2"></i> Solo disponibles
+                      </label>
+                      <input type="checkbox" class="btn-check" id="vegetarianOnlyDishes" [(ngModel)]="showVegetarianOnly" (ngModelChange)="applyFilters()">
+                      <label class="btn btn-outline-success btn-lg flex-fill" for="vegetarianOnlyDishes">
+                        <i class="fas fa-leaf me-2"></i> Vegetarianos
+                      </label>
+  </div>
+</div>
+
+<!-- MODO VITRINA: modal de variantes/extras deshabilitado (solo servia para agregar al carrito). Descomentar para reactivar.
+<div class="config-modal-overlay" *ngIf="showConfigModal" (click)="closeConfigModal()">
+  <div class="config-modal-dialog" (click)="$event.stopPropagation()">
+    <button class="close-modal-btn" (click)="closeConfigModal()"><i class="fas fa-times"></i></button>
+
+    <div class="modal-header-section" *ngIf="configItem">
+      <img [src]="configItem.image" [alt]="configItem.name" class="modal-item-thumb" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2272%22 height=%2272%22%3E%3Crect fill=%22%23F3F4F6%22 width=%2272%22 height=%2272%22/%3E%3Ctext x=%2236%22 y=%2241%22 text-anchor=%22middle%22 fill=%22%239CA3AF%22 font-size=%2212%22%3EPlato%3C/text%3E%3C/svg%3E'">
+      <div class="modal-header-info">
+        <h3>{{ configItem.name }}</h3>
+        <p>{{ configItem.description }}</p>
+      </div>
+    </div>
+
+    <div class="modal-body-section" *ngIf="configItem">
+      <div class="config-group" *ngIf="configItem.variants && configItem.variants.length > 0">
+        <h4>Elige una variante</h4>
+        <div class="variant-list">
+          <div class="variant-item" [class.active]="!selectedVariant" (click)="selectVariant(null)">
+            <span>Precio normal</span>
+            <span class="price">S/ {{ configItem.price.toFixed(2) }}</span>
+          </div>
+          <div class="variant-item" *ngFor="let v of configItem.variants" [class.active]="selectedVariant?.name === v.name" (click)="selectVariant(v)">
+            <span>{{ v.name }}</span>
+            <span class="price">S/ {{ v.price.toFixed(2) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-group" *ngIf="configItem.modifiers && configItem.modifiers.length > 0">
+        <h4>Extras</h4>
+        <div class="modifier-list">
+          <label class="modifier-item" *ngFor="let m of configItem.modifiers">
+            <input type="checkbox" [checked]="isModifierSelected(m)" (change)="toggleModifier(m)">
+            <span>{{ m.name }}</span>
+            <span class="price" *ngIf="m.price">+ S/ {{ m.price.toFixed(2) }}</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="config-group">
+        <h4>Cantidad</h4>
+        <div class="qty-picker">
+          <button (click)="configQuantity = configQuantity > 1 ? configQuantity - 1 : 1">−</button>
+          <span>{{ configQuantity }}</span>
+          <button (click)="configQuantity = configQuantity + 1">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer-section">
+      <div class="total-row">
+        <span>Total</span>
+        <span class="total-amount">S/ {{ getConfigTotal().toFixed(2) }}</span>
+      </div>
+      <div class="footer-buttons">
+        <button class="btn btn-outline-secondary rounded-pill" (click)="closeConfigModal()">Cancelar</button>
+        <button class="btn btn-primary rounded-pill" (click)="confirmAddToCart()"><i class="fas fa-cart-plus me-2"></i>Agregar</button>
+      </div>
+    </div>
+  </div>
+</div>
+-->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Filters Display -->
+          <div class="active-filters mt-4" *ngIf="selectedCategory !== 'all' || searchTerm || showAvailableOnly || showVegetarianOnly">
+            <div class="d-flex align-items-center flex-wrap gap-2">
+              <span class="fw-semibold text-dark me-2">Filtros activos:</span>
+
+              <span class="badge bg-primary rounded-pill px-3 py-2" *ngIf="selectedCategory !== 'all'">
+                <i class="fas fa-tag me-1"></i>
+                {{getCategoryName(selectedCategory)}}
+                <button type="button" class="btn-close btn-close-white ms-2" (click)="filterByCategory('all')" style="font-size: 10px;"></button>
+              </span>
+
+              <span class="badge bg-info rounded-pill px-3 py-2" *ngIf="searchTerm">
+                <i class="fas fa-search me-1"></i>
+                "{{searchTerm}}"
+                <button type="button" class="btn-close btn-close-white ms-2" (click)="clearSearch()" style="font-size: 10px;"></button>
+              </span>
+
+              <span class="badge bg-success rounded-pill px-3 py-2" *ngIf="showAvailableOnly">
+                <i class="fas fa-check-circle me-1"></i>
+                Solo disponibles
+                <button type="button" class="btn-close btn-close-white ms-2" (click)="showAvailableOnly = false; applyFilters()" style="font-size: 10px;"></button>
+              </span>
+
+              <span class="badge bg-success rounded-pill px-3 py-2" *ngIf="showVegetarianOnly">
+                <i class="fas fa-leaf me-1"></i>
+                Vegetarianos
+                <button type="button" class="btn-close btn-close-white ms-2" (click)="showVegetarianOnly = false; applyFilters()" style="font-size: 10px;"></button>
+              </span>
+
+              <button type="button" class="btn btn-sm btn-outline-secondary ms-2" (click)="clearAllFilters()">
+                <i class="fas fa-times me-1"></i> Limpiar todo
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Enhanced Dishes Grid -->
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-6 col-md-6 col-lg-4" *ngFor="let item of filteredItems">
+      <div class="dish-card-modern h-100 animate__animated animate__fadeInUp"
+           [class.out-of-stock]="!isItemCurrentlyAvailable(item)">
+        <div class="card-front">
+          <!-- Image Container -->
+          <div class="dish-image-wrapper">
+            <img [src]="item.image" [alt]="item.name" class="dish-image"
+                 *ngIf="item.image" (load)="onDishImageLoad(item)" (error)="onDishImageError(item)"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="d-flex justify-content-center align-items-center bg-light" style="height: 160px;" *ngIf="!item.image">
+              <i class="fas fa-utensils fa-3x text-muted"></i>
+            </div>
+            <div class="image-overlay"></div>
+
+            <!-- Badges -->
+            <div class="dish-badges-modern">
+              <span class="badge-modern popular" *ngIf="item.tags.includes('popular')">
+                <i class="fas fa-star"></i> Popular
+              </span>
+              <span class="badge-modern spicy" *ngIf="item.tags.includes('spicy')">
+                <i class="fas fa-fire"></i> Picante
+              </span>
+              <span class="badge-modern vegetarian" *ngIf="item.tags.includes('vegetarian')">
+                <i class="fas fa-leaf"></i> Veg
+              </span>
+              <span class="badge-modern unavailable" *ngIf="!isItemCurrentlyAvailable(item)">
+                <i class="fas fa-clock"></i> {{ item.isAvailable ? 'Fuera de horario' : 'No disponible' }}
+              </span>
+            </div>
+
+            <!-- MODO VITRINA: boton de agregado rapido deshabilitado. Descomentar para reactivar.
+            <div class="quick-add-overlay" *ngIf="isItemCurrentlyAvailable(item)">
+              <button class="quick-add-btn" (click)="addToCart(item)">
+                <i class="fas fa-cart-plus fa-2x"></i>
+                <span class="ms-2">Agregar</span>
+              </button>
+            </div>
+            -->
+          </div>
+
+          <!-- Card Content -->
+          <div class="dish-content-modern">
+            <div class="dish-header">
+              <h5 class="dish-title">{{ item.name }}</h5>
+              <div class="dish-rating">
+                <i class="fas fa-star text-warning" *ngFor="let star of [1,2,3,4,5]"></i>
+                <span class="rating-text ms-1">4.8</span>
+              </div>
+            </div>
+
+            <p class="dish-description">{{ item.description }}</p>
+
+            <!-- Dish Features -->
+            <div class="dish-features" *ngIf="item.tags.length > 0">
+              <span class="feature-tag" *ngFor="let tag of item.tags.slice(0, 3)">
+                <i class="fas fa-check-circle me-1"></i>{{ tag }}
+              </span>
+            </div>
+
+            <!-- Sale period label -->
+            <div class="dish-features" *ngIf="getItemPeriodLabel(item)">
+              <span class="feature-tag" [class.text-secondary]="!isItemCurrentlyAvailable(item)">
+                <i class="fas fa-clock me-1"></i>{{ getItemPeriodLabel(item) }}
+              </span>
+            </div>
+
+            <!-- Price and Actions -->
+            <div class="dish-footer-modern">
+              <div class="price-section">
+                <span class="current-price">S/ {{ item.price }}</span>
+                <span class="original-price" *ngIf="item.tags.includes('popular')">S/ {{ item.price + 5 }}</span>
+              </div>
+
+              <div class="action-buttons">
+                <button class="btn-favorite" (click)="toggleFavorite(item)">
+                  <i class="fas fa-heart"></i>
+                </button>
+                <!-- MODO VITRINA: boton de agregar al carrito deshabilitado. Descomentar para reactivar.
+                <button class="btn-add-to-cart"
+                        (click)="addToCart(item)"
+                        [disabled]="!isItemCurrentlyAvailable(item)"
+                        [class.btn-secondary]="!isItemCurrentlyAvailable(item)">
+                  <i class="fas fa-cart-plus me-1"></i>
+                  {{ isItemCurrentlyAvailable(item) ? 'Agregar' : (item.isAvailable ? 'Fuera de horario' : 'Agotado') }}
+                </button>
+                -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hover Effect -->
+        <div class="card-hover-effect"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enhanced Empty State -->
+  <div class="text-center py-5" *ngIf="filteredItems.length === 0">
+    <div class="empty-state-modern">
+      <div class="empty-icon-wrapper">
+        <i class="fas fa-search empty-icon"></i>
+      </div>
+      <h3 class="empty-title">No se encontraron platillos</h3>
+      <p class="empty-subtitle">Intenta con otros términos de búsqueda o categorías</p>
+      <button class="btn btn-primary btn-lg rounded-pill px-4" (click)="clearAllFilters()">
+        <i class="fas fa-refresh me-2"></i> Mostrar Todos
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODO VITRINA: boton flotante de carrito deshabilitado. Descomentar para reactivar.
+<button class="cart-fab" *ngIf="getCartItemCount() > 0" (click)="openCartSidebar()">
+  <span class="cart-fab-count">{{ getCartItemCount() }}</span>
+  <i class="fas fa-shopping-cart"></i>
+</button>
+-->
+
+<!-- Quick Action Buttons -->
+<div class="container-fluid py-3" *ngIf="filteredItems.length > 0">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="d-flex justify-content-end gap-2">
+        <!-- RESERVACIONES DESHABILITADO (posible implementación futura).
+        <button class="btn btn-outline-primary rounded-pill px-4" (click)="goToReservations()">
+          <i class="fas fa-calendar-alt me-2"></i>Reservar Mesa
+        </button>
+        -->
+        <button class="btn btn-warning rounded-pill px-4" (click)="callNow()">
+          <i class="fas fa-phone me-2"></i>Llamar Ahora
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Alliker | Pollería</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2C1810">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+  <!-- Los iconos deben estar visibles en el primer render. Font Awesome declara
+       font-display:block, asi que sus glifos quedan invisibles hasta que llega el
+       woff2; sin preload ese fetch recien arranca despues de parsear el CSS
+       (HTML -> css -> @font-face -> woff2 = dos saltos). Con preload el navegador
+       lo descarga en paralelo con el CSS. Las rutas son estables (public/fonts),
+       no hasheadas, justamente para poder referenciarlas aqui. -->
+  <link rel="preload" as="font" type="font/woff2" href="fonts/fa-solid-900.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="fonts/fa-brands-400.woff2" crossorigin>
+
+  <!-- Google Fonts - Inter (Admin) + Playfair Display (Public) -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=Playfair+Display:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+
+  <!-- Font Awesome y Bootstrap JS se empaquetan desde node_modules (ver angular.json).
+       No usar CDN: la CSP de public/_headers solo permite 'self' para script/style/font,
+       así que los recursos externos quedaban bloqueados en producción. -->
+  <link rel="manifest" href="manifest.webmanifest">
+</head>
+<body>
+  <app-root></app-root>
+
+  <!-- Culqi Checkout v4 -->
+  <!-- MODO VITRINA: pago en linea deshabilitado. Descomentar para reactivar el checkout de Culqi.
+  <script src="https://checkout.culqi.com/js/v4"></script>
+  -->
+  <noscript>Please enable JavaScript to continue using this application.</noscript>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<div class="offcanvas offcanvas-end" [class.show]="visible" tabindex="-1">
+  <div class="offcanvas-header border-bottom">
+    <div>
+      <h5 class="offcanvas-title fw-bold">
+        <i class="fas fa-shopping-cart text-primary me-2"></i>
+        Tu Carrito
+      </h5>
+      <small class="text-muted" *ngIf="getCartItemCount() > 0">
+        {{ getCartItemCount() }} {{ getCartItemCount() === 1 ? 'producto' : 'productos' }}
+      </small>
+    </div>
+    <button type="button" class="btn-close-custom" (click)="close()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <div class="offcanvas-body">
+    <div class="empty-cart text-center py-5" *ngIf="getCartItems().length === 0">
+      <div class="empty-icon-wrapper mb-3">
+        <i class="fas fa-shopping-cart fa-4x text-muted opacity-25"></i>
+      </div>
+      <h6 class="text-muted">Tu carrito está vacío</h6>
+      <p class="text-muted small">Agrega productos desde el menú</p>
+    </div>
+
+    <div class="cart-items" *ngIf="getCartItems().length > 0">
+      <div class="cart-item" *ngFor="let cartItem of getCartItems(); let i = index">
+        <div class="item-image-col" *ngIf="cartItem.item.image">
+          <img [src]="cartItem.item.image" [alt]="cartItem.item.name" class="item-thumb">
+        </div>
+        <div class="item-details-col">
+          <div class="item-name">{{ cartItem.item.name }}</div>
+          <div class="item-variant" *ngIf="cartItem.selectedVariant">
+            <small class="text-muted">{{ cartItem.selectedVariant.name }}</small>
+          </div>
+          <div class="item-modifiers" *ngIf="cartItem.selectedModifiers && cartItem.selectedModifiers.length > 0">
+            <small class="text-muted" *ngFor="let m of cartItem.selectedModifiers">+{{ m.name }} </small>
+          </div>
+          <div class="item-price">S/ {{ getItemPrice(cartItem).toFixed(2) }}</div>
+          <div class="item-actions-row">
+            <div class="qty-controls">
+              <button class="qty-btn" (click)="updateQuantity(i, cartItem.quantity - 1)" [disabled]="cartItem.quantity <= 1">
+                <i class="fas fa-minus"></i>
+              </button>
+              <span class="qty-value">{{ cartItem.quantity }}</span>
+              <button class="qty-btn" (click)="updateQuantity(i, cartItem.quantity + 1)">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+            <div class="item-subtotal">S/ {{ getItemSubtotal(cartItem).toFixed(2) }}</div>
+            <button class="remove-btn" (click)="removeItem(i)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="offcanvas-footer border-top p-3" *ngIf="getCartItems().length > 0">
+    <div class="total-row d-flex justify-content-between align-items-center mb-3">
+      <span class="fw-semibold">Total</span>
+      <span class="total-amount fw-bold text-primary fs-5">S/ {{ getCartTotal() }}</span>
+    </div>
+
+    <!-- Branch Picker -->
+    <div *ngIf="showBranchPicker" class="branch-picker-section mb-3">
+      <h6 class="fw-semibold mb-2">
+        <i class="fas fa-store text-primary me-1"></i>Selecciona una sucursal
+      </h6>
+      <div class="branch-list-sidebar">
+        <div class="branch-option p-2 rounded-3 mb-2 d-flex align-items-center gap-2"
+             *ngFor="let b of branches"
+             (click)="selectBranch(b.id)">
+          <i class="fas fa-store text-primary"></i>
+          <div>
+            <div class="fw-semibold small">{{ b.name }}</div>
+            <small class="text-muted">{{ b.address }}</small>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-outline-secondary w-100 rounded-pill mt-2" (click)="cancelBranchSelection()">
+        Cancelar
+      </button>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons" *ngIf="!showBranchPicker">
+      <button class="btn btn-success w-100 mb-2 rounded-pill py-2" (click)="goToPayment()">
+        <i class="fas fa-credit-card me-2"></i>Ir a Pagar
+      </button>
+      <button class="btn btn-outline-primary w-100 rounded-pill py-2" (click)="goToCart()">
+        <i class="fas fa-list me-2"></i>Ver Carrito Completo
+      </button>
+    </div>
+  </div>
+</div>
+<div class="offcanvas-backdrop fade" [class.show]="visible" (click)="close()"></div>

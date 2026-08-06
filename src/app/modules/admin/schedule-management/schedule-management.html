@@ -1,0 +1,187 @@
+<div class="schedule-management">
+  <div class="header">
+    <h2>Horarios de Servicio</h2>
+    <button class="btn-primary" (click)="addNewPeriod()">Agregar Franja</button>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">
+        <i class="fas fa-utensils"></i>
+        <h3>Franjas de servicio</h3>
+      </div>
+      <p class="section-desc">
+        Define en qué días y a qué horas se vende cada grupo de platos. Una franja que termina
+        después de su inicio (ej. 17:00 - 01:00) cruza la medianoche.
+      </p>
+    </div>
+
+    <div class="periods-grid">
+      <div *ngFor="let period of periods" class="period-card" [class.inactive]="!period.active">
+        <div class="period-header">
+          <div class="period-icon">
+            <i [class]="period.icon || 'fas fa-clock'"></i>
+          </div>
+          <div class="period-info">
+            <h4>{{period.name}}</h4>
+            <span class="period-time">{{ getPeriodTimeLabel(period) }}</span>
+          </div>
+          <div class="period-actions">
+            <label class="switch" title="Habilitar / Deshabilitar">
+              <input type="checkbox" [checked]="period.active" (change)="togglePeriodActive(period)">
+              <span class="slider"></span>
+            </label>
+            <button class="btn-edit" (click)="editPeriod(period)">Editar</button>
+            <button class="btn-delete" (click)="deletePeriod(period)">Eliminar</button>
+          </div>
+        </div>
+        <div class="period-days">
+          <span class="day-chip" *ngFor="let day of weekdays" [class.selected]="period.days.includes(day.value)">
+            {{day.short}}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="periods.length === 0">
+      <i class="fas fa-clock"></i>
+      <h3>Sin franjas configuradas</h3>
+      <p>Agrega franjas para controlar cuándo se venden los platos. Sin franjas asignadas, los platos se venden todo el día.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">
+        <i class="fas fa-calendar-alt"></i>
+        <h3>Días de descanso del local</h3>
+      </div>
+      <p class="section-desc">
+        En estos días todos los platos se deshabilitan automáticamente, sin importar las franjas.
+        Martes está configurado por defecto; puedes marcar tantos días como necesites.
+      </p>
+    </div>
+
+    <div class="closed-days">
+      <button
+        *ngFor="let day of weekdays"
+        type="button"
+        class="closed-day-chip"
+        [class.selected]="isClosedDay(day.value)"
+        (click)="toggleClosedDay(day.value)">
+        {{ day.label }}
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label for="closedMessage">Mensaje que verá el cliente cuando el local esté cerrado</label>
+      <textarea id="closedMessage" rows="2" [(ngModel)]="closedMessage" (input)="onMessageChange()" name="closedMessage"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Cierres puntuales (feriados, mantenimiento)</label>
+      <div class="closed-date-row">
+        <input type="date" [(ngModel)]="newClosedDate" name="newClosedDate" (change)="addClosedDate()" [class.dirty]="scheduleDirty">
+        <button type="button" class="btn-secondary" (click)="addClosedDate()">Agregar fecha</button>
+      </div>
+      <div class="closed-dates-list" *ngIf="closedDates.length > 0">
+        <span class="closed-date-chip" *ngFor="let date of closedDates">
+          {{ date }}
+          <button type="button" (click)="removeClosedDate(date)" aria-label="Quitar fecha">&times;</button>
+        </span>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-primary" (click)="saveSchedule()" [disabled]="savingSchedule">
+        {{ savingSchedule ? 'Guardando...' : 'Guardar Horario' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Add/Edit Form Modal -->
+  <div *ngIf="showForm" class="modal-overlay" (click)="cancelForm()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{editingPeriod ? 'Editar Franja' : 'Agregar Nueva Franja'}}</h3>
+        <button class="close-btn" (click)="cancelForm()">&times;</button>
+      </div>
+
+      <form (ngSubmit)="savePeriod()" class="period-form">
+        <div class="form-group">
+          <label for="periodName">Nombre *</label>
+          <input type="text" id="periodName" [(ngModel)]="newPeriod.name" name="periodName" required placeholder="Ej: Menú Mediodía" [class.invalid]="formErrors['name']">
+          <small class="field-error" *ngIf="formErrors['name']">{{ formErrors['name'] }}</small>
+        </div>
+
+        <div class="form-group">
+          <label>Días de la semana *</label>
+          <div class="day-selector">
+            <button
+              *ngFor="let day of weekdays"
+              type="button"
+              class="day-chip day-chip-selectable"
+              [class.selected]="isDaySelected(day.value)"
+              (click)="toggleDayInForm(day.value)">
+              {{day.label}}
+            </button>
+          </div>
+          <small class="field-error" *ngIf="formErrors['days']">{{ formErrors['days'] }}</small>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startTime">Hora de inicio *</label>
+            <input type="time" id="startTime" [(ngModel)]="newPeriod.startTime" name="startTime" required [class.invalid]="formErrors['time']">
+          </div>
+          <div class="form-group">
+            <label for="endTime">Hora de fin *</label>
+            <input type="time" id="endTime" [(ngModel)]="newPeriod.endTime" name="endTime" required [class.invalid]="formErrors['time']">
+          </div>
+        </div>
+        <small class="field-error" *ngIf="formErrors['time']">{{ formErrors['time'] }}</small>
+        <p class="hint">Si la hora de fin es menor que la de inicio, la franja termina al día siguiente.</p>
+
+        <div class="form-group">
+          <label for="periodIcon">Ícono</label>
+          <div class="icon-selector">
+            <button
+              *ngFor="let icon of iconOptions"
+              type="button"
+              class="icon-option"
+              [class.selected]="newPeriod.icon === icon"
+              (click)="newPeriod.icon = icon">
+              <i [class]="icon"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="periodOrder">Orden de aparición</label>
+          <input type="number" id="periodOrder" [(ngModel)]="newPeriod.order" name="periodOrder" min="0" step="1">
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label for="periodActive" class="checkbox-label">
+            <input type="checkbox" id="periodActive" [checked]="newPeriod.active" (change)="newPeriod.active = $event.target.checked" name="periodActive" class="checkbox-input">
+            <span class="checkbox-text">Activa</span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="cancelForm()">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="savingPeriod">
+            {{ savingPeriod ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

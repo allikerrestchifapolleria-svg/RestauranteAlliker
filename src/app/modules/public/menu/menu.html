@@ -1,0 +1,436 @@
+<!-- Enhanced Hero Section with Interactive Elements -->
+<section class="menu-hero position-relative overflow-hidden">
+  <div class="hero-background">
+    <div class="hero-gradient"></div>
+    <div class="hero-pattern"></div>
+    <div class="floating-elements">
+      <div class="floating-plate plate-1">
+        <i class="fas fa-utensils"></i>
+      </div>
+      <div class="floating-plate plate-2">
+        <i class="fas fa-pepper-hot"></i>
+      </div>
+      <div class="floating-plate plate-3">
+        <i class="fas fa-lemon"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="container position-relative">
+    <div class="row justify-content-center align-items-center min-vh-75 py-5">
+      <div class="col-lg-8 text-center">
+        <div class="hero-content animate__animated animate__fadeInUp">
+          <!-- Award Badge -->
+          <div class="hero-badge mb-4">
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">
+              <i class="fas fa-star me-1"></i> Menú Premiun 2024
+            </span>
+          </div>
+
+          <!-- Main Title -->
+          <h1 class="hero-title mb-4">
+            <span class="title-icon">
+              <i class="fas fa-utensils text-warning"></i>
+            </span>
+            <span class="title-text">Nuestro Menú</span>
+            <span class="title-accent">Gastronómico</span>
+          </h1>
+
+          <!-- Subtitle -->
+          <p class="hero-subtitle mb-5">
+            Descubre sabores auténticos de la gastronomía peruana.
+            Cada plato cuenta una historia de tradición, pasión y sabores inolvidables.
+          </p>
+
+          <!-- Interactive Category Pills -->
+          <div class="category-pills mb-4">
+            <button type="button"
+                    class="category-pill animate__animated animate__fadeInUp"
+                    [class.active]="selectedCategory === 'all'"
+                    (click)="filterByCategory('all')"
+                    data-bs-toggle="tooltip"
+                    title="Ver todos los platos">
+              <div class="pill-icon">
+                <i class="fas fa-th-large"></i>
+              </div>
+              <span class="pill-text">Todos</span>
+              <span class="pill-count">{{getTotalItems()}}</span>
+            </button>
+            <button type="button"
+                    class="category-pill animate__animated animate__fadeInUp"
+                    *ngFor="let category of allCategories; let i = index"
+                    [class.active]="selectedCategory === category.id"
+                    [attr.data-bs-toggle]="'tooltip'"
+                    [attr.title]="category.name"
+                    (click)="filterByCategory(category.id)"
+                    [style.animation-delay.ms]="(i + 1) * 1000">
+              <div class="pill-icon">
+                <i class="fas fa-utensils"></i>
+              </div>
+              <span class="pill-text">{{category.name}}</span>
+              <span class="pill-count">{{getCategoryCount(category.id)}}</span>
+            </button>
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="hero-stats">
+            <div class="stat-item">
+              <div class="stat-icon">
+                <i class="fas fa-clock text-info"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">15-25 min</div>
+                <div class="stat-label">Tiempo de preparación</div>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">
+                <i class="fas fa-shipping-fast text-success"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">Gratis</div>
+                <div class="stat-label">Delivery en centro</div>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">
+                <i class="fas fa-star text-warning"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">4.8/5</div>
+                <div class="stat-label">Calificación promedio</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll Indicator -->
+  <div class="scroll-indicator">
+    <div class="scroll-mouse">
+      <div class="scroll-wheel"></div>
+    </div>
+    <div class="scroll-text">Explora nuestro menú</div>
+  </div>
+</section>
+
+<!-- Closed Banner -->
+<div class="container-fluid py-4" *ngIf="isClosed">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="closed-banner d-flex align-items-center gap-3 p-4 rounded-4">
+        <div class="closed-banner-icon">
+          <i class="fas fa-store-slash fa-2x"></i>
+        </div>
+        <div class="flex-grow-1">
+          <h3 class="mb-1 fw-bold">Hoy estamos cerrados</h3>
+          <p class="mb-0">{{ closedMessage }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Enhanced Search and Filter Section -->
+<div class="container-fluid py-4">
+  <div class="row justify-content-center mb-5">
+    <div class="col-lg-10">
+      <div class="search-filter-card">
+        <div class="card-body p-4">
+          <div class="row g-4 align-items-end">
+            <!-- Search Input -->
+            <div class="col-lg-6">
+              <div class="search-wrapper">
+                <label class="form-label fw-semibold text-dark mb-3">
+                  <i class="fas fa-search me-2 text-primary"></i>
+                  Buscar en el menú
+                </label>
+                <div class="input-group input-group-lg">
+                  <input type="text"
+                         class="form-control form-control-lg border-0 bg-light"
+                         placeholder="Buscar por nombre, descripción o ingredientes..."
+                         [(ngModel)]="searchTerm"
+                         (input)="onSearch($event)"
+                         id="menuSearch">
+                  <button class="btn btn-primary btn-lg px-4" type="button">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+                <div class="search-suggestions mt-2" *ngIf="searchTerm">
+                  <small class="text-muted">
+                    <i class="fas fa-lightbulb me-1"></i>
+                    Prueba buscar "ceviche", "lomo" o "vegetariano"
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Advanced Filters -->
+            <div class="col-lg-6">
+              <div class="filters-wrapper">
+                <label class="form-label fw-semibold text-dark mb-3">
+                  <i class="fas fa-sliders-h me-2 text-primary"></i>
+                  Filtros avanzados
+                </label>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <select class="form-select form-select-lg bg-light border-0" [(ngModel)]="selectedCategory" (change)="filterByCategory(selectedCategory)">
+                      <option value="all">Todas las categorías</option>
+                      <option *ngFor="let category of allCategories" [value]="category.id">{{category.name}}</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="btn-group w-100" role="group">  
+                      <input type="checkbox" class="btn-check" id="availableOnly" [(ngModel)]="showAvailableOnly" (ngModelChange)="applyFilters()">
+                      <label class="btn btn-outline-success btn-lg flex-fill" for="availableOnly">
+                        <i class="fas fa-check-circle me-2"></i> Solo disponibles
+                      </label>
+                      <input type="checkbox" class="btn-check" id="vegetarianOnly" [(ngModel)]="showVegetarianOnly" (ngModelChange)="applyFilters()">
+                      <label class="btn btn-outline-success btn-lg flex-fill" for="vegetarianOnly">
+                        <i class="fas fa-leaf me-2"></i> Vegetarianos
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Filters Display -->
+          <div class="active-filters mt-4" *ngIf="selectedCategory !== 'all' || searchTerm || showAvailableOnly || showVegetarianOnly">
+            <div class="d-flex align-items-center flex-wrap gap-2">
+              <span class="fw-semibold text-dark me-2">Filtros activos:</span>
+
+              <span class="badge bg-primary rounded-pill px-3 py-2" *ngIf="selectedCategory !== 'all'">
+                <i class="fas fa-tag me-1"></i>
+                {{getCategoryName(selectedCategory)}}
+                <button type="button" class="btn-close btn-close-white ms-2" (click)="filterByCategory('all')" style="font-size: 10px;"></button>
+              </span>
+
+              <span class="badge bg-info rounded-pill px-3 py-2" *ngIf="searchTerm">
+                <i class="fas fa-search me-1"></i>
+                "{{searchTerm}}"
+                <button type="button" class="btn-close btn-close-white ms-2" (click)="clearSearch()" style="font-size: 10px;"></button>
+              </span>
+
+              <span class="badge bg-success rounded-pill px-3 py-2" *ngIf="showAvailableOnly">
+                <i class="fas fa-check-circle me-1"></i>
+                Solo disponibles
+                <button type="button" class="btn-close btn-close-white ms-2" (click)="showAvailableOnly = false; applyFilters()" style="font-size: 10px;"></button>
+              </span>
+
+              <span class="badge bg-success rounded-pill px-3 py-2" *ngIf="showVegetarianOnly">
+                <i class="fas fa-leaf me-1"></i>
+                Vegetarianos
+                <button type="button" class="btn-close btn-close-white ms-2" (click)="showVegetarianOnly = false; applyFilters()" style="font-size: 10px;"></button>
+              </span>
+
+              <button type="button" class="btn btn-sm btn-outline-secondary ms-2" (click)="clearAllFilters()">
+                <i class="fas fa-times me-1"></i> Limpiar todo
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODO VITRINA: modal de variantes/extras deshabilitado (solo servia para agregar al carrito). Descomentar para reactivar.
+  <div class="modal-overlay" *ngIf="showConfigModal" (click)="closeConfigModal()">
+    <div class="config-modal" (click)="$event.stopPropagation()">
+      <button class="modal-close-btn" (click)="closeConfigModal()"><i class="fas fa-times"></i></button>
+
+      <div class="modal-header-section" *ngIf="configItem">
+        <img [src]="configItem.image" [alt]="configItem.name" class="modal-item-img" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22%3E%3Crect fill=%22%23F3F4F6%22 width=%2280%22 height=%2280%22/%3E%3Ctext x=%2240%22 y=%2245%22 text-anchor=%22middle%22 fill=%22%239CA3AF%22 font-size=%2214%22%3EPlato%3C/text%3E%3C/svg%3E'">
+        <div class="modal-header-info">
+          <h3 class="modal-item-name">{{ configItem.name }}</h3>
+          <p class="modal-item-desc">{{ configItem.description }}</p>
+        </div>
+      </div>
+
+      <div class="modal-body" *ngIf="configItem">
+        <div class="config-section" *ngIf="configItem.variants && configItem.variants.length > 0">
+          <h4 class="config-section-title">Elige una variante</h4>
+          <div class="variant-options">
+            <div class="variant-option"
+                 [class.selected]="!selectedVariant"
+                 (click)="selectVariant(null)">
+              <span class="variant-name">Precio normal</span>
+              <span class="variant-price">S/ {{ configItem.price.toFixed(2) }}</span>
+            </div>
+            <div class="variant-option"
+                 *ngFor="let v of configItem.variants"
+                 [class.selected]="selectedVariant?.name === v.name"
+                 (click)="selectVariant(v)">
+              <span class="variant-name">{{ v.name }}</span>
+              <span class="variant-price">S/ {{ v.price.toFixed(2) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-section" *ngIf="configItem.modifiers && configItem.modifiers.length > 0">
+          <h4 class="config-section-title">Extras</h4>
+          <div class="modifier-options">
+            <label class="modifier-option" *ngFor="let m of configItem.modifiers">
+              <input type="checkbox" [checked]="isModifierSelected(m)" (change)="toggleModifier(m)">
+              <span class="modifier-name">{{ m.name }}</span>
+              <span class="modifier-price" *ngIf="m.price">+ S/ {{ m.price.toFixed(2) }}</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h4 class="config-section-title">Cantidad</h4>
+          <div class="quantity-controls">
+            <button class="qty-btn" (click)="configQuantity = configQuantity > 1 ? configQuantity - 1 : 1">−</button>
+            <span class="qty-value">{{ configQuantity }}</span>
+            <button class="qty-btn" (click)="configQuantity = configQuantity + 1">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer-section">
+        <div class="total-display">
+          <span class="total-label">Total</span>
+          <span class="total-amount">S/ {{ getConfigTotal().toFixed(2) }}</span>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-outline-secondary rounded-pill px-4" (click)="closeConfigModal()">Cancelar</button>
+          <button class="btn btn-primary rounded-pill px-4" (click)="confirmAddToCart()">
+            <i class="fas fa-cart-plus me-2"></i>Agregar al carrito
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  -->
+</div>
+
+<!-- Menu Grid -->
+<div class="container-fluid py-4">
+  <div class="row g-3 menu-items-row">
+    <div class="col-6 col-md-6 col-lg-4 col-xl-3" *ngFor="let item of filteredItems">
+      <div class="card menu-card h-100 shadow-sm hover-lift">
+        <div class="position-relative">
+          <!-- Image Container -->
+          <div class="menu-image-container">
+            <img [src]="item.image"
+                 [alt]="item.name"
+                 class="card-img-top menu-image"
+                 [class.opacity-50]="!isItemCurrentlyAvailable(item)"
+                 loading="lazy"
+                 (load)="onItemImageLoad(item)"
+                 (error)="onItemImageError(item)"
+                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22%3E%3Crect fill=%22%23F3F4F6%22 width=%2280%22 height=%2280%22/%3E%3Ctext x=%2240%22 y=%2245%22 text-anchor=%22middle%22 fill=%22%239CA3AF%22 font-size=%2214%22%3EPlato%3C/text%3E%3C/svg%3E'">
+            <div class="image-overlay" *ngIf="!isItemCurrentlyAvailable(item)">
+              <div class="overlay-content">
+                <i class="fas fa-clock fa-2x text-white"></i>
+                <span class="overlay-text">{{ item.isAvailable ? 'Fuera de horario' : 'No disponible' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Badges -->
+          <span class="position-absolute top-0 start-0 bg-warning text-dark px-2 py-1 small fw-bold mt-2 ms-2 rounded-pill"
+                *ngIf="item.tags && item.tags.includes('Nuevo')">
+            <i class="fas fa-star me-1"></i> Nuevo
+          </span>
+          <span class="position-absolute top-0 end-0 bg-success text-white px-2 py-1 small fw-bold mt-2 me-2 rounded-pill"
+                *ngIf="item.tags && item.tags.includes('Vegetariano')">
+            <i class="fas fa-leaf me-1"></i> Veg
+          </span>
+          <span class="position-absolute top-0 end-0 bg-danger text-white px-2 py-1 small fw-bold mt-2 me-2 rounded-pill"
+                *ngIf="item.tags && item.tags.includes('Picante') && !(item.tags && item.tags.includes('Vegetariano'))">
+            <i class="fas fa-fire me-1"></i> Picante
+          </span>
+        </div>
+
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title fw-bold text-dark mb-2">{{ item.name }}</h5>
+          <p class="card-text text-muted flex-grow-1 mb-3">{{ item.description }}</p>
+
+          <!-- Tags -->
+          <div class="menu-tags mb-3" *ngIf="item.tags && item.tags.length > 0">
+            <span class="badge bg-light text-dark me-1 mb-1" *ngFor="let tag of item.tags">
+              {{tag}}
+            </span>
+          </div>
+
+          <!-- Sale period label -->
+          <div class="mb-3" *ngIf="getItemPeriodLabel(item)">
+            <span class="badge bg-info text-dark me-1 mb-1" [class.bg-secondary]="!isItemCurrentlyAvailable(item)">
+              <i class="fas fa-clock me-1"></i>{{ getItemPeriodLabel(item) }}
+            </span>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mt-auto">
+            <span class="h5 mb-0 text-primary fw-bold">S/ {{ item.price.toFixed(2) }}</span>
+            <!-- MODO VITRINA: boton de agregar al carrito deshabilitado. Descomentar para reactivar.
+            <button class="btn btn-primary btn-sm rounded-pill px-3"
+                    (click)="addToCart(item)"
+                    [disabled]="!isItemCurrentlyAvailable(item)"
+                    [ngClass]="{'btn-secondary': !isItemCurrentlyAvailable(item)}">
+              <i class="fas fa-cart-plus me-1"></i>
+              <span class="d-none d-sm-inline">{{ isItemCurrentlyAvailable(item) ? 'Agregar' : (item.isAvailable ? 'Fuera de horario' : 'No disponible') }}</span>
+              <span class="d-sm-none">{{ isItemCurrentlyAvailable(item) ? '+' : '✗' }}</span>
+            </button>
+            -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- Loading State -->
+    <div class="text-center py-5" *ngIf="filteredItems.length === 0 && !searchTerm && selectedCategory === 'all'">
+      <div class="d-flex flex-column align-items-center">
+        <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <h4 class="mt-4 text-primary fw-bold">Preparando delicias</h4>
+        <p class="text-muted">Cargando nuestro delicioso menú...</p>
+        <div class="progress mt-3" style="width: 300px; height: 8px;">
+          <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 100%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="text-center py-5" *ngIf="filteredItems.length === 0 && (searchTerm || selectedCategory !== 'all')">
+      <div class="empty-state-icon mb-4">
+        <i class="fas fa-search fa-6x text-secondary opacity-25"></i>
+      </div>
+      <h4 class="text-muted fw-bold mb-3">No se encontraron productos</h4>
+      <p class="text-muted mb-4">Intenta con otros filtros o categorías</p>
+      <button class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm" (click)="clearAllFilters()">
+        <i class="fas fa-refresh me-2"></i> Mostrar Todo
+      </button>
+    </div>
+  </div>
+
+  <!-- MODO VITRINA: boton flotante de carrito deshabilitado. Descomentar para reactivar.
+  <button class="cart-fab" *ngIf="getCartItemCount() > 0" (click)="openCartSidebar()">
+    <span class="cart-fab-count">{{ getCartItemCount() }}</span>
+    <i class="fas fa-shopping-cart"></i>
+  </button>
+  -->
+
+  <!-- Quick Action Buttons -->
+  <div class="container-fluid py-3" *ngIf="filteredItems.length > 0">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="d-flex justify-content-end gap-2">
+          <!-- RESERVACIONES DESHABILITADO (posible implementación futura).
+          <button class="btn btn-outline-primary rounded-pill px-4" (click)="goToReservations()">
+            <i class="fas fa-calendar-alt me-2"></i>Reservar Mesa
+          </button>
+          -->
+          <button class="btn btn-warning rounded-pill px-4" (click)="callNow()">
+            <i class="fas fa-phone me-2"></i>Llamar Ahora
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>

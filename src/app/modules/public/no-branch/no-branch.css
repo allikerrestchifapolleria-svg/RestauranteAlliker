@@ -1,0 +1,20 @@
+/* ===== WARM LIGHT THEME - ALLIKER NO-BRANCH ===== */
+:host {
+  --primary-color: #c0392b;
+  --primary-hover: #e74c3c;
+  --accent-gold: #d4af37;
+  --text-dark: #1e272e;
+  --text-secondary: #636e72;
+  --bg-white: #FFFBF5;
+  --bg-cream: #F9F3E8;
+  --border-gold: rgba(212, 175, 55, 0.2);
+}
+
+.no-branch-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background: linear-gradient(135deg, #FFFBF5 0%, #F9F3E8 50%, #f0e6d4 100%);
+}

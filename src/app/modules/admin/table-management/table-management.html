@@ -1,0 +1,228 @@
+<div class="table-management">
+
+  <div class="header">
+    <h2>Gestión de Mesas</h2>
+    <div class="header-buttons">
+      <button class="btn-primary" [class.active]="showMergeMode" (click)="toggleMergeMode()">
+        <i class="fas fa-link"></i> Unir Permanente
+      </button>
+      <button class="btn-primary" (click)="addNewTable()">Agregar Mesa</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <input
+        type="text"
+        placeholder="Buscar mesas..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()">
+    </div>
+  </div>
+
+  <!-- Merge Banner -->
+  <div class="merge-banner" *ngIf="showMergeMode">
+    <div class="merge-banner-content">
+      <i class="fas fa-object-group"></i>
+      <span>
+        <strong>Modo unión permanente</strong>
+        — Selecciona 2 o más mesas libres para crear una Mesa Familiar Permanente
+      </span>
+    </div>
+    <div class="merge-banner-actions">
+      <span class="selected-count">{{ selectedForMerge.size }} seleccionadas</span>
+      <button class="btn btn-confirm-merge" [disabled]="selectedForMerge.size < 2" (click)="confirmPermanentMerge()">
+        <i class="fas fa-check"></i> Confirmar Unión
+      </button>
+      <button class="btn btn-cancel-merge" (click)="toggleMergeMode()">
+        <i class="fas fa-times"></i> Cancelar
+      </button>
+    </div>
+  </div>
+
+  <!-- Permanent Family Cards -->
+  <div class="family-section" *ngIf="(permanentFamilies$ | async)?.length">
+    <h3 class="section-title"><i class="fas fa-lock"></i> Mesas Familiares Permanentes</h3>
+    <div class="family-grid">
+      <div *ngFor="let family of (permanentFamilies$ | async)" class="table-card family-card">
+        <div class="table-header">
+          <h3>🔒 {{ family._displayName }}</h3>
+          <div class="table-actions">
+            <button class="btn-separate" (click)="separatePermanentFamily(family.familyGroupId!)">Separar</button>
+          </div>
+        </div>
+        <div class="table-details">
+          <p class="capacity">Capacidad total: {{ family.capacity }} personas</p>
+          <div class="family-children">
+            <span class="child-tag" *ngFor="let c of family._children">
+              <i class="fas fa-chair"></i> {{ c.name }} ({{ c.capacity }}p)
+            </span>
+          </div>
+          <p class="status" [class.free]="family.status === 'family_merged'">
+            {{ getFamilyStatusLabel(family.status) }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Individual Tables Grid -->
+  <h3 class="section-title" *ngIf="showMergeMode">Selecciona mesas para unir permanentemente</h3>
+  <div class="table-grid">
+    <div *ngFor="let table of filteredTables$ | async" class="table-card"
+         [class.free]="table.status === 'free'"
+         [class.merge-selectable]="showMergeMode && table.status === 'free'"
+         [class.merge-selected]="showMergeMode && isTableSelectedForMerge(table.id)"
+         (click)="showMergeMode && table.status === 'free' ? toggleTableForMerge(table.id) : null">
+
+      <div class="table-header">
+        <h3>{{ table.name }}</h3>
+        <div class="table-actions" *ngIf="!showMergeMode">
+          <button class="btn-edit" (click)="editTable(table); $event.stopPropagation()">Editar</button>
+          <button class="btn-delete" (click)="deleteTable(table); $event.stopPropagation()">Eliminar</button>
+        </div>
+        <div class="merge-check" *ngIf="showMergeMode && table.status === 'free'">
+          <i class="fas" [class.fa-check-circle]="isTableSelectedForMerge(table.id)" [class.fa-circle]="!isTableSelectedForMerge(table.id)"></i>
+        </div>
+      </div>
+
+      <div class="table-details">
+        <p class="branch-id">Sucursal: {{ getBranchName(table.branchId) }}</p>
+        <p class="capacity">Capacidad: {{ table.capacity }} personas</p>
+
+        <p
+          class="status"
+          [class.free]="table.status === 'free'"
+          [class.occupied]="table.status === 'occupied'"
+          [class.reserved]="table.status === 'reserved'">
+          {{
+            table.status === 'free'
+              ? 'Libre'
+              : table.status === 'occupied'
+              ? 'Ocupada'
+              : 'Reservada'
+          }}
+        </p>
+
+        <div class="status-actions" *ngIf="!showMergeMode">
+          <button
+            *ngIf="table.status !== 'free'"
+            class="btn-status btn-free"
+            (click)="updateTableStatus(table, 'free'); $event.stopPropagation()">
+            Marcar Libre
+          </button>
+          <button
+            *ngIf="table.status !== 'occupied'"
+            class="btn-status btn-occupied"
+            (click)="updateTableStatus(table, 'occupied'); $event.stopPropagation()">
+            Marcar Ocupada
+          </button>
+          <button
+            *ngIf="table.status !== 'reserved'"
+            class="btn-status btn-reserved"
+            (click)="updateTableStatus(table, 'reserved'); $event.stopPropagation()">
+            Marcar Reservada
+          </button>
+        </div>
+
+        <p class="order" *ngIf="table.currentOrderId">
+          Pedido actual: {{ table.currentOrderId }}
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="(filteredTables$ | async)?.length === 0 && !showMergeMode">
+    <i class="fas fa-chair"></i>
+    <p>No se encontraron mesas</p>
+  </div>
+
+  <!-- MODAL -->
+  <div *ngIf="showAddForm" class="modal-overlay" (click)="cancelEdit()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <h3>{{ editingTable ? 'Editar Mesa' : 'Agregar Nueva Mesa' }}</h3>
+        <button class="close-btn" (click)="cancelEdit()">&times;</button>
+      </div>
+
+      <form (ngSubmit)="saveTable()" class="table-form">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Sucursal *</label>
+            <select [(ngModel)]="newTable.branchId" name="branchId" required>
+              <option value="">Seleccionar Sucursal</option>
+              <option *ngFor="let branch of branches$ | async" [value]="branch.branchId">{{branch.name}} </option>
+            </select>
+
+          </div>
+
+          </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Número *</label>
+            <div class="number-stepper">
+              <input
+                type="number"
+                [(ngModel)]="newTable.number"
+                name="number"
+                min="0"
+                required>
+              <div class="stepper-controls">
+                <button type="button" class="stepper-btn stepper-up" (click)="adjustNumericField(newTable, 'number', 1)" aria-label="Aumentar número de mesa"><i class="fas fa-chevron-up"></i></button>
+                <button type="button" class="stepper-btn stepper-down" (click)="adjustNumericField(newTable, 'number', -1)" aria-label="Disminuir número de mesa"><i class="fas fa-chevron-down"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Capacidad *</label>
+            <div class="number-stepper">
+              <input
+                type="number"
+                [(ngModel)]="newTable.capacity"
+                name="capacity"
+                min="1"
+                required>
+              <div class="stepper-controls">
+                <button type="button" class="stepper-btn stepper-up" (click)="adjustNumericField(newTable, 'capacity', 1, 1)" aria-label="Aumentar capacidad"><i class="fas fa-chevron-up"></i></button>
+                <button type="button" class="stepper-btn stepper-down" (click)="adjustNumericField(newTable, 'capacity', -1, 1)" aria-label="Disminuir capacidad"><i class="fas fa-chevron-down"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Estado</label>
+            <select [(ngModel)]="newTable.status" name="status">
+              <option value="free">Libre</option>
+              <option value="occupied">Ocupada</option>
+              <option value="reserved">Reservada</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="cancelEdit()">
+            Cancelar
+          </button>
+
+          <button type="submit" class="btn-primary">
+            Guardar
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>

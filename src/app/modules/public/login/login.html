@@ -1,0 +1,213 @@
+<!-- Enhanced Login Hero Section -->
+<section class="login-hero bg-gradient-primary position-relative overflow-hidden">
+  <div class="hero-bg-pattern"></div>
+  <div class="floating-elements">
+    <div class="floating-key animate-float" style="top: 20%; left: 10%; animation-delay: 0s;">
+      <i class="fas fa-key text-warning"></i>
+    </div>
+    <div class="floating-shield animate-float" style="top: 30%; right: 15%; animation-delay: 1s;">
+      <i class="fas fa-shield-alt text-info"></i>
+    </div>
+    <div class="floating-user animate-float" style="bottom: 25%; left: 20%; animation-delay: 2s;">
+      <i class="fas fa-user-circle text-success"></i>
+    </div>
+    <div class="floating-lock animate-float" style="top: 60%; right: 10%; animation-delay: 0.5s;">
+      <i class="fas fa-lock text-danger"></i>
+    </div>
+  </div>
+
+  <div class="container position-relative">
+    <div class="row justify-content-center align-items-center min-vh-100 py-5">
+      <div class="col-lg-10">
+        <div class="row align-items-center">
+          <!-- Welcome Content -->
+          <div class="col-lg-6 text-center text-lg-start mb-5 mb-lg-0">
+            <div class="welcome-content">
+              <div class="welcome-badge mb-4">
+                <span class="badge bg-light text-primary px-4 py-2 rounded-pill shadow-sm">
+                  <i class="fas fa-utensils me-2"></i> Alliker - Pollería
+                </span>
+              </div>
+
+              <h1 class="welcome-title mb-4">
+                <span class="title-main">Bienvenido de</span>
+                <span class="title-accent">Vuelta</span>
+                <span class="title-highlight">¡Disfruta!</span>
+              </h1>
+
+              <p class="welcome-subtitle mb-4">
+                Accede a tu cuenta para disfrutar de una experiencia gastronómica excepcional.
+                Reserva mesas, realiza pedidos y accede a ofertas exclusivas.
+              </p>
+
+              <div class="welcome-features">
+                <div class="feature-item">
+                  <i class="fas fa-check-circle text-success me-2"></i>
+                  <span>Reservas instantáneas</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check-circle text-success me-2"></i>
+                  <span>Pedidos en línea</span>
+                </div>
+                <div class="feature-item">
+                  <i class="fas fa-check-circle text-success me-2"></i>
+                  <span>Ofertas exclusivas</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Login Form -->
+          <div class="col-lg-6">
+            <div class="login-card-modern shadow-lg rounded-4 p-4 p-md-5">
+              <div class="login-header text-center mb-4">
+                <div class="login-icon mb-3">
+                  <i class="fas fa-sign-in-alt fa-3x text-primary"></i>
+                </div>
+                <h2 class="login-title mb-2">Iniciar Sesión</h2>
+                <p class="login-subtitle text-muted">Ingresa tus credenciales para continuar</p>
+              </div>
+
+              <!-- Social Login Options -->
+              <div class="social-login mb-4">
+                <div #googleSignInButton class="w-100"></div>
+                <!-- Login con Facebook deshabilitado por ahora, queda pendiente para una versión futura.
+                <button class="btn btn-facebook btn-lg w-100 rounded-pill" type="button"
+                        (click)="loginWithFacebook()" [disabled]="isLoading">
+                  <i class="fab fa-facebook-f me-2"></i>
+                  Continuar con Facebook
+                </button>
+                -->
+              </div>
+
+              <div class="divider mb-4">
+                <span class="divider-text">o</span>
+              </div>
+
+              <!-- Login Form -->
+              <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+                <div class="mb-3">
+                  <label for="email" class="form-label fw-semibold">
+                    <i class="fas fa-envelope me-1 text-muted"></i>
+                    Correo electrónico
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <i class="fas fa-at"></i>
+                    </span>
+                    <input type="email"
+                           class="form-control form-control-lg"
+                           id="email"
+                           formControlName="email"
+                           placeholder="tu@email.com"
+                           autocomplete="email">
+                  </div>
+                  <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="text-danger small mt-1">
+                    <div *ngIf="loginForm.get('email')?.errors?.['required']">El correo electrónico es requerido.</div>
+                    <div *ngIf="loginForm.get('email')?.errors?.['email']">Ingrese un correo electrónico válido.</div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="password" class="form-label fw-semibold">
+                    <i class="fas fa-lock me-1 text-muted"></i>
+                    Contraseña
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <i class="fas fa-key"></i>
+                    </span>
+                    <input type="password"
+                           class="form-control form-control-lg"
+                           id="password"
+                           formControlName="password"
+                           placeholder="Tu contraseña"
+                           autocomplete="current-password">
+                    <button class="btn btn-outline-secondary"
+                            type="button"
+                            (click)="togglePasswordVisibility()"
+                            title="Mostrar/ocultar contraseña">
+                      <i class="fas" [class]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
+                  </div>
+                  <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="text-danger small mt-1">
+                    <div *ngIf="loginForm.get('password')?.errors?.['required']">La contraseña es requerida.</div>
+                    <div *ngIf="loginForm.get('password')?.errors?.['minlength']">La contraseña debe tener al menos 6 caracteres.</div>
+                  </div>
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="row mb-3">
+                  <div class="col-6">
+                    <div class="form-check">
+                      <input class="form-check-input"
+                             type="checkbox"
+                             id="rememberMe"
+                             formControlName="rememberMe">
+                      <label class="form-check-label small" for="rememberMe">
+                        Recordarme
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-6 text-end">
+                    <a href="#" class="text-decoration-none small" (click)="forgotPassword()">
+                      ¿Olvidaste tu contraseña?
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Error Message -->
+                <div *ngIf="errorMessage"
+                     class="alert alert-danger alert-dismissible fade show mb-3"
+                     role="alert">
+                  <i class="fas fa-exclamation-triangle me-2"></i>
+                  {{ errorMessage }}
+                  <button type="button"
+                          class="btn-close"
+                          (click)="errorMessage = ''"
+                          aria-label="Close"></button>
+                </div>
+
+                <!-- Success Message -->
+                <div *ngIf="successMessage"
+                     class="alert alert-success alert-dismissible fade show mb-3"
+                     role="alert">
+                  <i class="fas fa-check-circle me-2"></i>
+                  {{ successMessage }}
+                  <button type="button"
+                          class="btn-close"
+                          (click)="successMessage = ''"
+                          aria-label="Close"></button>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit"
+                        class="btn btn-primary btn-lg w-100 rounded-pill mb-3"
+                        [disabled]="isLoading">
+                  <span *ngIf="!isLoading">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    Iniciar Sesión
+                  </span>
+                  <span *ngIf="isLoading">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Iniciando sesión...
+                  </span>
+                </button>
+              </form>
+
+              <!-- Register Link -->
+              <div class="text-center">
+                <p class="mb-2 text-muted">¿No tienes cuenta?</p>
+                <button class="btn btn-outline-primary rounded-pill px-4" (click)="goToRegister()">
+                  <i class="fas fa-user-plus me-2"></i>
+                  Crear cuenta nueva
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

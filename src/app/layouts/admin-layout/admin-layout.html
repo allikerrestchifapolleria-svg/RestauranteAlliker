@@ -1,0 +1,168 @@
+<div class="admin-layout">
+  <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <i class="fas fa-fire"></i>
+        <span class="sidebar-brand" [class.d-none]="sidebarCollapsed">Alliker</span>
+      </div>
+      <button class="sidebar-toggle"
+              (click)="toggleSidebar()"
+              [attr.aria-expanded]="!sidebarCollapsed"
+              [attr.aria-label]="sidebarCollapsed ? 'Expandir menú' : 'Contraer menú'"
+              [title]="sidebarCollapsed ? 'Expandir menú' : 'Contraer menú'">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+    <nav class="sidebar-nav" role="navigation" aria-label="Navegación principal del panel de administración">
+      <a *ngFor="let item of navItems"
+         [routerLink]="item.path"
+         routerLinkActive="active"
+         #rla="routerLinkActive"
+         [attr.aria-current]="rla.isActive ? 'page' : null"
+         [attr.aria-label]="item.label"
+         [title]="item.label"
+         class="nav-link"
+         (click)="closeSidebar()">
+        <i [class]="item.icon"></i>
+        <span class="nav-text" [class.d-none]="sidebarCollapsed">{{ item.label }}</span>
+        <span class="nav-tooltip" role="tooltip">{{ item.label }}</span>
+      </a>
+      <div class="sidebar-divider"></div>
+      <a *ngFor="let item of navItemsSecondary"
+         [routerLink]="item.path"
+         routerLinkActive="active"
+         #rla="routerLinkActive"
+         [attr.aria-current]="rla.isActive ? 'page' : null"
+         [attr.aria-label]="item.label"
+         [title]="item.label"
+         class="nav-link"
+         (click)="closeSidebar()">
+        <i [class]="item.icon"></i>
+        <span class="nav-text" [class.d-none]="sidebarCollapsed">{{ item.label }}</span>
+        <span class="nav-tooltip" role="tooltip">{{ item.label }}</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-version" [class.d-none]="sidebarCollapsed">v2.0</div>
+    </div>
+  </aside>
+
+  <!-- Off-canvas backdrop: only visible on tablet widths (769-1024px) while the drawer is open -->
+  <div class="sidebar-backdrop" (click)="closeSidebar()"></div>
+
+  <main class="main-content">
+    <header class="content-header">
+      <div class="header-left">
+        <h1>Panel de Administración</h1>
+      </div>
+      <div class="header-controls">
+        <div class="branch-selector">
+          <label class="branch-label" for="branch-select">
+            <i class="fas fa-store"></i>
+          </label>
+          <select id="branch-select" class="form-select" [(ngModel)]="selectedBranchId" (change)="onBranchChange()">
+            <option value="">Todas las Sucursales</option>
+            <option *ngFor="let branch of branches" [value]="branch.id">{{branch.name}}</option>
+          </select>
+        </div>
+        <button class="btn-icon btn-portal-admin" (click)="goToPublic()" title="Ir al portal público">
+          <i class="fas fa-globe"></i>
+          <span class="btn-label">Portal</span>
+        </button>
+        <div class="user-badge">
+          <i class="fas fa-user-shield"></i>
+          <span>Admin</span>
+        </div>
+        <button class="btn-icon btn-logout" (click)="logout()" title="Cerrar sesión">
+          <i class="fas fa-sign-out-alt"></i>
+          <span class="btn-label">Salir</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="content-body">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav">
+    <a routerLink="/admin/dashboard" routerLinkActive="active" class="bottom-nav-link">
+      <i class="fas fa-th-large"></i>
+      <span>Dashboard</span>
+    </a>
+    <a routerLink="/admin/table-management" routerLinkActive="active" class="bottom-nav-link">
+      <i class="fas fa-chair"></i>
+      <span>Mesas</span>
+    </a>
+    <a routerLink="/admin/cash-register" routerLinkActive="active" class="bottom-nav-link">
+      <i class="fas fa-cash-register"></i>
+      <span>Caja</span>
+    </a>
+    <a routerLink="/admin/menu-management" routerLinkActive="active" class="bottom-nav-link">
+      <i class="fas fa-utensils"></i>
+      <span>Menú</span>
+    </a>
+    <button type="button" class="bottom-nav-link" [class.active]="mobileMoreOpen" (click)="toggleMobileMore()">
+      <i class="fas" [class.fa-ellipsis-h]="!mobileMoreOpen" [class.fa-times]="mobileMoreOpen"></i>
+      <span>Más</span>
+    </button>
+  </nav>
+
+  <!-- Mobile "More options" bottom sheet -->
+  <div class="mobile-more-backdrop" *ngIf="mobileMoreOpen" (click)="closeMobileMore()"></div>
+  <div class="mobile-more-panel" [class.open]="mobileMoreOpen">
+    <div class="mobile-more-handle"></div>
+    <h4 class="mobile-more-title">Más opciones</h4>
+    <div class="mobile-more-grid">
+      <a routerLink="/admin/menu-category-management" routerLinkActive="active" class="more-link" (click)="closeMobileMore()">
+        <i class="fas fa-tags"></i>
+        <span>Categorías</span>
+      </a>
+      <a routerLink="/admin/schedule-management" routerLinkActive="active" class="more-link" (click)="closeMobileMore()">
+        <i class="fas fa-clock"></i>
+        <span>Horarios</span>
+      </a>
+      <a routerLink="/admin/container-management" routerLinkActive="active" class="more-link" (click)="closeMobileMore()">
+        <i class="fas fa-box-open"></i>
+        <span>Recipientes</span>
+      </a>
+      <a routerLink="/admin/customer-management" routerLinkActive="active" class="more-link" (click)="closeMobileMore()">
+        <i class="fas fa-user-friends"></i>
+        <span>Clientes</span>
+      </a>
+      <a routerLink="/admin/branch-management" routerLinkActive="active" class="more-link" (click)="closeMobileMore()">
+        <i class="fas fa-building"></i>
+        <span>Sucursales</span>
+      </a>
+      <a routerLink="/admin/promotion-management" routerLinkActive="active" class="more-link" (click)="closeMobileMore()">
+        <i class="fas fa-percent"></i>
+        <span>Promociones</span>
+      </a>
+      <a routerLink="/admin/user-management" routerLinkActive="active" class="more-link" (click)="closeMobileMore()">
+        <i class="fas fa-users"></i>
+        <span>Usuarios</span>
+      </a>
+      <a routerLink="/admin/notification-management" routerLinkActive="active" class="more-link" (click)="closeMobileMore()">
+        <i class="fas fa-bell"></i>
+        <span>Notificaciones</span>
+      </a>
+      <a routerLink="/admin/order-history" routerLinkActive="active" class="more-link" (click)="closeMobileMore()">
+        <i class="fas fa-history"></i>
+        <span>Historial</span>
+      </a>
+      <a routerLink="/admin/ventas" routerLinkActive="active" class="more-link" (click)="closeMobileMore()">
+        <i class="fas fa-chart-line"></i>
+        <span>Ventas</span>
+      </a>
+      <a routerLink="/admin/invoices" routerLinkActive="active" class="more-link" (click)="closeMobileMore()">
+        <i class="fas fa-file-invoice"></i>
+        <span>Comprobantes</span>
+      </a>
+      <a routerLink="/admin/company-config" routerLinkActive="active" class="more-link" (click)="closeMobileMore()">
+        <i class="fas fa-building"></i>
+        <span>Config. Empresa</span>
+      </a>
+    </div>
+  </div>
+</div>
