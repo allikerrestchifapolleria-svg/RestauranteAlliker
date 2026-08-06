@@ -1107,6 +1107,11 @@
   padding-bottom: 1rem;
   min-height: 70vh;
   align-items: stretch;
+  /* Las columnas tienen max-width, así que en pantallas anchas sobra espacio:
+     se centran en vez de quedar pegadas a la izquierda. `safe` evita que al
+     desbordar se recorte el inicio del scroll horizontal. */
+  justify-content: center;
+  justify-content: safe center;
 }
 
 .kanban-column {
@@ -1570,6 +1575,9 @@
     flex-direction: column;
     overflow-x: visible;
     min-height: auto;
+    /* En columna el eje principal es vertical: el centrado horizontal ya no
+       aplica y solo confundiría el apilado. */
+    justify-content: flex-start;
   }
   .kanban-column {
     display: none;
